@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const raiz = path.join(__dirname, '..');
 const s = fs.readFileSync(path.join(raiz, 'index.html'), 'utf8');
+const hm = fs.readFileSync(path.join(raiz, 'src', 'domain', 'hunt-measurements.js'), 'utf8');
 // recorte unico dos dados reais do jogo (comprimido: leva golpes, stats e evolucoes)
 const J = JSON.parse(require('zlib').gunzipSync(fs.readFileSync(path.join(__dirname, 'fixtures', 'jogo-2026-09-17.json.gz'))).toString('utf8'));
 let fail = 0;
@@ -144,7 +145,7 @@ console.log('\n--- coletor le o dano real por golpe e a vida do selvagem (mensag
   const RS = lit('READ_STATE');
   const st = new Function('window', 'return ' + RS)({ __poke: { ws: { balls: { catalog: [], counts: {} }, inventory: { items: [] }, pokes: { list: [] } }, api: { '/api/characters/me': { character: { id: 1, name: 'A', level: 10 } } }, sess: { start: 1, drops: {}, kills: 10, hits: 13, pct: 6.5, pctN: 13 } } });
   ok(st && st.a && st.a.hpk === 1.3 && st.a.hitHp === 50, 'o painel recebe golpes por kill e dano medio em % da vida (' + (st && st.a && st.a.hpk) + ' golpes/kill, ' + (st && st.a && st.a.hitHp) + '%)');
-  ok(s.includes("hpk: +a.hpk > 0 ? Math.round(((c.hpk || +a.hpk) * (1 - al) + (+a.hpk) * al) * 10) / 10 : (c.hpk || 0)") && s.includes("t('cdHitsKill')") && s.split("cdHitsKill:'").length - 1 === 3, 'a media por hunt guarda golpes/kill e a lista mostra (3 idiomas)');
+  ok(hm.includes("hpk: m.hpk > 0 ? Math.round(((finite(old.hpk) || m.hpk) * (1 - weight) + m.hpk * weight) * 10) / 10 : finite(old.hpk)") && s.includes("t('cdHitsKill')") && s.split("cdHitsKill:'").length - 1 === 3, 'a media por hunt guarda golpes/kill e a lista mostra (3 idiomas)');
   ok(s.includes("kph: pha(sb('kills')), hpk, hitHp,") && s.includes("kph: ph(S.kills), hpk, hitHp,"), 'os dois caminhos do READ_STATE (Hunt Analyzer do servidor e conta local) devolvem golpes/kill e dano/vida');
 }
 

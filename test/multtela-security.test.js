@@ -41,13 +41,13 @@ ok(main.includes("ipcMain.handle('overlay:toggle'") && html.includes('id="overla
 ok(main.includes("ipcMain.handle('shiny:capture'") && html.includes("let shotShinyOn = lsGet('shotShiny') === '1'"), 'print de shiny é opcional e local');
 
 console.log('\n--- Instalador e atualização ---');
-ok(pkg.name === 'pokemux' && pkg.build.productName === 'PokeMux' && pkg.version === '1.1.10', 'produto PokeMux está na versão 1.1.10');
+ok(pkg.name === 'pokemux' && pkg.build.productName === 'PokeMux' && pkg.version === '1.1.11', 'produto PokeMux está na versão 1.1.11');
 ok(!html.includes('id="appSidebar"') && !html.includes('--pg-sidebar') && html.includes('id="statsBtn"') && html.includes('id="cardsBtn"'), 'layout clássico remove a sidebar fixa e restaura os controles no topo');
 ok(html.includes('class="cd-catches-list"') && html.includes('.cd-catches-list { max-height: clamp(') && html.includes('overflow-y: auto'), 'últimas capturas têm altura responsiva e rolagem interna');
-ok(html.includes('(+x.t || 0) >= corte).reverse()') && !html.includes('(+x.t || 0) >= corte).slice(-40)'), 'últimas capturas mostram todos os resultados que passam pelos filtros');
+ok(html.includes('captureFilters.filterCaptures(lifeCatch, f)') && !html.includes('.slice(-40)'), 'últimas capturas mostram todos os resultados que passam pelos filtros');
 ok(html.includes("delete cardsCfg.h.catches") && html.includes("sec === 'catches' ? ''"), 'últimas capturas ignora altura manual antiga e não oferece redimensionamento vertical');
 ok(html.includes("it.dataset.s === 'catches' ? it.querySelector('.cd-catches-list')") && html.includes('scrollBox.scrollTop = rolagem[it.dataset.s]'), 'rolagem das últimas capturas não volta ao topo durante a atualização automática');
-ok(html.includes('id="cdFcR"') && html.includes('rarityKey(numLivre(x.q)) === f.r') && html.includes("['legendary', 'Lendária', 'Legendary'"), 'últimas capturas filtram pela faixa exata de raridade');
+ok(html.includes('id="cdFcR"') && html.includes('captureFilters.filterCaptures(lifeCatch, f)') && html.includes("['legendary', 'Lendária', 'Legendary'"), 'últimas capturas filtram pela faixa exata de raridade');
 ok(pkg.build && pkg.build.win && pkg.build.nsis && pkg.build.nsis.deleteAppDataOnUninstall === false, 'instalador NSIS preserva dados');
 ok(pkg.dependencies['electron-updater'] && pkg.devDependencies['electron-builder'], 'dependências de build e update declaradas');
 ok(update.includes('autoDownload = false') && update.includes('autoInstallOnAppQuit = false'), 'atualização nunca baixa ou instala silenciosamente');

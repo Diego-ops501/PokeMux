@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.11 — Filtros de capturas e recomendação de hunt
+
+- Corrigidos todos os filtros de **Últimas capturas · todas as contas** para preservar capturas antigas com IV e qualidade nos formatos legados. O filtro de raridade combinado com o período **Todos** não limita mais a lista a poucos Pokémon.
+- O aviso de hunt com mais XP agora usa exclusivamente o Pokémon líder da conta atual, sem misturar o histórico de outro Pokémon usado anteriormente.
+- Cada medição continua vinculada ao nível em que foi feita. Ao subir de nível, o app pode comparar hunts do mesmo Pokémon em até cinco níveis de distância e normaliza o XP/h usando uma hunt já medida nos dois níveis. Trocas de Pokémon ou de hunt reiniciam a janela limpa de cinco minutos.
+
 ## 1.1.10 — Primeiro painel abre diretamente
 
 - O primeiro painel volta a receber a tela de login já durante a criação do WebView, eliminando a disputa de inicialização que ainda podia deixá-lo preso em uma tela preta na versão 1.1.9.

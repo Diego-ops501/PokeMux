@@ -7,6 +7,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: https://poke.idleworld.online https://raw.githubusercontent.com https://pokexguides.com; font-src 'self' data:; connect-src https://api.github.com; frame-src https://poke.idleworld.online; child-src https://poke.idleworld.online; base-uri 'none'; form-action 'none'">
 <title>PokeMux</title>
 <script src="src/domain/iv-math.js"></script>
+<script src="src/domain/capture-filters.js"></script>
+<script src="src/domain/hunt-measurements.js"></script>
 <style>
   :root {
     --brand-cyan: #22d3ee;
@@ -571,7 +573,7 @@
 // Quando a cota estoura (os logs de hunt/captura crescem com o uso), poda os logs grandes pela
 // metade e tenta de novo; se ainda assim falhar, desiste em silencio. Antes desta guarda, o
 // primeiro setItem do boot com a cota cheia impedia o app de abrir.
-const LS_PODAVEIS = ['huntLog', 'lifeCatch', 'lifeShiny', 'huntStats2'];
+const LS_PODAVEIS = ['huntLog', 'lifeCatch', 'lifeShiny', 'huntStats2', 'huntStats3'];
 function lsPoda() {
   let podou = false;
   LS_PODAVEIS.forEach(k => {
@@ -580,7 +582,7 @@ function lsPoda() {
       if (!v || v.length < 2000) return;
       const arr = JSON.parse(v);
       if (Array.isArray(arr) && arr.length > 1) { localStorage.setItem(k, JSON.stringify(arr.slice(-Math.floor(arr.length / 2)))); podou = true; }
-      // huntStats2 e OBJETO (hunt -> medicao): sem este ramo ele era apagado inteiro e o usuario
+      // huntStats e OBJETO: sem este ramo ele era apagado inteiro e o usuario
       // perdia toda a media medida de gold/h numa unica falha de cota
       else if (arr && typeof arr === 'object') {
         const ks = Object.keys(arr);
@@ -679,7 +681,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       mH2:'Treinadores salvos', mHint:'Preencha e-mail/usuário e senha de cada painel. As senhas ficam criptografadas neste PC. "Logar equipe" entra automaticamente onde houver dados, e se a sessão cair o painel loga sozinho.',
       mName:'Nome', mEmail:'E-mail ou usuário', mPass:'Senha', mCancel:'Cancelar', mSave:'Salvar',
       awakeTitle:'Impede o PC de dormir enquanto farma (a tela ainda pode desligar)', chatTitle:'Mostra ou esconde o chat do jogo em todos os painéis',
-      cdTime:'Tempo', cdPoke:'Pokémon', cdTeams:'Times & IV', cdSortSug:'Sugerido ↓', cdWith:'caçar com', cdLvNeed:'precisa Lv', cdEstTip:'estimado a partir das suas hunts medidas', cdRunTip:'no ritmo desta sess\u00e3o, quanto o estoque ainda dura', cdBetterTip:'na sua m\u00e9dia (rende mais que a hunt atual)', cdDittoH:'Ditto: melhor transforma\u00e7\u00e3o e onde ca\u00e7ar, por tipo', cdDitAll:'quadro por tipo (todas as hunts)', cdInv:'Inventário global', cdProjLv:'projetar no nível', cdFAll:'todas', cdFRarity:'Raridade', ivcMoveLv:'Nv', ivcMoveLocked:'Só aprende no nível',
+      cdTime:'Tempo', cdPoke:'Pokémon', cdTeams:'Times & IV', cdSortSug:'Sugerido ↓', cdWith:'caçar com', cdLvNeed:'precisa Lv', cdEstTip:'estimado pelas medições deste Pokémon neste nível', cdRunTip:'no ritmo desta sess\u00e3o, quanto o estoque ainda dura', cdBetterTip:'com este Pokémon no nível atual ou próximo (rende mais XP que a hunt atual)', cdDittoH:'Ditto: melhor transforma\u00e7\u00e3o e onde ca\u00e7ar, por tipo', cdDitAll:'quadro por tipo (todas as hunts)', cdInv:'Inventário global', cdProjLv:'projetar no nível', cdFAll:'todas', cdFRarity:'Raridade', ivcMoveLv:'Nv', ivcMoveLocked:'Só aprende no nível',
       cdMove:'Arraste para mover a seção', cdResize:'Arraste para ajustar a largura', cdResizeV:'Arraste para ajustar a altura (clique duplo: automática)',
       minTrayOn:'📥 Minimiza p/ bandeja', minTrayOff:'📥 Minimiza normal', minTrayTitle:'O que o botão minimizar faz: esconder na bandeja (ícone perto do relógio) ou minimizar normal na barra de tarefas',
       voltaOn:'↩ Voltar pra hunt: ligado', voltaOff:'↩ Voltar pra hunt: desligado', voltaTitle:'Experimental. Quando o app recarrega um painel que estava farmando, o jogo larga a conta na cidade. Ligado, o app manda a conta de volta pra mesma hunt (repete a cada 12 s, até 3 vezes, até o primeiro kill). Só age se houve kill nos últimos 10 minutos. A tela do jogo pode seguir mostrando a cidade enquanto a conta farma.', sndOn:'✨🔊 Som do shiny', sndOff:'✨🔇 Som do shiny', sndTitle:'Toca um som quando um shiny aparece (além da notificação)', voiceOn:'🗣️ Voz dos alertas: ligada', voiceOff:'🔇 Voz dos alertas: desligada', voiceTitle:'Usa uma voz local do Windows para shiny, drops raros, captura lendária e suprimentos baixos',
@@ -723,7 +725,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       mH2:'Saved accounts', mHint:'Fill in the e-mail/username and password for each panel. Passwords are encrypted on this PC. "Log in all" signs in automatically where data exists, and if the session drops the panel logs in by itself.',
       mName:'Name', mEmail:'E-mail or username', mPass:'Password', mCancel:'Cancel', mSave:'Save',
       awakeTitle:'Keeps the PC awake while farming (the screen can still turn off)', chatTitle:'Shows or hides the game chat in all panels',
-      cdTime:'Time', cdPoke:'Pokémon', cdTeams:'Teams & IV', cdSortSug:'Suggested ↓', cdWith:'hunt with', cdLvNeed:'needs Lv', cdEstTip:'estimated from your measured hunts', cdRunTip:'at this session pace, how long stock lasts', cdBetterTip:'on your average (beats the current hunt)', cdDittoH:'Ditto: best transformation and where to hunt, per type', cdDitAll:'board by type (all hunts)', cdInv:'Global inventory', cdProjLv:'project at level', cdFAll:'all', cdFRarity:'Rarity', ivcMoveLv:'Lv', ivcMoveLocked:'Only learned at level',
+      cdTime:'Time', cdPoke:'Pokémon', cdTeams:'Teams & IV', cdSortSug:'Suggested ↓', cdWith:'hunt with', cdLvNeed:'needs Lv', cdEstTip:'estimated from measurements of this Pokémon at this level', cdRunTip:'at this session pace, how long stock lasts', cdBetterTip:'with this Pokémon at the current or a nearby level (more XP than the current hunt)', cdDittoH:'Ditto: best transformation and where to hunt, per type', cdDitAll:'board by type (all hunts)', cdInv:'Global inventory', cdProjLv:'project at level', cdFAll:'all', cdFRarity:'Rarity', ivcMoveLv:'Lv', ivcMoveLocked:'Only learned at level',
       cdMove:'Drag to move the section', cdResize:'Drag to adjust the width', cdResizeV:'Drag to adjust the height (double-click: automatic)',
       minTrayOn:'📥 Minimize to tray', minTrayOff:'📥 Minimize normally', minTrayTitle:'What the minimize button does: hide to the tray (icon near the clock) or minimize normally to the taskbar',
       voltaOn:'↩ Back to hunt: on', voltaOff:'↩ Back to hunt: off', voltaTitle:'Experimental. When the app reloads a panel that was farming, the game drops the account in the city. When on, the app sends it back to the same hunt (retrying every 12 s, up to 3 times, until the first kill). Only acts if there was a kill in the last 10 minutes. The game screen may keep showing the city while the account farms.', sndOn:'✨🔊 Shiny sound', sndOff:'✨🔇 Shiny sound', sndTitle:'Plays a sound when a shiny appears (besides the notification)', voiceOn:'🗣️ Alert voice: on', voiceOff:'🔇 Alert voice: off', voiceTitle:'Uses a local Windows voice for shiny, rare drops, legendary catches and low supplies',
@@ -766,7 +768,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       mH2:'Entrenadores guardados', mHint:'Completa el e-mail/usuario y la contraseña de cada panel. Las contraseñas quedan cifradas en este PC. "Iniciar equipo" entra automáticamente donde haya datos, y si la sesión se cae el panel entra solo.',
       mName:'Nombre', mEmail:'E-mail o usuario', mPass:'Contraseña', mCancel:'Cancelar', mSave:'Guardar',
       awakeTitle:'Evita que el PC se duerma mientras farmea (la pantalla aún puede apagarse)', chatTitle:'Muestra u oculta el chat del juego en todos los paneles',
-      cdTime:'Tiempo', cdPoke:'Pokémon', cdTeams:'Equipos & IV', cdSortSug:'Sugerido ↓', cdWith:'cazar con', cdLvNeed:'necesita Lv', cdEstTip:'estimado a partir de tus hunts medidas', cdRunTip:'al ritmo de esta sesi\u00f3n, cu\u00e1nto dura el stock', cdBetterTip:'en tu promedio (rinde m\u00e1s que la hunt actual)', cdDittoH:'Ditto: mejor transformaci\u00f3n y d\u00f3nde cazar, por tipo', cdDitAll:'cuadro por tipo (todas las hunts)', cdInv:'Inventario global', cdProjLv:'proyectar al nivel', cdFAll:'todas', cdFRarity:'Rareza', ivcMoveLv:'Nv', ivcMoveLocked:'Solo se aprende en el nivel',
+      cdTime:'Tiempo', cdPoke:'Pokémon', cdTeams:'Equipos & IV', cdSortSug:'Sugerido ↓', cdWith:'cazar con', cdLvNeed:'necesita Lv', cdEstTip:'estimado con mediciones de este Pokémon en este nivel', cdRunTip:'al ritmo de esta sesi\u00f3n, cu\u00e1nto dura el stock', cdBetterTip:'con este Pokémon en el nivel actual o uno cercano (da más XP que la hunt actual)', cdDittoH:'Ditto: mejor transformaci\u00f3n y d\u00f3nde cazar, por tipo', cdDitAll:'cuadro por tipo (todas las hunts)', cdInv:'Inventario global', cdProjLv:'proyectar al nivel', cdFAll:'todas', cdFRarity:'Rareza', ivcMoveLv:'Nv', ivcMoveLocked:'Solo se aprende en el nivel',
       cdMove:'Arrastra para mover la sección', cdResize:'Arrastra para ajustar el ancho', cdResizeV:'Arrastra para ajustar la altura (doble clic: automática)',
       minTrayOn:'📥 Minimizar a la bandeja', minTrayOff:'📥 Minimizar normal', minTrayTitle:'Qué hace el botón minimizar: esconder en la bandeja (icono junto al reloj) o minimizar normal a la barra de tareas',
       voltaOn:'↩ Volver a la hunt: activado', voltaOff:'↩ Volver a la hunt: desactivado', voltaTitle:'Experimental. Cuando la app recarga un panel que estaba farmeando, el juego deja la cuenta en la ciudad. Activado, la app la manda de vuelta a la misma hunt (repite cada 12 s, hasta 3 veces, hasta el primer kill). Solo actúa si hubo kill en los últimos 10 minutos. La pantalla del juego puede seguir mostrando la ciudad mientras la cuenta farmea.', sndOn:'✨🔊 Sonido de shiny', sndOff:'✨🔇 Sonido de shiny', sndTitle:'Reproduce un sonido cuando aparece un shiny (además de la notificación)', voiceOn:'🗣️ Voz de alertas: activada', voiceOff:'🔇 Voz de alertas: desactivada', voiceTitle:'Usa una voz local de Windows para shiny, drops raros, capturas legendarias y pocos suministros',
@@ -1946,6 +1948,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   // Tudo que vem do disco e saneado: o "Importar config" grava localStorage arbitrario e a
   // lista poe dot em atributo style; campo fora do formato viraria XSS armazenado.
   const COR_OK = /^#[0-9a-fA-F]{3,8}$/;
+  const captureFilters = window.PokeMuxCaptureFilters;
   const saneiaLog = (arr, extra) => (Array.isArray(arr) ? arr : []).slice(-500).map(x => {
     if (!x || typeof x !== 'object') return null;
     const e = { n: String(x.n || '').slice(0, 40), sid: +x.sid || 0, t: +x.t || 0, p: +x.p || 0, acc: String(x.acc || '').slice(0, 40), dot: COR_OK.test(String(x.dot)) ? String(x.dot) : '#8b949e' };
@@ -1953,7 +1956,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   }).filter(Boolean);
   let lifeShiny = [], lifeCatch = [];
   try { lifeShiny = saneiaLog(lsArr('lifeShiny'), (e, x) => { e.cap = x.cap ? 1 : 0; e.def = x.def ? 1 : 0; }); } catch {}
-  try { lifeCatch = saneiaLog(lsArr('lifeCatch'), (e, x) => { e.iv = +x.iv || 0; e.q = +x.q || 0; e.sh = !!x.sh; e.fx = !!x.fx; }); } catch {}
+  try { lifeCatch = saneiaLog(lsArr('lifeCatch'), (e, x) => { e.iv = captureFilters.parseLooseNumber(x.iv); e.q = captureFilters.parseLooseNumber(x.q); e.sh = !!x.sh; e.fx = !!x.fx; }); } catch {}
   // chave de dedupe inclui o painel (indice, nao o nome: o nome comeca padrao e muda ao carregar,
   // o que duplicaria a entrada e o aviso). Assim duas contas com a mesma especie no mesmo ms nao colidem.
   const kSh = (p, x) => 's' + p + '_' + x.t + '_' + (x.sid || x.n);
@@ -2335,7 +2338,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const pushGrp = c => { const items = groups[c].sort((x,y)=>y.qty-x.qty); bag.push({ label: LABELS[c]||'Outros', total: items.reduce((s,x)=>s+x.qty,0), items }); done[c]=1; };
     ORDER.forEach(c => { if (groups[c]) pushGrp(c); });
     Object.keys(groups).forEach(c => { if (!done[c]) pushGrp(c); });
-    const team = ((ws.pokes && ws.pokes.list)||[]).filter(p=>p.team).sort((x,y)=>(x.slot||0)-(y.slot||0)).map(p=>({name:p.name,level:p.level,shiny:!!p.shiny,t1:p.type1||'',t2:p.type2||'',ld:!!p.leader,q:nL(p.quality),ivt:p.ivTotal!=null?nL(p.ivTotal):null,dt:!!p.isDitto,tms:(Array.isArray(p.tms)?p.tms:[]).slice(0,24).map(x=>String(x).toUpperCase().slice(0,12)),sid:+p.speciesId||+p.pokeId||0,hp:+p.hp||0,hm:+p.maxHp||+p.hpMax||+p.totalHp||0,xpp:(+p.xp>0&&+p.level>0?(X=>{const a=X(+p.level),b=X(+p.level+1);return b>a?Math.round((+p.xp-a)/(b-a)*100):null})(n=>n<=1?0:Math.round(50/3*(n**3-6*n**2+17*n-12))):null)}));
+    const team = ((ws.pokes && ws.pokes.list)||[]).filter(p=>p.team).sort((x,y)=>(x.slot||0)-(y.slot||0)).map(p=>({id:String(p.id||'').slice(0,60),name:p.name,level:p.level,shiny:!!p.shiny,t1:p.type1||'',t2:p.type2||'',ld:!!p.leader,q:nL(p.quality),ivt:p.ivTotal!=null?nL(p.ivTotal):null,dt:!!p.isDitto,tms:(Array.isArray(p.tms)?p.tms:[]).slice(0,24).map(x=>String(x).toUpperCase().slice(0,12)),sid:+p.speciesId||+p.pokeId||0,hp:+p.hp||0,hm:+p.maxHp||+p.hpMax||+p.totalHp||0,xpp:(+p.xp>0&&+p.level>0?(X=>{const a=X(+p.level),b=X(+p.level+1);return b>a?Math.round((+p.xp-a)/(b-a)*100):null})(n=>n<=1?0:Math.round(50/3*(n**3-6*n**2+17*n-12))):null)}));
     let hunt = (ws['field-init'] && ws['field-init'].slug) || '';
     hunt = hunt.replace(/[_-]+/g,' ').replace(/\\b\\w/g, m=>m.toUpperCase());
     const mail = ws['mail-badge'] || {};
@@ -2999,24 +3002,13 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const ritmo = ritmoDe(best.rt); // kills esperados por golpe
     return { ritmo, xph: ritmo * (+x.xp || 0), nome: best.nome, eff: best.eff, fis: best.fis, mg: best.mg, tm: best.tm, hl: +x.level || +(dm.hl || 0) };
   };
-  // Calibra ritmo -> kills/h com as hunts que VOCE ja mediu: razao real/ritmo de cada uma, pela
-  // mediana (outlier nao manda). Ancoras: huntStats (kph novo) e o log de hunts (kills/duracao).
-  const kphLog = (pi) => {
-    const m = {};
-    huntLog.forEach(h => {
-      const k = hkey(h.hunt), secs = Math.max(1, (h.end - h.start) / 1000);
-      if (!k || !(h.kills > 0) || secs < 300 || (pi != null && h.p !== pi)) return;
-      (m[k] = m[k] || []).push(h.kills / secs * 3600);
-    });
-    const out = {};
-    for (const k in m) { const v = m[k].sort((a, b) => a - b); out[k] = v[Math.floor(v.length / 2)]; }
-    return out;
-  };
-  const calibraK = (lista, kLog) => {
+  // Calibra ritmo -> kills/h somente com medições do Pokémon e nível selecionados.
+  // O huntLog antigo não guarda o líder e por isso não pode servir de âncora aqui.
+  const calibraK = (lista) => {
     const rs = [];
     lista.forEach(x => {
       if (!x.sug || x.trava || !(x.sug.ritmo > 0)) return;
-      const kh = (x.md && +x.md.kph > 0) ? +x.md.kph : (kLog[hkey(x.sl || x.name)] || 0);
+      const kh = (x.md && +x.md.kph > 0) ? +x.md.kph : 0;
       if (kh > 0 && x.sug.ritmo >= 0.5) rs.push(kh / x.sug.ritmo); // so ancora em medicao do mesmo regime
     });
     rs.sort((a, b) => a - b);
@@ -3119,28 +3111,27 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const saveCardsCfg = () => { try { lsSet('cardsCfg', JSON.stringify(cardsCfg)); } catch {} };
   // Últimas capturas tem rolagem própria: uma altura manual antiga só criava um cartão gigante vazio.
   if (Object.prototype.hasOwnProperty.call(cardsCfg.h, 'catches')) { delete cardsCfg.h.catches; saveCardsCfg(); }
-  // base medida por conta e hunt: media (EWMA) do que CADA conta realmente fez ali (gold/h, xp/h, capturas/h).
-  // amostra a taxa acumulada da sessao (ja e uma media) quando a hunt rodou tempo suficiente pra estabilizar.
-  // estrutura: huntStats[cid da conta][hunt normalizada] = { gph, xph, cph, n, t }
+  // Base medida por conta, Pokémon exato, nível e hunt. O formato antigo (huntStats2) não tinha
+  // Pokémon/nível e não é migrado: reutilizá-lo faria o novo líder receber a recomendação do anterior.
+  // Ao trocar líder, nível ou hunt, cria uma linha de base e mede só os cinco minutos seguintes.
   const hkey = s => String(s || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
-  let huntStats = {}; try { huntStats = lsObj('huntStats2'); } catch {}
-  function amostraHunt(acc, nome, a) {
-    const ak = String(acc || ''), k = hkey(nome);
-    if (!ak || !k || !a || (a.seconds || 0) < 300) return; // 5 min pra a taxa acumulada assentar
-    const M = huntStats[ak] || (huntStats[ak] = {});
-    const cph = a.captures / a.seconds * 3600, al = 0.25, c = M[k];
-    M[k] = c
-      ? { gph: Math.round(c.gph * (1 - al) + a.gph * al), xph: Math.round(c.xph * (1 - al) + a.xph * al), cph: c.cph * (1 - al) + cph * al, kph: Math.round((c.kph || 0) * (1 - al) + (a.kph || 0) * al), hpk: +a.hpk > 0 ? Math.round(((c.hpk || +a.hpk) * (1 - al) + (+a.hpk) * al) * 10) / 10 : (c.hpk || 0), n: (c.n || 0) + 1, t: Date.now() }
-      : { gph: Math.round(a.gph), xph: Math.round(a.xph), cph, kph: Math.round(a.kph || 0), hpk: +a.hpk > 0 ? +a.hpk : 0, n: 1, t: Date.now() };
+  const huntMeasurements = window.PokeMuxHuntMeasurements;
+  const huntMeasureCtx = [];
+  let huntStats = {}; try { huntStats = lsObj('huntStats3'); } catch {}
+  const statsDoPoke = (cid, poke) => huntMeasurements.statsFor(huntStats, cid, poke);
+  const statsParaRecomendacao = (cid, poke) => huntMeasurements.recommendationStatsFor(huntStats, cid, poke);
+  function amostraHunt(pi, acc, nome, poke, a) {
+    const sample = huntMeasurements.isolateSample(huntMeasureCtx, pi, acc, nome, poke, a, Date.now(), 300);
+    return sample ? huntMeasurements.recordMeasurement(huntStats, sample) : false;
   }
   // amostrador de fundo: roda mesmo com painel/cartas fechados, pra base acumular durante o farm
   setInterval(async () => {
     let mudou = false;
     for (let i = 0; i < count; i++) {
       if (off[i] || !webviews[i]) continue;
-      try { const d = await webviews[i].executeJavaScript(READ_STATE); if (d && d.ok && d.cid && d.hunt && d.a) { amostraHunt(d.cid, d.hunt, d.a); mudou = true; } } catch {}
+      try { const d = await webviews[i].executeJavaScript(READ_STATE); if (d && d.ok && d.cid && d.hunt && d.a) { const lead = (d.team || []).find(p => p.ld) || (d.team || [])[0] || null; if (amostraHunt(i, d.cid, d.hunt, lead, d.a)) mudou = true; } } catch {}
     }
-    if (mudou) { try { lsSet('huntStats2', JSON.stringify(huntStats)); } catch {} }
+    if (mudou) { try { lsSet('huntStats3', JSON.stringify(huntStats)); } catch {} }
   }, 30000);
   // junta os marcadores do mapa com o catalogo de criaturas (tudo dado que o jogo ja entrega ao cliente)
   const HUNTS_JS = `(async()=>{try{const [mk,cr]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null)]);const limpa=s=>String(s||'').toLowerCase().replace(/\\[.*?\\]/g,'').replace(/\\(.*?\\)/g,'').replace(/[_-]+/g,' ').replace(/\\s+/g,' ').trim();const chave=s=>limpa(s).replace(/female/g,'fe').replace(/male/g,'ma').replace(/[^a-z0-9]/g,'');const cs={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.name&&!(cs[chave(c.name)]&&!c.area&&+c.pokeId>=10000))cs[chave(c.name)]={nm0:c.name.toLowerCase().trim(),t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||c.priceNpc||0,xp:c.experience||c.xp||0,lvl:c.huntLevel||0,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string'),ar:String(c.area||'')||((+c.pokeId>=10000&&+c.pokeId<11000)?'outland':''),xm:+c.orreXpMul||0,tr:+c.orreTier||0};});const acha=nm=>{const k=chave(nm);if(cs[k])return cs[k];const pt=limpa(nm).split(/ e | and /);if(pt.length>1){const k2=chave(pt[0]);if(cs[k2])return cs[k2];}const w=limpa(nm).split(' ');for(let i=0;i<w.length;i++){const suf=chave(w.slice(i).join(' '));if(suf&&cs[suf])return cs[suf];}for(let i=0;i<w.length;i++){const kk=chave(w[i]);if(kk&&cs[kk])return cs[kk];}return null;};const ml={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null)ml[c.pokeId]=+c.huntLevel||0;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{const e=c?(+c.evolvesToId||0):0;if(!e||ml[e]==null)return;const v=Math.max(ml[c.pokeId]||0,+c.evolveLevel||0);if(v<ml[e])ml[e]=v;});const byId={},bs={},mv={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null&&c.name){byId[c.pokeId]=c.name;const pMv=mv[String(c.name).toLowerCase()];if(bs[String(c.name).toLowerCase()]&&!c.area&&+c.pokeId>=10000)return;bs[String(c.name).toLowerCase()]=[+c.baseHp||0,+c.baseAtk||0,+c.baseDef||0,+c.baseSpAtk||0,+c.baseSpDef||0,+c.baseSpeed||0];mv[String(c.name).toLowerCase()]={hl:+c.huntLevel||0,ml:(ml[c.pokeId]!=null?ml[c.pokeId]:(+c.huntLevel||0)),id:(pMv&&pMv.id&&pMv.id<(+c.pokeId||0))?pMv.id:(+c.pokeId||0),t:[String(c.type1||'').toUpperCase(),String(c.type2||'').toUpperCase()],a:(c.attacks||[]).slice(0,24).map(g=>[String((g&&g.name)||'').slice(0,24),+(g&&g.power)||0,String((g&&g.type)||'').toUpperCase(),String((g&&g.category)||'').toUpperCase()==='PHYSICAL'?'P':'S',+(g&&g.cooldownMs)||0,+(g&&g.learnLevel)||0,String((g&&g.tm)||'').toUpperCase().slice(0,12)])};}});const nat={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&+c.pokeId>=1&&+c.pokeId<1026)nat[chave(c.name)]=+c.pokeId;});const EXTRA={darumaka:554,darmanitan:555,pyroar:668};const dex={};((cr&&cr.creatures)||[]).forEach(c=>{if(!c||!((+c.pokeId>=10000&&+c.pokeId<11000)||(+c.pokeId>=50000&&+c.pokeId<51000)))return;const k=limpa(c.name);let d=nat[chave(k)];const w=k.split(' ');for(let i=0;i<w.length&&!d;i++)d=nat[chave(w.slice(i).join(' '))];for(let i=0;i<w.length&&!d;i++)d=nat[chave(w[i])]||EXTRA[chave(w[i])];if(d)dex[+c.pokeId]=d;});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const mlN={};ms.forEach(m2=>{const c=acha(m2.hunt||m2.name||m2.slug||m2.title||'');const lv=+(m2.level||m2.lvl||m2.minLevel)||0;if(c&&lv>0&&(mlN[c.nm0]==null||lv<mlN[c.nm0]))mlN[c.nm0]=lv;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{if(!c)return;const e=+c.evolvesToId||0;if(!e)return;const de=String(c.name||'').toLowerCase(),pa=String(byId[e]||'').toLowerCase();if(!pa||mlN[de]==null)return;const v=Math.max(mlN[de],+c.evolveLevel||0);if(mlN[pa]==null||v<mlN[pa])mlN[pa]=v;});for(const k in mv){if(mlN[k]!=null)mv[k].ml=mlN[k];}const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const c=acha(nm);out.push({sl:String(m2.slug||''),name:String(nm).replace(/[_-]+/g,' ').trim(),level:m2.level||m2.lvl||m2.minLevel||(c?c.lvl:0)||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?Math.round((+c.xp||0)*((c.ar==='orre'&&c.xm>0)?c.xm:1)):0,loot:c?c.loot:[],sp:c?c.nm0:'',ar:c?c.ar:'',tr:c?c.tr:0});});return {h:out,byId:byId,bs:bs,mv:mv,dex:dex};}catch(e){return null}})()`;
@@ -3429,15 +3420,16 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   };
   // Aviso de lugar melhor: outra hunt SUA (medida, 2+ amostras) rendendo 15%+ acima da atual.
   const melhorTxt = (r) => {
-    const M2 = huntStats[r.cid]; if (!M2 || !r.hunt || !(r.secs > 600)) return ''; // sessao curta: gold/h ainda oscila
+    const M2 = statsParaRecomendacao(r.cid, r.lead); if (!Object.keys(M2).length || !r.hunt) return ''; // mesmo Pokémon; nível exato ou o mais próximo
     const atual = hkey(r.hunt);
+    const corrente = M2[atual];
+    if (!corrente || !(+corrente.xph > 0)) return ''; // ainda não há cinco minutos limpos com este Pokémon nesta hunt
     let best = null;
     // entrada nula/torta vinda do disco nao pode derrubar o refreshCards (travava o Simples pra sempre)
-    for (const k2 in M2) { const e2 = M2[k2]; if (!e2 || typeof e2 !== 'object' || k2 === atual || !((+e2.n || 0) >= 2)) continue; if (!best || +e2.gph > best.gph) best = { k: k2, gph: +e2.gph || 0 }; }
-    // no prejuizo, qualquer alternativa medida no lucro ja vale o aviso; no lucro, so 15%+ acima
-    const alvo = r.gph > 0 ? r.gph * 1.15 : 0;
-    if (!best || !(best.gph > alvo)) return '';
-    return ' <span title="' + esc(cap(best.k)) + ': ' + ncs(best.gph) + '/h ' + t('cdBetterTip') + '" style="color:#f2c665;cursor:help">\u2197</span>';
+    for (const k2 in M2) { const e2 = M2[k2]; if (!e2 || typeof e2 !== 'object' || k2 === atual || !((+e2.n || 0) >= 2)) continue; if (!best || +e2.xph > best.xph) best = { k: k2, xph: +e2.xph || 0 }; }
+    const alvo = +corrente.xph * 1.15;
+    if (!best || !(best.xph > alvo)) return '';
+    return ' <span title="' + esc(cap(best.k)) + ': ' + nc(best.xph) + ' xp/h ' + t('cdBetterTip') + '" style="color:#f2c665;cursor:help">\u2197</span>';
   };
   async function refreshCards(force) {
     if (!cardsOn || (cdBusy && Date.now() - cdBusy < 8000)) return; // nao destroi o DOM durante o gesto, mas destrava sozinho se o mouseup se perder
@@ -3561,15 +3553,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       const optConta = [-1].concat([...Array(count).keys()]).map(v => v < 0
         ? '<option value="-1"' + (f.p === -1 ? ' selected' : '') + '>' + t('cdFAll') + '</option>'
         : '<option value="' + v + '"' + (f.p === v ? ' selected' : '') + '>' + esc(tabNames[v] || stName(v)) + '</option>').join('');
-      const corte = f.per > 0 ? Date.now() - f.per * 3600e3 : 0;
-      const catches = lifeCatch.filter(x =>
-        (f.p < 0 || x.p === f.p) &&
-        (!f.n || String(x.n || '').toLowerCase().includes(f.n)) &&
-        (!f.sh || x.sh) &&
-        (!f.r || rarityKey(numLivre(x.q)) === f.r) &&
-        numLivre(x.iv) >= f.iv &&
-        numLivre(x.q) >= f.q &&
-        (+x.t || 0) >= corte).reverse();
+      const catches = captureFilters.filterCaptures(lifeCatch, f);
       return '<div class="cd-sec"><div class="cd-h">' + t('cdCatches') + '</div>'
         + '<div class="cd-cfg-row" style="flex-wrap:wrap;gap:4px;margin-bottom:6px">'
         + '<select id="cdFcP" class="cd-inp">' + optConta + '</select>'
@@ -3653,7 +3637,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         if (rSel && pSel) {
           // Ditto transformado vem com o nome da forma; a flag do jogo (dt) e quem manda
           const spSel = pSel.dt ? (pSel.shiny ? 'shiny ditto' : 'ditto') : String(pSel.name || '').toLowerCase();
-          atacante = { sp: spSel, level: +pSel.level || 1, q: +pSel.q || 0, ivt: +pSel.ivt || 0, tlv: +rSel.tlv || 0, cid: rSel.cid, pi: rSel.i,
+          atacante = { sp: spSel, level: +pSel.level || 1, q: +pSel.q || 0, ivt: +pSel.ivt || 0, tlv: +rSel.tlv || 0, cid: rSel.cid, pi: rSel.i, poke: pSel,
             tms: pSel.dt ? null : (Array.isArray(pSel.tms) ? pSel.tms.filter(x => typeof x === 'string').map(x => x.toUpperCase().slice(0, 12)).slice(0, 24) : null) }; // Ditto nao aprende TM
           pkVal = rSel.i + ':' + (rSel.team || []).indexOf(pSel);
         }
@@ -3665,7 +3649,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + (huntSort === 'sug' ? (() => { const ops = []; on.forEach(r => (r.team || []).forEach((p, ix) => { const v = r.i + ':' + ix; const rot = p.dt && !/ditto/i.test(String(p.name || '')) ? (p.shiny ? 'Shiny Ditto \u2192 ' : 'Ditto \u2192 ') + p.name : p.name; ops.push('<option value="' + v + '"' + (pkVal === v ? ' selected' : '') + '>' + esc(r.name) + ' \u00b7 ' + esc(rot) + ' Lv' + nf(p.level) + '</option>'); })); return ops.length ? '<select id="cdHuntPk" title="' + t('cdWith') + '">' + ops.join('') + '</select>' : ''; })() : '') + '</div>';
       if (!huntsCache) return s + '<div class="cd-empty">' + t('cdLoading') + '</div></div>';
       const lead2 = leadRow ? leadRow.lead : null;
-      const accStats = (leadRow && huntStats[leadRow.cid]) || {};
+      const accStats = leadRow ? statsDoPoke(leadRow.cid, leadRow.lead) : {};
       const minhas = new Set(on.map(r => hkey(r.hunt)).filter(Boolean)); // hunts em que as contas estão agora
       let lista = huntsCache.map(x2 => Object.assign({}, x2, { ef: effVs(lead2, x2), fav: !!huntFavs[x2.name], hidden: !!huntHidden[x2.name], md: accStats[hkey(x2.sl || x2.name)] || null }));
       if (huntScope === 'minhas') lista = lista.filter(x => x.md || x.fav || minhas.has(hkey(x.sl || x.name))); // só as que você farma/favoritou
@@ -3676,9 +3660,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
           if (x.sug && atacante.tlv > 0 && x.sug.hl > atacante.tlv) x.trava = x.sug.hl; // conta ainda nao alcanca essa hunt
           if (x.sug && !x.trava && x.sug.ritmo >= 0.15) maxSug = Math.max(maxSug, x.sug.xph || x.sug.ritmo); // piso: hunt inviavel (ritmo<0.15) nao escala a barra
         });
-        // a ancora vem da conta do ATACANTE: medicao do lider forte de uma conta inflava a estimativa do pokemon de outra
-        const stA = (atacante && atacante.cid) ? (huntStats[atacante.cid] || {}) : null;
-        const K = calibraK(stA ? lista.map(x => Object.assign({}, x, { md: stA[hkey(x.sl || x.name)] || null })) : lista, kphLog(atacante && atacante.pi != null ? atacante.pi : null));
+        // A âncora vem somente deste Pokémon e deste nível; logs antigos da conta não entram.
+        const stA = (atacante && atacante.cid) ? statsDoPoke(atacante.cid, atacante.poke) : null;
+        const K = calibraK(stA ? lista.map(x => Object.assign({}, x, { md: stA[hkey(x.sl || x.name)] || null })) : lista);
         if (K) lista.forEach(x => { if (x.sug && !x.trava && x.sug.ritmo >= 0.15) x.est = { kh: K * x.sug.ritmo, xph: K * x.sug.ritmo * (+x.xp || 0) }; });
       }
       if (huntSort === 'sug' && atacante && atacante.sp.indexOf('ditto') >= 0) {

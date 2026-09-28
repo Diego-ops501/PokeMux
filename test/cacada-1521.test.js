@@ -186,17 +186,11 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
   ok(b.includes("data-item=\"' + esc(it.id) + '\"'") && !b.includes("data-item=\"' + (+it.id || 0)"), '"esconder itens especificos" leva o id de verdade (b4, i59195), nao 0');
   ok(!b.includes('const lvH = nivel > 0 ? nivel :') && b.includes("if (nivel > 0 && (+x.level || 0) > nivel) return;"), 'tierlist: o nivel escolhido filtra as hunts, e o atacante e avaliado no nivel de cada hunt (antes 98% viravam S)');
   ok(b.includes('const hlAlvo = +alvoX.level || +((movesByName[alvoX.sp] || {}).hl || 0);'), 'Ditto: aviso de nivel usa o nivel do mapa');
-  {
-    const hkey = new Function(entre(b, '  const hkey = ', '\n', false) + '\nreturn hkey;')();
-    const src = entre(b, '  const kphLog = (pi) => {', '  const calibraK = ', false);
-    const huntLog = [{ p: 0, hunt: 'Gyarados', kills: 700, start: 0, end: 3600e3 }, { p: 1, hunt: 'Gyarados', kills: 100, start: 0, end: 3600e3 }];
-    const kphLog = new Function('huntLog', 'hkey', src + '\nreturn kphLog;')(huntLog, hkey);
-    ok(Math.round(kphLog(0).gyarados) === 700, 'calibragem: so as hunts do painel do atacante (' + Math.round(kphLog(0).gyarados) + ' kills/h)');
-    ok(Math.round(kphLog(1).gyarados) === 100, 'a outra conta tem a medicao dela (' + Math.round(kphLog(1).gyarados) + ')');
-    ok(kphLog(null).gyarados > 0, 'sem atacante definido: usa todas, como antes');
-    ok(b.includes('cid: rSel.cid, pi: rSel.i,') && b.includes('stA[hkey(x.sl || x.name)]'), 'e as medicoes por hunt vem da conta do atacante');
-    ok(b.includes("out.push({sl:String(m2.slug||''),") && b.includes('accStats[hkey(x2.sl || x2.name)]') && b.includes('kLog[hkey(x.sl || x.name)]'), 'medicao casa pelo slug do marcador (nome com pontuacao nao casava)');
-  }
+  ok(b.includes("lsObj('huntStats3')") && !b.includes("huntStats = lsObj('huntStats2')"), 'histórico antigo por conta não alimenta recomendações novas');
+  ok(b.includes('statsParaRecomendacao(r.cid, r.lead)') && b.includes('statsDoPoke(leadRow.cid, leadRow.lead)'), 'aviso usa o mesmo Pokémon em nível atual/próximo e ranking medido usa o nível exato');
+  ok(b.includes('cid: rSel.cid, pi: rSel.i, poke: pSel,') && b.includes('statsDoPoke(atacante.cid, atacante.poke)'), 'estimativa usa o Pokémon selecionado, não o histórico geral da conta');
+  ok(b.includes("out.push({sl:String(m2.slug||''),") && b.includes('accStats[hkey(x2.sl || x2.name)]'), 'medição continua casando pelo slug do marcador');
+  ok(!b.includes('const kphLog = (pi) =>'), 'log antigo sem Pokémon não entra mais na calibração');
   ok(b.includes("';window.__pgSellTxt=' + JSON.stringify([t('sgAviso'), t('sgConfirma')])).catch(() => {});"), 'venda protegida: texto traduzido tambem ao recarregar o painel');
   {
     const BAGCATS = new Function(entre(b, '  const BAGCATS = [', ';', true) + '\nreturn BAGCATS;')();
