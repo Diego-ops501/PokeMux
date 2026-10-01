@@ -508,7 +508,7 @@
         <button id="awake" title="Impede o PC de dormir enquanto farma (a tela ainda pode desligar)">💤 Dormir</button>
         <button id="minTray" title="O que o botão minimizar faz: esconder na bandeja ou minimizar normal na barra de tarefas">📥 Minimiza p/ bandeja</button>
         <button id="autoStart" style="display:none" title="Cria um atalho na pasta Inicializar do Windows pra abrir o PokeMux junto com o sistema">🚀 Abrir com o Windows</button>
-        <button id="sndShiny" title="Toca um som quando um shiny aparece (além da notificação)">✨🔊 Som do shiny</button>
+        <button id="sndShiny" title="Toca um acorde quando um shiny aparece e quando é capturado">✨🔊 Som do shiny</button>
         <button id="voiceAlerts" title="Fala alertas importantes usando uma voz instalada no Windows">🗣️ Voz dos alertas</button>
         <button id="shotShiny" title="Salva localmente um print quando aparece um shiny">📷 Print de shiny: off</button>
         <button id="voltaHunt">↩ Voltar pra hunt</button>
@@ -684,11 +684,11 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       cdTime:'Tempo', cdPoke:'Pokémon', cdTeams:'Times & IV', cdSortSug:'Sugerido ↓', cdWith:'caçar com', cdLvNeed:'precisa Lv', cdEstTip:'estimado pelas medições deste Pokémon neste nível', cdRunTip:'no ritmo desta sess\u00e3o, quanto o estoque ainda dura', cdBetterTip:'com este Pokémon no nível atual ou próximo (rende mais XP que a hunt atual)', cdDittoH:'Ditto: melhor transforma\u00e7\u00e3o e onde ca\u00e7ar, por tipo', cdDitAll:'quadro por tipo (todas as hunts)', cdInv:'Inventário global', cdProjLv:'projetar no nível', cdFAll:'todas', cdFRarity:'Raridade', ivcMoveLv:'Nv', ivcMoveLocked:'Só aprende no nível',
       cdMove:'Arraste para mover a seção', cdResize:'Arraste para ajustar a largura', cdResizeV:'Arraste para ajustar a altura (clique duplo: automática)',
       minTrayOn:'📥 Minimiza p/ bandeja', minTrayOff:'📥 Minimiza normal', minTrayTitle:'O que o botão minimizar faz: esconder na bandeja (ícone perto do relógio) ou minimizar normal na barra de tarefas',
-      voltaOn:'↩ Voltar pra hunt: ligado', voltaOff:'↩ Voltar pra hunt: desligado', voltaTitle:'Experimental. Quando o app recarrega um painel que estava farmando, o jogo larga a conta na cidade. Ligado, o app manda a conta de volta pra mesma hunt (repete a cada 12 s, até 3 vezes, até o primeiro kill). Só age se houve kill nos últimos 10 minutos. A tela do jogo pode seguir mostrando a cidade enquanto a conta farma.', sndOn:'✨🔊 Som do shiny', sndOff:'✨🔇 Som do shiny', sndTitle:'Toca um som quando um shiny aparece (além da notificação)', voiceOn:'🗣️ Voz dos alertas: ligada', voiceOff:'🔇 Voz dos alertas: desligada', voiceTitle:'Usa uma voz local do Windows para shiny, drops raros, captura lendária e suprimentos baixos',
+      voltaOn:'↩ Voltar pra hunt: ligado', voltaOff:'↩ Voltar pra hunt: desligado', voltaTitle:'Experimental. Quando o app recarrega um painel que estava farmando, o jogo larga a conta na cidade. Ligado, o app manda a conta de volta pra mesma hunt (repete a cada 12 s, até 3 vezes, até o primeiro kill). Só age se houve kill nos últimos 10 minutos. A tela do jogo pode seguir mostrando a cidade enquanto a conta farma.', sndOn:'✨🔊 Som do shiny', sndOff:'✨🔇 Som do shiny', sndTitle:'Toca um acorde quando um shiny aparece e quando é capturado', voiceOn:'🗣️ Voz dos alertas: ligada', voiceOff:'🔇 Voz dos alertas: desligada', voiceTitle:'Usa uma voz local do Windows para shiny capturado, capturas com IV 160+ ou raridade Lendária, drops raros e suprimentos baixos',
       msgStalled:'parece ter parado de farmar (10 min sem kills)',
       cdToday:'Hoje', cdWeek:'7 dias', cdAllTime:'Total', goalG:'Meta gold/dia', goalC:'Meta capturas/dia', csvTitle:'Baixa o resumo por dia em CSV (planilha)', csvDia:'Dia', csvHunts:'Hunts', csvHuntsTitle:'Baixa duas planilhas: uma linha por hunt (tempo, kills/h, XP/h, capturas, gold) e uma linha por item dropado, com drop por kill pra calcular a porcentagem. O registro é automático: cada vez que você troca de hunt, a anterior entra no log.', cdLifeHint:'contadores: sessão · lista: histórico',
       cdTargets:'Alvos', cdCritIvQ:'IV × qual.', cdCritIv:'IV', cdCritQ:'Qualidade', cdBestCritTitle:'Critério do melhor catch. A qualidade multiplica os stats e o poder, então IV × qualidade reflete melhor a força real.', cdTargetsHint:'Sem alvos ainda: no modo Total, passe o mouse num card e clique na ★ para marcar', cdTargetsMark:'Marcar/desmarcar como alvo',
-      whTitle:'Webhook do Discord: cole a URL do seu servidor pra receber avisos', whTest:'Testar', whTestOk:'✅ Chegou!', whTestErr:'❌ Falhou', sgAviso:'PokeMux: voce esta vendendo coisas valiosas:', sgConfirma:'Confirmar a venda?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas no Windows (por tipo)', alLocalHint:'O botão \u{1F514} no topo liga/desliga tudo. Aqui você escolhe quais tipos avisam na sua máquina (o Discord tem as opções próprias abaixo).', alLocal_shiny:'\u2728 Shiny', alLocal_rare:'\u{1F48E} Strange Pheromones / Boss Token', alLocal_down:'\u{1F534} Conta caiu', alLocal_stalled:'\u{1F7E0} Parou de farmar', alLocal_balls:'\u{1F535} Suprimento baixo (pokébola, potion, revive)', alLocal_faint:'\u{1F480} Pokémon derrubado', whProb:'Avisar problema (conta caiu, parou de farmar, sem bola)', whSum:'Resumo diário', whDay:'📊 Resumo de', whCaught:'CAPTURADO ✅', whLost:'perdido ✕', whTestMsg:'✅ PokeMux conectado! Os avisos vão chegar aqui.',
+      whTitle:'Webhook do Discord: cole a URL do seu servidor pra receber avisos', whTest:'Testar', whTestOk:'✅ Chegou!', whTestErr:'❌ Falhou', sgAviso:'PokeMux: voce esta vendendo coisas valiosas:', sgConfirma:'Confirmar a venda?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas no Windows (por tipo)', alLocalHint:'O botão \u{1F514} no topo liga/desliga tudo. Aqui você escolhe quais tipos avisam na sua máquina (o Discord tem as opções próprias abaixo).', alLocal_shiny:'\u2728 Shiny capturado', alLocal_capture:'Capturas com IV 160+ / Lendária', alLocal_rare:'\u{1F48E} Strange Pheromones / Boss Token', alLocal_down:'\u{1F534} Conta caiu', alLocal_stalled:'\u{1F7E0} Parou de farmar', alLocal_balls:'\u{1F535} Suprimento baixo (pokébola, potion, revive)', alLocal_faint:'\u{1F480} Pokémon derrubado', whProb:'Avisar problema (conta caiu, parou de farmar, sem bola)', whSum:'Resumo diário', whDay:'📊 Resumo de', whCaught:'CAPTURADO ✅', whLost:'perdido ✕', whTestMsg:'✅ PokeMux conectado! Os avisos vão chegar aqui.',
       bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Salva um arquivo com todas as configurações e o histórico (senhas ficam fora)', bkImpTitle:'Restaura configurações e histórico de um arquivo exportado', bkConfirm:'Substituir as configurações e o histórico (hunts, shinies, gráficos) pelos do arquivo? Uma cópia do estado atual é salva antes. O app vai recarregar. (Senhas não são afetadas.)', bkBad:'Arquivo inválido.', bkNoCopy:'Não foi possível salvar a cópia do estado atual (pasta de backups inacessível, disco cheio ou histórico acima de 2 MB). Importar mesmo assim? O histórico atual será perdido.'
     },
     en: {
@@ -728,11 +728,11 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       cdTime:'Time', cdPoke:'Pokémon', cdTeams:'Teams & IV', cdSortSug:'Suggested ↓', cdWith:'hunt with', cdLvNeed:'needs Lv', cdEstTip:'estimated from measurements of this Pokémon at this level', cdRunTip:'at this session pace, how long stock lasts', cdBetterTip:'with this Pokémon at the current or a nearby level (more XP than the current hunt)', cdDittoH:'Ditto: best transformation and where to hunt, per type', cdDitAll:'board by type (all hunts)', cdInv:'Global inventory', cdProjLv:'project at level', cdFAll:'all', cdFRarity:'Rarity', ivcMoveLv:'Lv', ivcMoveLocked:'Only learned at level',
       cdMove:'Drag to move the section', cdResize:'Drag to adjust the width', cdResizeV:'Drag to adjust the height (double-click: automatic)',
       minTrayOn:'📥 Minimize to tray', minTrayOff:'📥 Minimize normally', minTrayTitle:'What the minimize button does: hide to the tray (icon near the clock) or minimize normally to the taskbar',
-      voltaOn:'↩ Back to hunt: on', voltaOff:'↩ Back to hunt: off', voltaTitle:'Experimental. When the app reloads a panel that was farming, the game drops the account in the city. When on, the app sends it back to the same hunt (retrying every 12 s, up to 3 times, until the first kill). Only acts if there was a kill in the last 10 minutes. The game screen may keep showing the city while the account farms.', sndOn:'✨🔊 Shiny sound', sndOff:'✨🔇 Shiny sound', sndTitle:'Plays a sound when a shiny appears (besides the notification)', voiceOn:'🗣️ Alert voice: on', voiceOff:'🔇 Alert voice: off', voiceTitle:'Uses a local Windows voice for shiny, rare drops, legendary catches and low supplies',
+      voltaOn:'↩ Back to hunt: on', voltaOff:'↩ Back to hunt: off', voltaTitle:'Experimental. When the app reloads a panel that was farming, the game drops the account in the city. When on, the app sends it back to the same hunt (retrying every 12 s, up to 3 times, until the first kill). Only acts if there was a kill in the last 10 minutes. The game screen may keep showing the city while the account farms.', sndOn:'✨🔊 Shiny sound', sndOff:'✨🔇 Shiny sound', sndTitle:'Plays a chord when a shiny appears and when it is caught', voiceOn:'🗣️ Alert voice: on', voiceOff:'🔇 Alert voice: off', voiceTitle:'Uses a local Windows voice for caught shinies, IV 160+ or Legendary catches, rare drops and low supplies',
       msgStalled:'seems to have stopped farming (10 min without kills)',
       cdToday:'Today', cdWeek:'7 days', cdAllTime:'All time', goalG:'Gold goal/day', goalC:'Catch goal/day', csvTitle:'Downloads the daily summary as a CSV (spreadsheet)', csvDia:'Day', csvHunts:'Hunts', csvHuntsTitle:'Downloads two spreadsheets: one row per hunt (time, kills/h, XP/h, captures, gold) and one row per dropped item, with drop per kill so you can work out the percentage. Logging is automatic: every time you switch hunts, the previous one is recorded.', cdLifeHint:'counters: session · list: all-time',
       cdTargets:'Targets', cdCritIvQ:'IV × qual.', cdCritIv:'IV', cdCritQ:'Quality', cdBestCritTitle:'Best-catch criterion. Quality multiplies stats and power, so IV × quality reflects real strength better.', cdTargetsHint:'No targets yet: in Total mode, hover a card and click the ★ to mark it', cdTargetsMark:'Mark/unmark as target',
-      whTitle:'Discord webhook: paste your server URL to receive alerts', whTest:'Test', whTestOk:'✅ Delivered!', whTestErr:'❌ Failed', sgAviso:'PokeMux: you are selling valuable things:', sgConfirma:'Confirm the sale?', whShiny:'Shiny alerts', alLocalTitle:'\u{1F514} Windows alerts (by type)', alLocalHint:'The \u{1F514} button at the top turns everything on/off. Here you pick which types notify on this machine (Discord has its own options below).', alLocal_shiny:'\u2728 Shiny', alLocal_rare:'\u{1F48E} Strange Pheromones / Boss Token', alLocal_down:'\u{1F534} Account dropped', alLocal_stalled:'\u{1F7E0} Stopped farming', alLocal_balls:'\u{1F535} Low supplies (balls, potions, revives)', alLocal_faint:'\u{1F480} Pokémon fainted', whProb:'Problem alerts (dropped, stopped farming, out of balls)', whSum:'Daily summary', whDay:'📊 Summary of', whCaught:'CAUGHT ✅', whLost:'lost ✕', whTestMsg:'✅ PokeMux connected! Alerts will arrive here.',
+      whTitle:'Discord webhook: paste your server URL to receive alerts', whTest:'Test', whTestOk:'✅ Delivered!', whTestErr:'❌ Failed', sgAviso:'PokeMux: you are selling valuable things:', sgConfirma:'Confirm the sale?', whShiny:'Shiny alerts', alLocalTitle:'\u{1F514} Windows alerts (by type)', alLocalHint:'The \u{1F514} button at the top turns everything on/off. Here you pick which types notify on this machine (Discord has its own options below).', alLocal_shiny:'\u2728 Shiny caught', alLocal_capture:'IV 160+ / Legendary catches', alLocal_rare:'\u{1F48E} Strange Pheromones / Boss Token', alLocal_down:'\u{1F534} Account dropped', alLocal_stalled:'\u{1F7E0} Stopped farming', alLocal_balls:'\u{1F535} Low supplies (balls, potions, revives)', alLocal_faint:'\u{1F480} Pokémon fainted', whProb:'Problem alerts (dropped, stopped farming, out of balls)', whSum:'Daily summary', whDay:'📊 Summary of', whCaught:'CAUGHT ✅', whLost:'lost ✕', whTestMsg:'✅ PokeMux connected! Alerts will arrive here.',
       bkExp:'💾 Export config', bkImp:'📂 Import config', bkExpTitle:'Saves a file with all settings and history (passwords stay out)', bkImpTitle:'Restores settings and history from an exported file', bkConfirm:'Replace the current settings and history (hunts, shinies, charts) with the file? A copy of the current state is saved first. The app will reload. (Passwords are not affected.)', bkBad:'Invalid file.', bkNoCopy:'Could not save a copy of the current state (backup folder unavailable, disk full or history above 2 MB). Import anyway? The current history will be lost.'
     },
     es: {
@@ -771,11 +771,11 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       cdTime:'Tiempo', cdPoke:'Pokémon', cdTeams:'Equipos & IV', cdSortSug:'Sugerido ↓', cdWith:'cazar con', cdLvNeed:'necesita Lv', cdEstTip:'estimado con mediciones de este Pokémon en este nivel', cdRunTip:'al ritmo de esta sesi\u00f3n, cu\u00e1nto dura el stock', cdBetterTip:'con este Pokémon en el nivel actual o uno cercano (da más XP que la hunt actual)', cdDittoH:'Ditto: mejor transformaci\u00f3n y d\u00f3nde cazar, por tipo', cdDitAll:'cuadro por tipo (todas las hunts)', cdInv:'Inventario global', cdProjLv:'proyectar al nivel', cdFAll:'todas', cdFRarity:'Rareza', ivcMoveLv:'Nv', ivcMoveLocked:'Solo se aprende en el nivel',
       cdMove:'Arrastra para mover la sección', cdResize:'Arrastra para ajustar el ancho', cdResizeV:'Arrastra para ajustar la altura (doble clic: automática)',
       minTrayOn:'📥 Minimizar a la bandeja', minTrayOff:'📥 Minimizar normal', minTrayTitle:'Qué hace el botón minimizar: esconder en la bandeja (icono junto al reloj) o minimizar normal a la barra de tareas',
-      voltaOn:'↩ Volver a la hunt: activado', voltaOff:'↩ Volver a la hunt: desactivado', voltaTitle:'Experimental. Cuando la app recarga un panel que estaba farmeando, el juego deja la cuenta en la ciudad. Activado, la app la manda de vuelta a la misma hunt (repite cada 12 s, hasta 3 veces, hasta el primer kill). Solo actúa si hubo kill en los últimos 10 minutos. La pantalla del juego puede seguir mostrando la ciudad mientras la cuenta farmea.', sndOn:'✨🔊 Sonido de shiny', sndOff:'✨🔇 Sonido de shiny', sndTitle:'Reproduce un sonido cuando aparece un shiny (además de la notificación)', voiceOn:'🗣️ Voz de alertas: activada', voiceOff:'🔇 Voz de alertas: desactivada', voiceTitle:'Usa una voz local de Windows para shiny, drops raros, capturas legendarias y pocos suministros',
+      voltaOn:'↩ Volver a la hunt: activado', voltaOff:'↩ Volver a la hunt: desactivado', voltaTitle:'Experimental. Cuando la app recarga un panel que estaba farmeando, el juego deja la cuenta en la ciudad. Activado, la app la manda de vuelta a la misma hunt (repite cada 12 s, hasta 3 veces, hasta el primer kill). Solo actúa si hubo kill en los últimos 10 minutos. La pantalla del juego puede seguir mostrando la ciudad mientras la cuenta farmea.', sndOn:'✨🔊 Sonido de shiny', sndOff:'✨🔇 Sonido de shiny', sndTitle:'Reproduce un acorde cuando aparece un shiny y cuando es capturado', voiceOn:'🗣️ Voz de alertas: activada', voiceOff:'🔇 Voz de alertas: desactivada', voiceTitle:'Usa una voz local de Windows para shinies capturados, capturas con IV 160+ o rareza Legendaria, drops raros y pocos suministros',
       msgStalled:'parece haber dejado de farmear (10 min sin kills)',
       cdToday:'Hoy', cdWeek:'7 días', cdAllTime:'Total', goalG:'Meta oro/día', goalC:'Meta capturas/día', csvTitle:'Descarga el resumen por día en CSV (planilla)', csvDia:'Día', csvHunts:'Hunts', csvHuntsTitle:'Descarga dos planillas: una fila por hunt (tiempo, kills/h, XP/h, capturas, oro) y una fila por ítem dropeado, con drop por kill para calcular el porcentaje. El registro es automático: cada vez que cambias de hunt, la anterior queda guardada.', cdLifeHint:'contadores: sesión · lista: histórico',
       cdTargets:'Objetivos', cdCritIvQ:'IV × cal.', cdCritIv:'IV', cdCritQ:'Calidad', cdBestCritTitle:'Criterio del mejor catch. La calidad multiplica los stats y el poder, así que IV × calidad refleja mejor la fuerza real.', cdTargetsHint:'Sin objetivos aún: en modo Total, pasa el mouse por un card y haz clic en la ★ para marcarlo', cdTargetsMark:'Marcar/desmarcar como objetivo',
-      whTitle:'Webhook de Discord: pega la URL de tu servidor para recibir avisos', whTest:'Probar', whTestOk:'✅ ¡Llegó!', whTestErr:'❌ Falló', sgAviso:'PokeMux: estas vendiendo cosas valiosas:', sgConfirma:'¿Confirmar la venta?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas en Windows (por tipo)', alLocalHint:'El botón \u{1F514} de arriba enciende/apaga todo. Aquí eliges qué tipos avisan en tu máquina (Discord tiene sus propias opciones abajo).', alLocal_shiny:'\u2728 Shiny', alLocal_rare:'\u{1F48E} Strange Pheromones / Boss Token', alLocal_down:'\u{1F534} Cuenta caída', alLocal_stalled:'\u{1F7E0} Dejó de farmear', alLocal_balls:'\u{1F535} Suministro bajo (bolas, pociones, revivires)', alLocal_faint:'\u{1F480} Pokémon debilitado', whProb:'Avisar problema (cuenta caída, dejó de farmear, sin bolas)', whSum:'Resumen diario', whDay:'📊 Resumen de', whCaught:'CAPTURADO ✅', whLost:'perdido ✕', whTestMsg:'✅ ¡PokeMux conectado! Los avisos llegarán aquí.',
+      whTitle:'Webhook de Discord: pega la URL de tu servidor para recibir avisos', whTest:'Probar', whTestOk:'✅ ¡Llegó!', whTestErr:'❌ Falló', sgAviso:'PokeMux: estas vendiendo cosas valiosas:', sgConfirma:'¿Confirmar la venta?', whShiny:'Avisar shiny', alLocalTitle:'\u{1F514} Alertas en Windows (por tipo)', alLocalHint:'El botón \u{1F514} de arriba enciende/apaga todo. Aquí eliges qué tipos avisan en tu máquina (Discord tiene sus propias opciones abajo).', alLocal_shiny:'\u2728 Shiny capturado', alLocal_capture:'Capturas con IV 160+ / Legendaria', alLocal_rare:'\u{1F48E} Strange Pheromones / Boss Token', alLocal_down:'\u{1F534} Cuenta caída', alLocal_stalled:'\u{1F7E0} Dejó de farmear', alLocal_balls:'\u{1F535} Suministro bajo (bolas, pociones, revivires)', alLocal_faint:'\u{1F480} Pokémon debilitado', whProb:'Avisar problema (cuenta caída, dejó de farmear, sin bolas)', whSum:'Resumen diario', whDay:'📊 Resumen de', whCaught:'CAPTURADO ✅', whLost:'perdido ✕', whTestMsg:'✅ ¡PokeMux conectado! Los avisos llegarán aquí.',
       bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Guarda un archivo con todas las configuraciones y el historial (las contraseñas quedan fuera)', bkImpTitle:'Restaura configuraciones e historial desde un archivo exportado', bkConfirm:'¿Reemplazar las configuraciones y el historial (hunts, shinies, gráficos) por los del archivo? Antes se guarda una copia del estado actual. La app se recargará. (Las contraseñas no se ven afectadas.)', bkBad:'Archivo inválido.', bkNoCopy:'No se pudo guardar la copia del estado actual (carpeta de backups inaccesible, disco lleno o historial de más de 2 MB). ¿Importar igual? El historial actual se perderá.'
     }
   };
@@ -1561,9 +1561,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   const alertBtn = document.getElementById('alerts');
   let alertsOn = lsGet('alerts') !== '0'; // ligado por padrao
   // Alertas locais (Windows) por tipo (pedido do Abel: desligar SO o shiny, manter "parou de farmar").
-  let alLocal = { shiny: true, rare: true, down: true, stalled: true, balls: true, faint: true };
+  let alLocal = { shiny: true, capture: true, rare: true, down: true, stalled: true, balls: true, faint: true };
   try { alLocal = Object.assign(alLocal, lsObj('alLocal') || {}); } catch {}
-  ['shiny', 'rare', 'down', 'stalled', 'balls', 'faint'].forEach(k => alLocal[k] = alLocal[k] !== false);
+  ['shiny', 'capture', 'rare', 'down', 'stalled', 'balls', 'faint'].forEach(k => alLocal[k] = alLocal[k] !== false);
   const saveAl = () => { try { lsSet('alLocal', JSON.stringify(alLocal)); } catch {} };
   const alCat = (c) => (c === 'msgShiny' || c === 'msgShinyCap') ? 'shiny' : c === 'msgRareDrop' ? 'rare' : c === 'msgStalled' ? 'stalled' : (c === 'msgBalls' || c.slice(-3) === 'Low') ? 'balls' : c === 'msgFaint' ? 'faint' : 'down';
   function applyAlerts() {
@@ -1591,12 +1591,12 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   }
   sgBtn.onclick = () => { sellGuardOn = !sellGuardOn; applySellGuard(); };
   function alerta(i, chave, meta) {
-    if (!alertsOn) return;
+    if (!alertsOn || chave === 'msgShiny') return;
     const nome = (accounts[i] && accounts[i].name) || defName(i);
     const localOn = alLocal[alCat(chave)] !== false;
     const detalhe = chave === 'msgRareDrop' && meta && meta.name ? t(chave) + ': ' + vozLimpa(meta.name, 50) + ' ×' + Math.max(1, Math.floor(+meta.count || 1)) : t(chave);
-    if (localOn) { try { window.pokeAPI.notify('PokeMux', nome + ' ' + detalhe); } catch {} } // notify local so se o tipo estiver ligado
-    const vozTipo = { msgShiny: 'shinyAppear', msgShinyCap: 'shinySuccess', msgRareDrop: 'rareDrop', msgBallsLow: 'ballsLow', msgPotionsLow: 'healsLow', msgRevivesLow: 'revivesLow' }[chave];
+    if (localOn) { try { window.pokeAPI.notify('PokeMux', chave === 'msgShinyCap' ? fraseVoz('shinySuccess', i, meta || {}) : nome + ' ' + detalhe); } catch {} } // notify local so se o tipo estiver ligado
+    const vozTipo = { msgShinyCap: 'shinySuccess', msgRareDrop: 'rareDrop', msgBallsLow: 'ballsLow', msgPotionsLow: 'healsLow', msgRevivesLow: 'revivesLow' }[chave];
     if (vozTipo && localOn) falaAlerta(vozTipo, i, meta || {});
     // pedido do Arthur: o mesmo aviso vai pro Discord, pra chegar no celular quando uma conta
     // cai ou para de farmar e voce nao esta no PC (shiny e resumo tem as chaves proprias deles)
@@ -1634,21 +1634,30 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const conta = vozLimpa((accounts[i] && accounts[i].name) || defName(i), 35);
     const poke = vozLimpa(meta && meta.name, 40) || 'Pokémon';
     const qtd = Math.max(0, Math.floor(+(meta && meta.count) || 0));
+    const iv = captureFilters.parseLooseNumber(meta && meta.iv);
+    const quality = captureFilters.parseLooseNumber(meta && meta.quality);
+    const rarity = captureFilters.rarityKey(quality);
+    const names = { pt: ['Fraca', 'Comum', 'Incomum', 'Rara', 'Épica', 'Lendária', 'Mítica', 'Anciã', 'Divina'], en: ['Weak', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ancient', 'Divine'], es: ['Débil', 'Común', 'Poco común', 'Rara', 'Épica', 'Legendaria', 'Mítica', 'Ancestral', 'Divina'] };
+    const rarityName = names[lang] || names.pt;
+    const raridade = rarityName[['weak', 'common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'ancient', 'divine'].indexOf(rarity)];
+    if (tipo === 'capture' || tipo === 'legendary' || (tipo === 'shinySuccess' && (iv >= 160 || rarity === 'legendary'))) {
+      const shiny = tipo === 'shinySuccess' ? 'shiny ' : '';
+      if (lang === 'en') return `Account ${conta} caught ${shiny}${poke}, with IV ${iv} and ${raridade} rarity.`;
+      if (lang === 'es') return `La cuenta ${conta} capturó ${shiny}${poke}, con IV ${iv} y rareza ${raridade}.`;
+      return `A conta ${conta} capturou ${shiny}${poke}, com IV ${iv} e raridade ${raridade}.`;
+    }
     if (lang === 'en') return ({
-      shinyAppear: `A shiny ${poke} appeared on account ${conta}.`, shinySuccess: `Shiny ${poke} caught successfully on account ${conta}.`,
-      shinyFail: `The shiny ${poke} was not caught on account ${conta}.`, legendary: `Account ${conta} caught the legendary rarity Pokémon ${poke}.`, rareDrop: `Account ${conta} found ${poke}.`,
+      shinySuccess: `Shiny ${poke} caught successfully on account ${conta}.`, rareDrop: `Account ${conta} found ${poke}.`,
       ballsLow: `Poké Balls are running low on account ${conta}. ${qtd} remaining.`, healsLow: `Healing items are running low on account ${conta}. ${qtd} potions remaining.`,
       revivesLow: `Revives are running low on account ${conta}. ${qtd} remaining.`
     })[tipo] || '';
     if (lang === 'es') return ({
-      shinyAppear: `Apareció un ${poke} shiny en la cuenta ${conta}.`, shinySuccess: `El shiny ${poke} fue capturado con éxito en la cuenta ${conta}.`,
-      shinyFail: `El shiny ${poke} no fue capturado en la cuenta ${conta}.`, legendary: `La cuenta ${conta} capturó el Pokémon ${poke} de rareza legendaria.`, rareDrop: `La cuenta ${conta} encontró ${poke}.`,
+      shinySuccess: `El shiny ${poke} fue capturado con éxito en la cuenta ${conta}.`, rareDrop: `La cuenta ${conta} encontró ${poke}.`,
       ballsLow: `Las Poké Balls se están acabando en la cuenta ${conta}. Quedan ${qtd}.`, healsLow: `Las curas se están acabando en la cuenta ${conta}. Quedan ${qtd} pociones.`,
       revivesLow: `Los revivir se están acabando en la cuenta ${conta}. Quedan ${qtd}.`
     })[tipo] || '';
     return ({
-      shinyAppear: `Apareceu um ${poke} shiny na conta ${conta}.`, shinySuccess: `O shiny ${poke} foi capturado com sucesso na conta ${conta}.`,
-      shinyFail: `A captura do shiny ${poke} falhou na conta ${conta}.`, legendary: `A conta ${conta} capturou o Pokémon ${poke}, de raridade lendária.`, rareDrop: `A conta ${conta} encontrou ${poke}.`,
+      shinySuccess: `O shiny ${poke} foi capturado com sucesso na conta ${conta}.`, rareDrop: `A conta ${conta} encontrou ${poke}.`,
       ballsLow: `As Pokébolas estão acabando na conta ${conta}. Restam ${qtd}.`, healsLow: `As curas estão acabando na conta ${conta}. Restam ${qtd} poções.`,
       revivesLow: `Os revives estão acabando na conta ${conta}. Restam ${qtd}.`
     })[tipo] || '';
@@ -1692,7 +1701,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   function falaAlerta(tipo, i, meta) {
     if (!voiceOn || !alertsOn) return;
     const text = fraseVoz(tipo, i, meta || {}); if (!text) return;
-    const key = tipo + '|' + i + '|' + vozLimpa(meta && meta.name, 40);
+    const key = tipo + '|' + i + '|' + vozLimpa(meta && meta.name, 40) + '|' + String(meta && meta.event || '');
     const now = Date.now(); if (voiceLast.key === key && now - voiceLast.t < 5000) return;
     voiceLast = { key, t: now };
     if (voiceQueue.length >= 8) voiceQueue.shift();
@@ -1963,6 +1972,14 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const kCa = (p, x) => 'c' + p + '_' + x.t + '_' + x.n;
   const seenLog = {}; lifeShiny.forEach(x => seenLog[kSh(x.p, x)] = 1); lifeCatch.forEach(x => seenLog[kCa(x.p, x)] = 1);
   const mergedOnce = []; // 1o merge do painel: backfill silencioso (shiny de antes nao e novidade nem rajada de webhook)
+  function alertaCaptura(i, x) {
+    if (!alertsOn || alLocal.capture === false || x.sh) return;
+    const iv = captureFilters.parseLooseNumber(x.iv), quality = captureFilters.parseLooseNumber(x.q);
+    if (iv < 160 && !(quality >= 1.7 && quality < 2)) return;
+    const meta = { name: x.n, iv, quality, event: kCa(i, x) };
+    try { window.pokeAPI.notify('PokeMux', fraseVoz('capture', i, meta)); } catch {}
+    falaAlerta('capture', i, meta);
+  }
   function mergeLogs(i, r) {
     const acc = tabNames[i] || stName(i), dot = ACOR[i] || '#8b949e';
     const avisa = !!mergedOnce[i]; mergedOnce[i] = 1;
@@ -1976,17 +1993,14 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       if (avisa && x.cap) { // CAPTUROU: aviso grande na tela, som de festa e notificacao propria
         const c = (r.catchLog || []).filter(y => y.sh).sort((p, q2) => Math.abs((+p.t || 0) - (+x.t || 0)) - Math.abs((+q2.t || 0) - (+x.t || 0)))[0]; // pega IV/qualidade da captura correspondente
         festaShiny({ n: x.n || (c && c.n), sid: x.sid, acc, dot, iv: c && c.iv, q: c && c.q, t: x.t });
-        if (alertsOn) alerta(i, 'msgShinyCap', { name: x.n || (c && c.n) });
-      } else if (avisa && x.def) {
-        falaAlerta('shinyFail', i, { name: x.n });
+        if (alertsOn) alerta(i, 'msgShinyCap', { name: x.n || (c && c.n), iv: c && c.iv, quality: c && c.q, event: key });
       }
     });
     (r.catchLog || []).forEach(x => {
       const key = kCa(i, x); if (seenLog[key]) return; seenLog[key] = 1; dirty = true;
       lifeCatch.push({ n: String(x.n || '').slice(0, 40), iv: +x.iv || 0, q: +x.q || 0, sh: !!x.sh, fx: !!x.fx, t: +x.t || 0, p: i, acc, dot });
-      // Entre as capturas comuns, só a faixa oficialmente Lendária recebe voz. Shiny tem
-      // avisos próprios e não é anunciado duas vezes.
-      if (avisa && !x.sh && +x.q >= 1.7 && +x.q < 2) falaAlerta('legendary', i, { name: x.n, iv: +x.iv || 0, quality: +x.q || 0 });
+      // Uma mensagem reúne IV alto e raridade; shiny já usa seu aviso de captura.
+      if (avisa) alertaCaptura(i, x);
     });
     if (dirty) {
       if (lifeShiny.length > 500) lifeShiny = lifeShiny.slice(-500);
@@ -2056,7 +2070,6 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
           if (!shinyFieldOn[i] && Date.now() - (shinyFalouEm[i] || 0) > 30000) {
             shinyFalouEm[i] = Date.now();
             if (sndShinyOn) beepShiny();
-            if (alertsOn) alerta(i, 'msgShiny', { name: r.fieldShiny.n });
           }
           shinyFieldOn[i] = true;
         } else shinyFieldOn[i] = false;
@@ -2066,7 +2079,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
           const delta = r.shinyN - lastShiny[i]; lastShiny[i] = r.shinyN; addShinyLife(r.cid, delta);
           if (Date.now() - (shinyFalouEm[i] || 0) > 120000) {
             const ult = (r.shinyLog || []).slice().sort((a, b) => (+b.t || 0) - (+a.t || 0))[0] || {};
-            shinyFalouEm[i] = Date.now(); if (sndShinyOn) beepShiny(); if (alertsOn) alerta(i, 'msgShiny', { name: ult.n });
+            shinyFalouEm[i] = Date.now(); if (sndShinyOn) beepShiny();
           }
         }
         registraHunt(i, r.prevHunt); // hunt encerrada entra no log sozinha
@@ -3722,7 +3735,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       + cardsCfg.order.map(s => '<div class="cd-cfg-row" draggable="true" data-s="' + s + '"><span class="cd-grip">⋮⋮</span><label><input type="checkbox" data-sec="' + s + '"' + (cardsCfg.hide[s] ? '' : ' checked') + '> ' + cdLabel(s) + '</label></div>').join('')
       + '<div class="cd-cfg-h" style="margin-top:10px">' + t('alLocalTitle') + '</div>'
       + '<div class="cd-cfg-row" style="display:block;font-size:10px;color:#7d8590;line-height:1.4">' + t('alLocalHint') + '</div>'
-      + ['shiny', 'rare', 'down', 'stalled', 'balls', 'faint'].map(k => '<div class="cd-cfg-row"><label><input type="checkbox" id="cdAl_' + k + '"' + (alLocal[k] ? ' checked' : '') + '> ' + t('alLocal_' + k) + '</label></div>').join('')
+      + ['shiny', 'capture', 'rare', 'down', 'stalled', 'balls', 'faint'].map(k => '<div class="cd-cfg-row"><label><input type="checkbox" id="cdAl_' + k + '"' + (alLocal[k] ? ' checked' : '') + '> ' + t('alLocal_' + k) + '</label></div>').join('')
       + '<div class="cd-cfg-h" style="margin-top:10px">' + t('whTitle') + '</div>'
       + '<div class="cd-cfg-row"><input id="cdWhUrl" type="text" class="cd-inp" style="flex:1" placeholder="https://discord.com/api/webhooks/…" value="' + esc(whCfg.url) + '"><button id="cdWhTest" class="cd-inp" style="cursor:pointer">' + t('whTest') + '</button></div>'
       + '<div class="cd-cfg-row"><input id="cdWhMention" type="text" class="cd-inp" style="flex:1" placeholder="' + t('whMention') + '" value="' + esc(whCfg.mention) + '"></div>'
@@ -3791,7 +3804,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const ws2 = cardsEl.querySelector('#cdWhShiny'); if (ws2) ws2.onchange = () => { whCfg.shiny = ws2.checked; saveWh(); };
     const wm = cardsEl.querySelector('#cdWhSum'); if (wm) wm.onchange = () => { whCfg.sum = wm.checked; saveWh(); };
   const wp = cardsEl.querySelector('#cdWhProb'); if (wp) wp.onchange = () => { whCfg.prob = wp.checked; saveWh(); };
-  ['shiny', 'rare', 'down', 'stalled', 'balls', 'faint'].forEach(k => { const el = cardsEl.querySelector('#cdAl_' + k); if (el) el.onchange = () => { alLocal[k] = el.checked; saveAl(); }; });
+  ['shiny', 'capture', 'rare', 'down', 'stalled', 'balls', 'faint'].forEach(k => { const el = cardsEl.querySelector('#cdAl_' + k); if (el) el.onchange = () => { alLocal[k] = el.checked; saveAl(); }; });
   const wmn = cardsEl.querySelector('#cdWhMention'); if (wmn) wmn.onchange = () => { whCfg.mention = String(wmn.value || '').replace(/\D/g, '').slice(0, 20); wmn.value = whCfg.mention; wmn.blur(); saveWh(); };
     let dragS = null;
     cardsEl.querySelectorAll('.cd-cfg-row').forEach(row => {

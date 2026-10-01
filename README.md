@@ -65,11 +65,12 @@ Algumas ideias de interface e leitura de eventos também foram inspiradas pelo [
 - Acordes sintetizados ou voz local instalada no Windows.
 - Voz informando a conta e o item, além da notificação, ao obter **Strange Pheromones** ou **Boss Token**, com opção individual para desativar.
 - Voz para:
-  - shiny ainda vivo no campo;
-  - captura de shiny concluída ou perdida;
+  - captura de shiny concluída com sucesso;
+  - captura de Pokémon com IV 160 ou mais, informando IV e raridade;
   - Pokébolas, poções e revives acabando, com nome da conta e quantidade;
   - Strange Pheromones ou Boss Token, com nome da conta e do item;
-  - captura exatamente na faixa de qualidade **Lendária** (`1,7 ≤ qualidade < 2,0`).
+  - captura exatamente na faixa de qualidade **Lendária** (`1,7 ≤ qualidade < 2,0`), informando também o IV.
+- Voz e notificações do Windows não avisam a aparição nem a falha de captura de shiny. Capturas com IV 160+ ou raridade Lendária recebem uma única mensagem com conta, Pokémon, IV e raridade.
 - Fila e deduplicação impedem uma avalanche de falas quando várias contas alertam juntas.
 - Mítica, Anciã e Divina não são anunciadas incorretamente como Lendária.
 - Webhook opcional do próprio usuário, com fila e tratamento de limite do Discord.

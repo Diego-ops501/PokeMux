@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.12 — Alertas de capturas com IV e raridade
+
+- Voz e notificações do Windows para shiny agora avisam somente a captura concluída com sucesso. Aparição e falha de captura não disparam esses dois canais; o acorde opcional de shiny permanece disponível.
+- Capturas com IV 160 ou mais recebem um aviso com conta, Pokémon, IV e raridade.
+- O aviso de captura na faixa Lendária também informa o IV, mesmo abaixo de 160.
+- Capturas que atendem a mais de um critério recebem uma única mensagem por canal. O aviso de shiny capturado inclui IV e raridade quando também atende aos critérios de IV alto ou Lendária.
+- Nova opção individual para avisos de capturas com IV 160+ ou raridade Lendária, com mensagens em português, inglês e espanhol.
+- Testes de regressão cobrem limites de IV, faixas de raridade, histórico inicial silencioso e prevenção de avisos duplicados.
+- As integrações externas existentes continuam nesta versão; a revisão de privacidade não incluiu sua remoção.
+
 ## 1.1.11 — Filtros de capturas e recomendação de hunt
 
 - Corrigidos todos os filtros de **Últimas capturas · todas as contas** para preservar capturas antigas com IV e qualidade nos formatos legados. O filtro de raridade combinado com o período **Todos** não limita mais a lista a poucos Pokémon.
