@@ -923,7 +923,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
             const slugVolta = recOk ? rec.slug : (snv && snv.slug);
             const voltaComum = !!(voltaHuntOn && snv && Date.now() - snv.t < 600e3 && Date.now() - ((snv.s && snv.s.lastKillT) || 0) < 600e3);
             if ((recOk || voltaComum) && (wv.getURL() || '').startsWith('https://poke.idleworld.online/play') && /^[a-z0-9_-]{1,60}$/i.test(slugVolta || '')) {
-              if (recOk) delete huntRecovery[i];
+              // Só encerra a recuperação quando READ_ALERTS confirmar um novo abate.
               wv.executeJavaScript(VOLTA_JS(slugVolta)).then(r => { if (r === 'armado') { try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': ' + (recOk ? 'watchdog recuperando' : 'recarregou farmando') + ', volta pra hunt ' + slugVolta + ' em 12s'); } catch {} } }).catch(() => {});
             }
           } catch {}
@@ -996,6 +996,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     count = n;
     if (n < atual) { // remove os paineis do fim (remover do DOM ja destroi o webview)
       for (let i = atual - 1; i >= n; i--) {
+        delete huntRecovery[i]; delete maintenanceLogin[i]; stallSlug[i] = '';
         clearTimeout(loginLoadTimers[i]); loginLoadTimers[i] = null;
         if (grid.children[i]) grid.children[i].remove();
         webviews.pop();
@@ -1022,6 +1023,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     const dot = panel.querySelector('.dot');
     const status = panel.querySelector('.status');
     off[i] = !off[i];
+    delete huntRecovery[i]; delete maintenanceLogin[i]; stallSlug[i] = '';
     panel.classList.toggle('off', off[i]);
     clearTimeout(loginLoadTimers[i]); loginLoadTimers[i] = null;
     if (off[i]) { webviews[i].src = 'about:blank'; dot.className = 'dot off'; status.textContent = t('stOff'); }
@@ -1108,6 +1110,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     if (!window.confirm(t('accWipeConfirm').replace('{n}', () => tabNames[i] || stName(i)))) return;
     let okL = false;
     try { okL = await window.pokeAPI.clearAccount(i); } catch {}
+    if (okL) { delete huntRecovery[i]; delete maintenanceLogin[i]; stallSlug[i] = ''; }
     if (okL && !off[i] && webviews[i]) try { delete sessSnap[i]; webviews[i].reload(); } catch {}
     window.alert(okL ? t('accWipeOk') : t('accWipeErr'));
   };
@@ -1120,6 +1123,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove('show'); };
   document.getElementById('accSave').onclick = async () => {
     document.querySelectorAll('#accRows input').forEach(inp => {
+      if (inp.dataset.f === 'email' && accounts[+inp.dataset.i].email !== inp.value) {
+        delete huntRecovery[+inp.dataset.i]; delete maintenanceLogin[+inp.dataset.i]; stallSlug[+inp.dataset.i] = '';
+      }
       accounts[+inp.dataset.i][inp.dataset.f] = inp.value;
     });
     grid.querySelectorAll('.name').forEach((el, i) => el.textContent = accounts[i].name || defName(i));
@@ -2009,11 +2015,97 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     }
   }
 
+  // Login não recebe o coletor. Tenta novamente mesmo sem aviso de manutenção,
+  // preservando desafios manuais e campos que o usuário está preenchendo.
+  const MAINTENANCE_RETRY_MS = 300e3;
+  const maintenanceLogin = [], maintenancePending = [];
+  const READ_MAINTENANCE = `(() => {
+    const text = String(document.body && document.body.innerText || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+    const maintenance = new URL(location.href).searchParams.get('maintenance') === '1'
+      || /\\b(?:manutencao|maintenance|mantenimiento)\\b/.test(text);
+    const token = document.querySelector('input[name="cf-turnstile-response"]');
+    const otp = document.querySelector('input[autocomplete="one-time-code"]');
+    const focused = document.activeElement;
+    const editing = focused && (focused.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(focused.tagName));
+    const manual = !!otp || !!editing || (!maintenance && (!!(token && !token.value)
+      || /confirme.{0,30}humano|verify.{0,30}human|codigo.{0,30}(?:autenticacao|2fa)|authentication code/.test(text)));
+    return { maintenance, manual };
+  })()`;
+  async function checkMaintenanceLogin(i, w) {
+    const account = accounts[i];
+    const eligible = () => {
+      try {
+        const url = new URL(w.getURL());
+        return !off[i] && webviews[i] === w && accounts[i] === account && account && account.email && account.senha
+          && url.origin === 'https://poke.idleworld.online' && url.pathname === '/login';
+      } catch { return false; }
+    };
+    if (!eligible()) { delete maintenanceLogin[i]; return false; }
+    if (!huntRecovery[i] && stallSlug[i]) {
+      const now = Date.now();
+      huntRecovery[i] = { slug: stallSlug[i], cid: stallCid[i], t: now, started: now, lastRetry: now };
+    }
+    deadT[i] = 0;
+    if (maintenancePending[i]) return true;
+    maintenancePending[i] = true;
+    try {
+      const url = w.getURL();
+      const page = await w.executeJavaScript(READ_MAINTENANCE);
+      if (!eligible() || w.getURL() !== url) { delete maintenanceLogin[i]; return true; }
+      if (!page || typeof page !== 'object') return true;
+      const now = Date.now();
+      let state = maintenanceLogin[i];
+      if (!state || state.account !== account) state = maintenanceLogin[i] = { account, lastRetry: now };
+      // Renova apenas um retorno ainda válido, sem ressuscitar sessões ou hunts antigas.
+      const recovery = huntRecovery[i];
+      if (recovery && now - recovery.t < 900e3) { recovery.t = now; recovery.lastRetry = now; }
+      if (page.manual) { state.lastRetry = now; return true; }
+      if (now - state.lastRetry < MAINTENANCE_RETRY_MS) return true;
+      state.lastRetry = now;
+      try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': login sem entrar no jogo, nova tentativa após 5 min'); } catch {}
+      if (typeof w.reloadIgnoringCache === 'function') w.reloadIgnoringCache(); else w.reload();
+    } catch {} // Navegação em andamento ou página de erro: os watchdogs de carga continuam responsáveis.
+    finally { maintenancePending[i] = false; }
+    return true;
+  }
+
   // ----- Watchdog da hunt: recarrega somente uma hunt confirmada sem abates por 10 min -----
   // Kill e um sinal melhor que drop: todo combate concluido gera field-kill, enquanto loot pode
   // variar. set-city/leave-hunt zeram P.hunting, portanto cidade e mercado nunca entram aqui.
   const HUNT_STALL_MS = 600e3, HUNT_RELOAD_COOLDOWN = 1200e3;
-  const lastK = [], lastKT = [], stallOn = [], stallSlug = [], stallReload = [], huntRecovery = [];
+  const lastK = [], lastKT = [], stallOn = [], stallSlug = [], stallCid = [], stallReload = [], huntRecovery = [];
+  function checkHuntRecovery(i, r, w) {
+    if (off[i] || webviews[i] !== w) { delete huntRecovery[i]; return false; }
+    let rec = huntRecovery[i];
+    if (!rec && stallSlug[i] && (!r || !r.live)) {
+      const now = Date.now();
+      rec = huntRecovery[i] = { slug: stallSlug[i], cid: stallCid[i], t: now, started: now, lastRetry: now };
+    }
+    if (!rec) return false;
+    const now = Date.now();
+    if (now - rec.t >= 900e3 || (r && r.live && rec.cid && r.cid && String(rec.cid) !== String(r.cid))) {
+      delete huntRecovery[i]; stallSlug[i] = ''; return false;
+    }
+    if (r && r.live && r.hunting && r.slug === rec.slug && r.lastKillT > rec.started) {
+      delete huntRecovery[i];
+      stallOn[i] = false;
+      return false;
+    }
+    rec.t = now;
+    if ((w.getURL() || '').split(/[?#]/)[0] !== 'https://poke.idleworld.online/play') return false;
+    if (now - rec.lastRetry < MAINTENANCE_RETRY_MS) return false;
+    rec.lastRetry = now;
+    if (r && r.live && !r.hunting) {
+      try {
+        w.executeJavaScript('delete window.__pgVolta;' + VOLTA_JS(rec.slug)).catch(() => {});
+        window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': conta na cidade durante recuperação, retornando à hunt ' + rec.slug);
+      } catch {}
+      return true;
+    }
+    try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': recuperação ainda sem abates, nova tentativa após 5 min'); } catch {}
+    try { if (typeof w.reloadIgnoringCache === 'function') w.reloadIgnoringCache(); else w.reload(); } catch {}
+    return true;
+  }
   function checkStall(i, r, w) {
     const now = Date.now(), slug = String(r.slug || '');
     const city = ['cerulean', 'pewter', 'viridian', 'cassino', 'arena_pvp'].includes(slug);
@@ -2022,6 +2114,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       lastK[i] = undefined; lastKT[i] = 0; stallOn[i] = false; stallSlug[i] = '';
       return false;
     }
+    stallCid[i] = r.cid;
     if (stallSlug[i] !== slug || lastK[i] === undefined || r.kills !== lastK[i]) {
       stallSlug[i] = slug; lastK[i] = r.kills; lastKT[i] = now; stallOn[i] = false;
       return false;
@@ -2029,7 +2122,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     if (now - (lastKT[i] || now) < HUNT_STALL_MS) return false;
     if (stallOn[i] && now - (stallReload[i] || 0) < HUNT_RELOAD_COOLDOWN) return false;
     stallOn[i] = true; stallReload[i] = now;
-    huntRecovery[i] = { slug, t: now };
+    huntRecovery[i] = { slug, cid: r.cid, t: now, started: now, lastRetry: now };
     if (alertsOn) alerta(i, 'msgStalled');
     try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': hunt ' + slug + ' sem abates ha 10 min, recarregando sem cache'); } catch {}
     try { if (typeof w.reloadIgnoringCache === 'function') w.reloadIgnoringCache(); else w.reload(); } catch {}
@@ -2050,6 +2143,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   setInterval(() => {
     webviews.forEach((w, i) => {
       if (off[i]) { pendA[i] = 0; return; }
+      checkMaintenanceLogin(i, w).then(handled => {
+        if (handled || off[i] || webviews[i] !== w) { pendA[i] = 0; return; }
       if (++pendA[i] >= 10) { // 60s sem nenhuma resposta: painel travado, recarrega sozinho
         pendA[i] = 0;
         try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ' sem responder ha 60s, recarregando'); } catch {}
@@ -2058,6 +2153,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       }
       w.executeJavaScript(READ_ALERTS).then(r => {
         pendA[i] = 0;
+        if (checkHuntRecovery(i, r, w)) return;
         if (!r) return;
         if (r.live && r.sess && r.sess.start) { // so de conta VIVA: foto tirada no login/erro nunca vencia os 10 min
           const o = sessSnap[i];
@@ -2107,6 +2203,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         if (r.hasBalls) checkLow(i, 'balls', r.balls, BALL_MIN, 'msgBallsLow');
         if (r.hasInv) { checkLow(i, 'potions', r.potions, POTION_MIN, 'msgPotionsLow'); checkLow(i, 'revives', r.revives, REVIVE_MIN, 'msgRevivesLow'); }
       }).catch(() => { pendA[i] = 0; }); // rejeicao rapida (navegando/crash) nao e travamento: outros watchdogs cuidam
+      }).catch(() => { pendA[i] = 0; });
     });
   }, 6000);
 

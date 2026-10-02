@@ -9,11 +9,11 @@ const z = b.indexOf('  const lastRareDrops', a);
 const src = b.slice(a, z);
 let now = 1_000_000;
 const DateFake = { now: () => now };
-const lastK = [], lastKT = [], stallOn = [], stallSlug = [], stallReload = [], huntRecovery = [];
+const lastK = [], lastKT = [], stallOn = [], stallSlug = [], stallCid = [], stallReload = [], huntRecovery = [];
 const logs = [], alerts = [];
-const checkStall = new Function('Date', 'lastK', 'lastKT', 'stallOn', 'stallSlug', 'stallReload', 'huntRecovery',
+const checkStall = new Function('Date', 'lastK', 'lastKT', 'stallOn', 'stallSlug', 'stallReload', 'huntRecovery', 'stallCid',
   'HUNT_STALL_MS', 'HUNT_RELOAD_COOLDOWN', 'alertsOn', 'alerta', 'window', src + ';return checkStall;')(
-    DateFake, lastK, lastKT, stallOn, stallSlug, stallReload, huntRecovery,
+    DateFake, lastK, lastKT, stallOn, stallSlug, stallReload, huntRecovery, stallCid,
     600e3, 1200e3, true, (i, k) => alerts.push([i, k]), { pokeAPI: { logError: (...x) => logs.push(x) } });
 
 const panel = (url = 'https://poke.idleworld.online/play') => ({

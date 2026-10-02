@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.13 — Recuperação contínua das contas
+
+- Após dez minutos sem novos abates em uma hunt confirmada, o watchdog recarrega o painel. A recuperação continua com novas tentativas a cada cinco minutos até confirmar um novo abate, mesmo sem aviso de manutenção.
+- Com credenciais salvas, uma conta presa no login tenta novamente a cada cinco minutos. CAPTCHA pendente, 2FA e campos em edição pausam as recargas.
+- A hunt anterior permanece pendente durante login ou manutenção prolongados. Se a conta voltar para a cidade durante a recuperação, o app tenta enviá-la para essa mesma hunt, com tentativas limitadas e espaçadas.
+- Contas desligadas, trocas de personagem e contas paradas voluntariamente na cidade não recebem o retorno de outra recuperação.
+
 ## 1.1.12 — Alertas de capturas com IV e raridade
 
 - Voz e notificações do Windows para shiny agora avisam somente a captura concluída com sucesso. Aparição e falha de captura não disparam esses dois canais; o acorde opcional de shiny permanece disponível.

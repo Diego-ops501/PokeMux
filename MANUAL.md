@@ -57,6 +57,8 @@ Onde caçar com um Ditto e em que pokémon virar. Escolha **Shiny** ou **Comum**
 
 ## Proteções
 
+Depois de **dez minutos sem novos abates** em uma hunt confirmada, o app recarrega o painel. A recuperação continua com novas tentativas a cada **cinco minutos** até confirmar um novo abate, mesmo sem aviso de manutenção. Se a conta voltar para a cidade durante a recuperação, o app tenta enviá-la à hunt anterior. Contas ligadas com credenciais salvas também tentam novamente quando ficam presas no login. CAPTCHA pendente, 2FA e campos em edição pausam as recargas e continuam manuais. Uma conta parada voluntariamente na cidade, sem recuperação pendente, não é enviada para uma hunt.
+
 - **🛡 Venda protegida**: pede confirmação antes de vender shiny, qualidade Lendária ou acima e itens raros. Na engrenagem do Painel dá pra travar seus próprios itens (**🔒 Cadeado de venda**)
 - **🔔 Alertas**: avisa quando um shiny é capturado, um Pokémon com IV 160+ ou raridade Lendária é capturado, cai **Strange Pheromones** ou **Boss Token**, uma conta cai, para de farmar, fica sem suprimento ou tem pokémon derrubado. Na engrenagem do Simples você escolhe quais tipos avisam no Windows, um por um. Com webhook do Discord configurado, os avisos de problema também chegam no celular
 - **🗣️ Voz dos alertas**: usa uma voz instalada no Windows e fala a conta envolvida. Anuncia somente a captura bem-sucedida de shiny, **Strange Pheromones**, **Boss Token**, Pokébolas/curas acabando e capturas com IV 160+ ou exatamente da faixa Lendária. Esses avisos informam o IV e a raridade do Pokémon, sem duplicar uma captura que atende aos dois critérios. A aparição e a falha de captura de shiny não disparam voz nem notificação do Windows. Mítica, Anciã e Divina não são chamadas de Lendária
