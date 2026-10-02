@@ -9,6 +9,7 @@
 <script src="src/domain/iv-math.js"></script>
 <script src="src/domain/capture-filters.js"></script>
 <script src="src/domain/hunt-measurements.js"></script>
+<script src="src/domain/pokemon-aptitude.js"></script>
 <style>
   :root {
     --brand-cyan: #22d3ee;
@@ -304,6 +305,15 @@
   #ivCard .iv-mv .mv-lv { color: #7d8590; font-size: 10.5px; font-variant-numeric: tabular-nums; flex: none; }
   #ivCard .iv-mv .mv-p { margin-left: auto; color: #f0883e; font-variant-numeric: tabular-nums; flex: none; }
   #ivCard .iv-mv .mv-d { color: #55e6d3; font-variant-numeric: tabular-nums; flex: none; }
+  #ivCard .iv-apt, #ivCard .iv-warning { padding: 10px 12px; border: 1px solid #303d50; border-radius: 9px; margin-bottom: 12px; background: #111a28; font-size: 12px; line-height: 1.5; }
+  #ivCard .iv-warning { color: #f2c665; border-color: #705b30; background: #211d12; }
+  #ivCard .iv-apt small { display: block; color: #8b949e; }
+  #ivCard .iv-st.target { border-color: #f0883e; }
+  #ivCard .iv-moves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  #ivCard .iv-mv { min-width: 0; flex-wrap: wrap; margin-bottom: 0; }
+  #ivCard .iv-mv.synergy { border-left: 3px solid #3fb950; }
+  #ivCard .mv-meta { width: 100%; color: #8b949e; font-size: 10px; }
+  @media (max-width: 550px) { #ivCard .iv-moves { grid-template-columns: 1fr; } }
   #ivCard .iv-foot { display: flex; align-items: center; gap: 8px; margin-top: 11px; font-size: 11px; color: #6e7681; flex-wrap: wrap; }
   #ivCard .iv-vazio { padding: 26px 16px; text-align: center; color: #7d8590; font-size: 13px; line-height: 1.7; }
   /* Shiny CAPTURADO: o evento mais raro do jogo, então o aviso fica na tela até ser fechado */
@@ -779,6 +789,30 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       bkExp:'💾 Exportar config', bkImp:'📂 Importar config', bkExpTitle:'Guarda un archivo con todas las configuraciones y el historial (las contraseñas quedan fuera)', bkImpTitle:'Restaura configuraciones e historial desde un archivo exportado', bkConfirm:'¿Reemplazar las configuraciones y el historial (hunts, shinies, gráficos) por los del archivo? Antes se guarda una copia del estado actual. La app se recargará. (Las contraseñas no se ven afectadas.)', bkBad:'Archivo inválido.', bkNoCopy:'No se pudo guardar la copia del estado actual (carpeta de backups inaccesible, disco lleno o historial de más de 2 MB). ¿Importar igual? El historial actual se perderá.'
     }
   };
+  Object.assign(I18N.pt, {
+    ivNatural: 'Aptidão natural', ivProfile: 'Perfil deste exemplar', ivSynergy: 'Sinergia',
+    ivApt_physical: 'Físico (Ataque)', ivApt_special: 'Especial (Sp. Atk)', ivApt_balanced: 'Equilibrado', ivApt_unknown: 'Dados insuficientes',
+    ivAligned: 'golpes disponíveis combinam com o perfil', ivNoMoves: 'sem dados suficientes de golpes disponíveis', ivTarget: 'ALVO',
+    ivAptHint: 'Aptidão usa as bases da espécie; perfil usa os atributos observados. Até 10% de diferença indica equilíbrio. Sinergia não é uma previsão de dano contra uma hunt.',
+    ivLowLevel: 'Pokémon abaixo do nível 15: para uma medição de IV mais precisa, suba o Pokémon para pelo menos o nível 15. Simular outro nível não melhora a leitura atual.',
+    ivTmUnknown: 'aprendizado não confirmado', ivTmLearned: 'aprendida', ivTmMissing: 'não aprendida'
+  });
+  Object.assign(I18N.en, {
+    ivNatural: 'Natural aptitude', ivProfile: 'This Pokémon’s profile', ivSynergy: 'Synergy',
+    ivApt_physical: 'Physical (Attack)', ivApt_special: 'Special (Sp. Atk)', ivApt_balanced: 'Balanced', ivApt_unknown: 'Insufficient data',
+    ivAligned: 'available moves match the profile', ivNoMoves: 'insufficient data on available moves', ivTarget: 'TARGET',
+    ivAptHint: 'Aptitude uses species bases; profile uses observed stats. A difference up to 10% is balanced. Synergy does not predict damage against a hunt.',
+    ivLowLevel: 'Pokémon below level 15: level this Pokémon up to at least level 15 for a more precise IV measurement. Simulating another level does not improve the current reading.',
+    ivTmUnknown: 'learning not confirmed', ivTmLearned: 'learned', ivTmMissing: 'not learned'
+  });
+  Object.assign(I18N.es, {
+    ivNatural: 'Aptitud natural', ivProfile: 'Perfil de este ejemplar', ivSynergy: 'Sinergia',
+    ivApt_physical: 'Físico (Ataque)', ivApt_special: 'Especial (Sp. Atk)', ivApt_balanced: 'Equilibrado', ivApt_unknown: 'Datos insuficientes',
+    ivAligned: 'movimientos disponibles combinan con el perfil', ivNoMoves: 'datos insuficientes de movimientos disponibles', ivTarget: 'OBJETIVO',
+    ivAptHint: 'La aptitud usa las bases de la especie; el perfil usa los atributos observados. Hasta un 10% de diferencia indica equilibrio. La sinergia no predice el daño contra una hunt.',
+    ivLowLevel: 'Pokémon por debajo del nivel 15: sube este Pokémon al menos al nivel 15 para una medición de IV más precisa. Simular otro nivel no mejora la lectura actual.',
+    ivTmUnknown: 'aprendizaje no confirmado', ivTmLearned: 'aprendida', ivTmMissing: 'no aprendida'
+  });
   let lang = ['en', 'es'].includes(lsGet('lang')) ? lsGet('lang') : 'pt';
   const t = (k) => (I18N[lang][k] != null ? I18N[lang][k] : I18N.pt[k]);
   const defName = (i) => t('trainer') + ' ' + (i + 1);
@@ -788,6 +822,20 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
     const out = [];
     for (let i = 0; i < 4; i++) out.push(Object.assign(blank(), arr && arr[i]));
     return out;
+  }
+  // Nome lido do personagem tem prioridade nos alertas; preserva durante uma reconexão.
+  const gameAccountNames = [];
+  function rememberAccountName(i, name, cid) {
+    const email = String(accounts[i] && accounts[i].email || '');
+    const previous = gameAccountNames[i];
+    if (previous && (previous.email !== email || (cid && previous.cid && String(cid) !== previous.cid))) delete gameAccountNames[i];
+    const clean = String(name || '').replace(/[<>\[\]{}\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (clean) gameAccountNames[i] = { name: clean, cid: String(cid || (gameAccountNames[i] && gameAccountNames[i].cid) || ''), email };
+  }
+  function alertAccountName(i) {
+    const remembered = gameAccountNames[i];
+    if (remembered && remembered.email === String(accounts[i] && accounts[i].email || '')) return remembered.name;
+    return String(accounts[i] && accounts[i].name || '').trim() || defName(i);
   }
 
   // A calculadora de IV é um helper fixo, empacotado e lido por um IPC sem parâmetros.
@@ -868,7 +916,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
         const m = e && e.message;
         if (typeof m !== 'string') return;
         if (m.lastIndexOf('__PGST__', 0) === 0 && m.length < 300000) {
-          try { const d = stSane(JSON.parse(m.slice(8))); if (d) { stCache[i] = { t: Date.now(), d }; dtPush(); pushOverlay(); } } catch {}
+          try { const d = stSane(JSON.parse(m.slice(8))); if (d) { rememberAccountName(i, d.name, d.cid); stCache[i] = { t: Date.now(), d }; dtPush(); pushOverlay(); } } catch {}
           return;
         }
         if (m.lastIndexOf('__PGIV__', 0) !== 0) return;
@@ -996,7 +1044,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     count = n;
     if (n < atual) { // remove os paineis do fim (remover do DOM ja destroi o webview)
       for (let i = atual - 1; i >= n; i--) {
-        delete huntRecovery[i]; delete maintenanceLogin[i]; stallSlug[i] = '';
+        delete huntRecovery[i]; delete maintenanceLogin[i]; delete gameAccountNames[i]; stallSlug[i] = '';
         clearTimeout(loginLoadTimers[i]); loginLoadTimers[i] = null;
         if (grid.children[i]) grid.children[i].remove();
         webviews.pop();
@@ -1110,7 +1158,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     if (!window.confirm(t('accWipeConfirm').replace('{n}', () => tabNames[i] || stName(i)))) return;
     let okL = false;
     try { okL = await window.pokeAPI.clearAccount(i); } catch {}
-    if (okL) { delete huntRecovery[i]; delete maintenanceLogin[i]; stallSlug[i] = ''; }
+    if (okL) { delete huntRecovery[i]; delete maintenanceLogin[i]; delete gameAccountNames[i]; stallSlug[i] = ''; }
     if (okL && !off[i] && webviews[i]) try { delete sessSnap[i]; webviews[i].reload(); } catch {}
     window.alert(okL ? t('accWipeOk') : t('accWipeErr'));
   };
@@ -1124,7 +1172,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   document.getElementById('accSave').onclick = async () => {
     document.querySelectorAll('#accRows input').forEach(inp => {
       if (inp.dataset.f === 'email' && accounts[+inp.dataset.i].email !== inp.value) {
-        delete huntRecovery[+inp.dataset.i]; delete maintenanceLogin[+inp.dataset.i]; stallSlug[+inp.dataset.i] = '';
+        delete huntRecovery[+inp.dataset.i]; delete maintenanceLogin[+inp.dataset.i]; delete gameAccountNames[+inp.dataset.i]; stallSlug[+inp.dataset.i] = '';
       }
       accounts[+inp.dataset.i][inp.dataset.f] = inp.value;
     });
@@ -1598,7 +1646,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   sgBtn.onclick = () => { sellGuardOn = !sellGuardOn; applySellGuard(); };
   function alerta(i, chave, meta) {
     if (!alertsOn || chave === 'msgShiny') return;
-    const nome = (accounts[i] && accounts[i].name) || defName(i);
+    const nome = alertAccountName(i);
     const localOn = alLocal[alCat(chave)] !== false;
     const detalhe = chave === 'msgRareDrop' && meta && meta.name ? t(chave) + ': ' + vozLimpa(meta.name, 50) + ' ×' + Math.max(1, Math.floor(+meta.count || 1)) : t(chave);
     if (localOn) { try { window.pokeAPI.notify('PokeMux', chave === 'msgShinyCap' ? fraseVoz('shinySuccess', i, meta || {}) : nome + ' ' + detalhe); } catch {} } // notify local so se o tipo estiver ligado
@@ -1621,7 +1669,7 @@ const resumo=(X)=>{if(!X||!X.start||!X.kills)return null;let lg=0;const dr=[];fo
 return {start:X.start,end:X.end||Date.now(),slug:X.slug||'',kills:X.kills||0,xp:X.xp||0,caps:X.captures||0,sf:X.shinyN||0,sc:X.shinyCapN||0,balls:X.balls||0,pots:X.supN||0,loot:lg,sell:X.sellG||0,sup:(X.supGold||0),drops:dr};};
 const fm=(ws.field&&Array.isArray(ws.field.mobs))?ws.field.mobs:[];const fs=fm.find(x=>x&&x.shiny&&!x.dead);const fieldShiny=fs?{n:fs.speciesName||fs.name||'',sid:fs.speciesId||fs.pokeId||0}:null;
 const rareDrops=[];for(const id in (S.drops||{})){const dd=S.drops[id]||{};const nm=String(dd.name||(cat[id]||{}).name||'').trim();const nk=nm.toLowerCase();if(nk==='strange pheromone'||nk==='strange pheromones'||nk==='boss token'||nk==='boss tokens')rareDrops.push({n:nm,q:+dd.qty||0});}
-return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shinyN:S.shinyN||0,fieldShiny,rareDrops,faintN:S.faintN||0,cid:ch.id||'',kills:S.kills||0,xp:S.xp||0,caps:S.captures||0,shinyCapN:S.shinyCapN||0,saldo:(()=>{const A=ws.analyzer;if(A&&typeof A==='object'&&+A.seconds>0&&Number.isFinite(+A.balance)){const B=P.anBase;return (+A.balance||0)-((B&&+B.balance)||0);}return lootGold+(S.sellG||0)-(S.supGold||0);})(),shinyLog:P.shinyLog||[],catchLog:P.catchLog||[],sess:S,slug:P.lastSlug||'',hunting:P.hunting===true,huntSince:+P.huntSince||0,lastKillT:+S.lastKillT||0,anBase:(P.anBase&&typeof P.anBase==='object')?P.anBase:null};})()`;
+return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shinyN:S.shinyN||0,fieldShiny,rareDrops,faintN:S.faintN||0,cid:ch.id||'',name:String(ch.name||'').slice(0,60),kills:S.kills||0,xp:S.xp||0,caps:S.captures||0,shinyCapN:S.shinyCapN||0,saldo:(()=>{const A=ws.analyzer;if(A&&typeof A==='object'&&+A.seconds>0&&Number.isFinite(+A.balance)){const B=P.anBase;return (+A.balance||0)-((B&&+B.balance)||0);}return lootGold+(S.sellG||0)-(S.supGold||0);})(),shinyLog:P.shinyLog||[],catchLog:P.catchLog||[],sess:S,slug:P.lastSlug||'',hunting:P.hunting===true,huntSince:+P.huntSince||0,lastKillT:+S.lastKillT||0,anBase:(P.anBase&&typeof P.anBase==='object')?P.anBase:null};})()`;
   const BALL_MIN = 100, POTION_MIN = 15, REVIVE_MIN = 5; // limites do "está com poucos ..."
   const lastShiny = [], shinyFieldOn = [], shinyFalouEm = [], lastFaint = [], lowOn = [{}, {}, {}, {}];
   function checkLow(i, key, val, min, msgKey) {
@@ -1637,7 +1685,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   let voiceBusy = false, voiceTimer = null, voiceLast = { key: '', t: 0 };
   const vozLimpa = (v, n) => String(v == null ? '' : v).replace(/[<>\[\]{}]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 50);
   function fraseVoz(tipo, i, meta) {
-    const conta = vozLimpa((accounts[i] && accounts[i].name) || defName(i), 35);
+    const conta = vozLimpa(alertAccountName(i), 60);
     const poke = vozLimpa(meta && meta.name, 40) || 'Pokémon';
     const qtd = Math.max(0, Math.floor(+(meta && meta.count) || 0));
     const iv = captureFilters.parseLooseNumber(meta && meta.iv);
@@ -1987,7 +2035,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     falaAlerta('capture', i, meta);
   }
   function mergeLogs(i, r) {
-    const acc = tabNames[i] || stName(i), dot = ACOR[i] || '#8b949e';
+    const acc = alertAccountName(i), dot = ACOR[i] || '#8b949e';
     const avisa = !!mergedOnce[i]; mergedOnce[i] = 1;
     let dirty = false;
     (r.shinyLog || []).forEach(x => {
@@ -2153,6 +2201,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       }
       w.executeJavaScript(READ_ALERTS).then(r => {
         pendA[i] = 0;
+        if (r) rememberAccountName(i, r.name, r.cid);
         if (checkHuntRecovery(i, r, w)) return;
         if (!r) return;
         if (r.live && r.sess && r.sess.start) { // so de conta VIVA: foto tirada no login/erro nunca vencia os 10 min
@@ -2699,7 +2748,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     let changed = false;
     for (let i = 0; i < count; i++) {
       if (off[i] || !webviews[i]) continue;
-      try { const nm = await webviews[i].executeJavaScript(NAME_JS); if (nm && tabNames[i] !== nm) { tabNames[i] = nm; changed = true; } } catch {}
+      try { const nm = await webviews[i].executeJavaScript(NAME_JS); if (nm) rememberAccountName(i, nm); if (nm && tabNames[i] !== nm) { tabNames[i] = nm; changed = true; } } catch {}
     }
     if (changed) buildStatsTabs();
   }
@@ -4182,6 +4231,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + '<div class="iv-vazio">' + (d && d.erro ? esc(d.nome || '') + ': ' + esc(d.erro) : t('ivcHint')) + '</div>';
     } else {
       const cor = ACOR[ivFonte] || '#8b949e', acc = tabNames[ivFonte] || stName(ivFonte);
+      const aptitude = window.PokeMuxAptitude.analyze(d);
+      const roleLabel = role => t('ivApt_' + role);
       const raro = d.qualidade ? RARO(+d.qualidade) : null;
       const kpi = (k, v, c) => '<div class="iv-kpi"><div class="k">' + k + '</div><div class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div></div>';
       const kpiInp = (k, id, val, step) => '<div class="iv-kpi"><div class="k">' + k + '</div><input class="iv-inp" id="' + id + '" type="number" step="' + step + '" value="' + val + '"></div>';
@@ -4200,6 +4251,12 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + kpi(t('ivcIvTotal'), (+d.ivTotal || 0) + '<span style="font-size:11px;color:#6e7681">/' + (d.ivMax || 192) + '</span>', '#55e6d3')
         + (() => { const pf = poderFiel(d); return kpi(t('ivcPower'), nf(Math.round(pf != null ? pf : (+d.poder || 0))), '#f2c665'); })()
         + '</div>'
+        + (aptitude.lowLevel ? '<div class="iv-warning">⚠ ' + t('ivLowLevel') + '</div>' : '')
+        + '<div class="iv-apt"><b>' + t('ivNatural') + ': ' + roleLabel(aptitude.natural.role) + '</b>'
+        + '<div>' + t('ivProfile') + ': ' + roleLabel(aptitude.current.role)
+        + (['physical', 'special'].includes(aptitude.current.role) ? ' · ' + (aptitude.current.role === 'physical' ? 'Atk' : 'Sp. Atk') + ' +' + aptitude.current.advantage + '%' : '') + '</div>'
+        + '<div>' + t('ivSynergy') + ': ' + (aptitude.usable && aptitude.current.role !== 'unknown' ? aptitude.aligned + '/' + aptitude.usable + ' ' + t('ivAligned') : t('ivNoMoves')) + '</div>'
+        + '<small>' + t('ivAptHint') + '</small></div>'
         + (d.classificacao ? (() => { // anel de potencial, igual ao da aba de analise do painel
             const corPot = COR_OK.test(String(d.classificacao.cor)) ? String(d.classificacao.cor) : '#8b949e';
             const pctv = Math.max(0, Math.min(100, +d.percentual || 0));
@@ -4210,24 +4267,28 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + '<div class="iv-sec">' + t('ivcStats') + ' <span style="color:#586069;text-transform:none">(' + (+d.percentual || 0).toFixed(1) + '% · ' + (raro ? '<span style="color:' + raro[1] + '">' + raro[0] + '</span> ×' + (+d.qualidade).toFixed(2) : '') + ')</span></div>'
         + '<div class="iv-grid">' + IVST.map(([k, c]) => {
             const iv = +((d.ivs || {})[k]) || 0, pct = Math.min(100, iv / (d.ivMaxInd || 32) * 100);
-            return '<div class="iv-st"><div class="iv-st-h"><span class="iv-st-n" style="color:' + c + '">' + k.toUpperCase() + '</span>'
+            const target = (aptitude.current.role === 'physical' && k === 'atk') || (aptitude.current.role === 'special' && k === 'spa');
+            return '<div class="iv-st' + (target ? ' target' : '') + '"><div class="iv-st-h"><span class="iv-st-n" style="color:' + c + '">' + k.toUpperCase() + (target ? ' · ' + t('ivTarget') : '') + '</span>'
               + '<span class="iv-st-iv">' + iv.toFixed(1) + '<span style="color:#6e7681;font-size:10px">/' + (d.ivMaxInd || 32) + '</span></span></div>'
               + '<div class="iv-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + c + '"></i></div>'
               + '<div class="iv-st-l">' + t('ivcCurrent') + ' <input data-at="' + k + '" type="number" value="' + (+((d.atuais || {})[k]) || 0) + '"></div>'
               + '<div class="iv-st-l" style="margin-top:3px">' + t('ivcBase') + ' <input data-ba="' + k + '" type="number" value="' + (+((d.bases || {})[k]) || 0) + '"></div></div>';
           }).join('') + '</div>'
-        + (d.golpes && d.golpes.length ? '<div class="iv-sec" style="margin-top:11px">⚔ ' + t('ivcMoves') + '</div>'
-            + d.golpes.map(g => {
+        + (aptitude.moves.length ? '<div class="iv-sec" style="margin-top:11px">⚔ ' + t('ivcMoves') + ' · ' + t('ivSynergy') + '</div><div class="iv-moves">'
+            + aptitude.moves.map(g => {
               // golpe que o pokemon ainda nao aprendeu (nivel dele menor que o exigido) fica apagado
-              const trava = g.nivel != null && +d.nivel > 0 && +d.nivel < +g.nivel;
-              return '<div class="iv-mv' + (g.ativo ? ' on' : '') + (trava ? ' off' : '') + '"'
-              + (trava ? ' title="' + t('ivcMoveLocked') + ' ' + (+g.nivel) + '"' : '') + '>'
+              const trava = g.levelLocked || (g.tm && g.tmAprendida === false);
+              return '<div class="iv-mv' + (g.ativo ? ' on' : '') + (trava ? ' off' : '') + (g.aligned && g.available ? ' synergy' : '') + '"'
+              + (trava ? ' title="' + (g.levelLocked ? t('ivcMoveLocked') + ' ' + (+g.nivel) : t('ivTmMissing')) + '"' : '') + '>'
               + (g.tipo ? '<span class="iv-tp" style="background:' + ivCorTipo(g.tipo) + '">' + esc(g.tipo) + '</span>' : '')
               + '<span class="mv-n">' + esc(g.nome) + '</span>'
               + (g.nivel != null ? '<span class="mv-lv"' + (trava ? ' style="color:#f0883e"' : '') + '>' + t('ivcMoveLv') + ' ' + (+g.nivel) + '</span>' : '')
               + (+g.dano ? '<span class="mv-d" title="' + t('ivcMoveLast') + '">' + nf(+g.dano) + (g.eff && +g.eff !== 1 ? ' ×' + (+g.eff) : '') + '</span>' : '')
-              + '<span class="mv-p" title="' + t('ivcMovePower') + '">' + (g.poder != null ? nf(+g.poder) : '–') + '</span></div>';
-            }).join('') : '')
+              + '<span class="mv-p" title="' + t('ivcMovePower') + '">' + (g.poder != null ? nf(+g.poder) : '–') + '</span>'
+              + '<div class="mv-meta">' + roleLabel(g.role)
+              + (g.tm ? ' · TM · ' + t(g.tmUnknown ? 'ivTmUnknown' : g.tmAprendida ? 'ivTmLearned' : 'ivTmMissing') : '')
+              + (g.aligned && g.available ? ' · ✓ ' + t('ivSynergy') : '') + '</div></div>';
+            }).join('') + '</div>' : '')
         + '<div class="iv-foot">' + t('ivcPowerGame') + ': <b style="color:#adbac7">' + nf(+d.poderJogo || 0) + '</b>'
         + '<span style="margin-left:auto">' + t('ivcFooter') + '</span></div></div>';
     }
@@ -4289,9 +4350,11 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       percentual: Math.max(0, Math.min(100, ivNum(p.percentual))),
       classificacao: cl ? { texto: ivTxt(cl.texto, 30), descricao: ivTxt(cl.descricao, 140), cor: COR_OK.test(String(cl.cor)) ? String(cl.cor) : '#8b949e' } : null,
       sprite: still || anim ? { still: still || anim, anim: anim || still } : null,
-      golpes: (Array.isArray(p.golpes) ? p.golpes : []).slice(0, 12).filter(g => g && typeof g === 'object').map(g => ({
+      golpes: (Array.isArray(p.golpes) ? p.golpes : []).slice(0, 64).filter(g => g && typeof g === 'object').map(g => ({
         nome: ivTxt(g.nome, 30), tipo: ivTxt(g.tipo, 20), nivel: g.nivel == null ? null : ivNum(g.nivel),
-        poder: g.poder == null ? null : ivNum(g.poder), dano: ivNum(g.dano), eff: ivNum(g.eff), ativo: !!g.ativo
+        poder: g.poder == null ? null : ivNum(g.poder), dano: ivNum(g.dano), eff: ivNum(g.eff), ativo: !!g.ativo,
+        categoria: ['PHYSICAL', 'SPECIAL', 'STATUS'].includes(String(g.categoria).toUpperCase()) ? String(g.categoria).toUpperCase() : '',
+        tm: ivTxt(g.tm, 12), tmAprendida: typeof g.tmAprendida === 'boolean' ? g.tmAprendida : null
       })),
       poder: ivNum(p.poder), poderJogo: ivNum(p.poderJogo),
       // volta pro painel no recálculo: só campos com tipo conferido

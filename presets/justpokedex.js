@@ -362,7 +362,9 @@
                 name: String(nome),
                 power: s.power ?? s.basePower ?? s.damage ?? s.dmg ?? null,
                 type: s.type ? String(s.type) : (s.element ? String(s.element) : null),
-                learnLevel: s.learnLevel ?? s.level ?? s.lvl ?? null
+                learnLevel: s.learnLevel ?? s.level ?? s.lvl ?? null,
+                category: String(s.category || '').toUpperCase(),
+                tm: String(s.tm || '').toUpperCase()
             } : null;
         };
 
@@ -5604,11 +5606,26 @@
             // golpes com poder de catalogo + dano observado em batalha (mesma fonte da aba Moves)
             let golpes = [];
             try {
-                golpes = (obterMovesDoPokemon(pk) || []).slice(0, 8).map(mv => {
+                // Só associa TMs quando os dados identificam um único exemplar da conta.
+                let learnedTms = Array.isArray(pk.tms) ? pk.tms : null;
+                if (!learnedTms) {
+                    const list = window.__poke && window.__poke.ws && window.__poke.ws.pokes && window.__poke.ws.pokes.list;
+                    const matches = (Array.isArray(list) ? list : []).filter(p => {
+                        if (pk.id != null) return String(p.id) === String(pk.id);
+                        return normalizarNomePokemon(p.name) === normalizarNomePokemon(pk.nome)
+                            && Number(p.level) === Number(pk.nivel) && pk.ivAtual != null && Number(p.ivTotal) === Number(pk.ivAtual)
+                            && Number.isFinite(Number(p.quality)) && Math.abs(Number(p.quality) - Number(pk.multiplicadorQualidade)) < 0.001;
+                    });
+                    if (matches.length === 1 && Array.isArray(matches[0].tms)) learnedTms = matches[0].tms;
+                }
+                if (learnedTms) learnedTms = learnedTms.map(tm => String(tm).toUpperCase());
+                golpes = (obterMovesDoPokemon(pk) || []).slice(0, 64).map(mv => {
                     const ch = String(mv.name || "").toLowerCase().trim();
                     const di = danoPorGolpe.get(ch);
                     return { nome: mv.name, tipo: mv.type || "", poder: mv.power != null ? +mv.power : null,
                         nivel: mv.learnLevel != null ? +mv.learnLevel : null,
+                        categoria: mv.category || '', tm: mv.tm || '',
+                        tmAprendida: mv.tm && learnedTms ? learnedTms.includes(mv.tm) : null,
                         dano: di ? (+di.lastDmg || 0) : 0, eff: di && di.eff ? +di.eff : 0, ativo: ultimoGolpeUsado === ch };
                 });
             } catch (x) {}

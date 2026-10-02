@@ -36,6 +36,10 @@ ok(html.includes("['shiny', 'capture', 'rare', 'down', 'stalled', 'balls', 'fain
 const filters = require('../src/domain/capture-filters');
 const trecho = (start, end) => html.slice(html.indexOf(start), html.indexOf(end, html.indexOf(start)));
 const state = { lang: 'pt', alertsOn: true, alLocal: { capture: true, shiny: true }, accounts: [{ name: 'Diego' }] };
+const accountNames = new Function('accounts', 'defName',
+  trecho('  const gameAccountNames =', '  // A calculadora de IV é um helper') + '; return { rememberAccountName, alertAccountName };')(
+  state.accounts, i => 'Treinador ' + (i + 1));
+state.alertAccountName = accountNames.alertAccountName;
 const notifications = [], voices = [];
 const phrase = new Function('state', 'captureFilters', 'vozLimpa', 'defName',
   'with(state) {' + trecho('  function fraseVoz(', '  function proximaFala(') + '; return fraseVoz; }')(
@@ -100,6 +104,24 @@ alert(0, 'msgShiny', { name: 'Pikachu' });
 ok(voices.length === 1 && notifications.length === 1, 'canal de notificação também rejeita aparição de shiny');
 
 console.log('\n--- Calculadora de IV confiável e empacotada ---');
+accountNames.rememberAccountName(0, 'Azuosd', 'personagem-a');
+capture({ iv: 160, q: 1.5 });
+ok(voices[0].includes('A conta Azuosd capturou') && notifications[0].includes('Azuosd'), 'voz e Windows usam o personagem lido em vez do apelido do painel');
+ok(phrase('ballsLow', 0, { count: 5 }).includes('conta Azuosd'), 'suprimentos usam o mesmo nome real');
+ok(phrase('rareDrop', 0, { name: 'Boss Token' }).includes('conta Azuosd'), 'drop raro usa o nome real');
+accountNames.rememberAccountName(0, '', 'personagem-a');
+ok(accountNames.alertAccountName(0) === 'Azuosd', 'reconexão sem nome mantém o último personagem');
+accountNames.rememberAccountName(0, '', 'personagem-b');
+ok(accountNames.alertAccountName(0) === 'Diego', 'troca de personagem não reutiliza o nome anterior');
+accountNames.rememberAccountName(0, 'Azuosphp', 'personagem-b');
+ok(accountNames.alertAccountName(0) === 'Azuosphp', 'nova leitura atualiza o nome');
+state.accounts[0].email = 'outra-conta';
+ok(accountNames.alertAccountName(0) === 'Diego', 'troca de conta configurada invalida nome em cache');
+state.accounts[0].name = '';
+ok(accountNames.alertAccountName(0) === 'Treinador 1', 'sem nome real nem apelido ainda há identificação do painel');
+state.accounts.push({ name: 'Treinador 2' });
+accountNames.rememberAccountName(1, 'Azuosjava', 'personagem-c');
+ok(phrase('shinySuccess', 1, { name: 'Pikachu' }).includes('conta Azuosjava'), 'contas mantêm nomes independentes');
 ok(main.includes("ipcMain.handle('iv-helper:read'") && main.includes("path.join(__dirname, 'presets', 'justpokedex.js')"), 'IPC lê somente o helper fixo de IV');
 ok(preload.includes("readIvHelper: () => ipcRenderer.invoke('iv-helper:read')"), 'preload expõe apenas a leitura sem caminho ou URL');
 ok(html.includes('async function injectIvHelper(wv)') && html.includes('injectIvHelper(wv); // somente o helper de IV auditado e empacotado'), 'helper volta a ser injetado nas páginas do jogo');

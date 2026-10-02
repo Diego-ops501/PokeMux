@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.14 — Aptidão natural, sinergia e nomes nos alertas
+
+- Card de IV mostra a aptidão física, especial ou equilibrada da espécie e o perfil dos atributos observados do exemplar.
+- Moveset completo (até 64 entradas), com categoria física/especial, sinergia, nível necessário e aprendizado de TM confirmado ou desconhecido.
+- Aviso para Pokémon abaixo do nível 15 recomenda subir ao menos até esse nível para melhorar a precisão da medição. Simular um nível maior não remove o aviso da leitura original.
+- Voz, notificações e alertas de problema no Discord priorizam o nome do personagem lido no jogo. O último nome é preservado durante reconexões e invalidado ao trocar de conta ou personagem.
+
 ## 1.1.13 — Recuperação contínua das contas
 
 - Após dez minutos sem novos abates em uma hunt confirmada, o watchdog recarrega o painel. A recuperação continua com novas tentativas a cada cinco minutos até confirmar um novo abate, mesmo sem aviso de manutenção.

@@ -57,6 +57,8 @@ Onde caçar com um Ditto e em que pokémon virar. Escolha **Shiny** ou **Comum**
 
 ## Proteções
 
+A calculadora de IV mostra a **aptidão natural** da espécie (física, especial ou equilibrada), o **perfil do exemplar** pelos atributos observados e a **sinergia** com os golpes disponíveis. Até 10% de diferença entre Ataque e Ataque Especial é mostrado como equilíbrio; esse limite é uma convenção de apresentação. Golpes de nível superior e TMs sem aprendizado confirmado ficam fora da contagem de sinergia. A comparação não substitui a análise de efetividade contra a hunt. Para Pokémon abaixo do nível 15, o card recomenda subir ao menos até esse nível para uma medição de IV mais precisa; simular nível maior não melhora os dados já lidos.
+
 Depois de **dez minutos sem novos abates** em uma hunt confirmada, o app recarrega o painel. A recuperação continua com novas tentativas a cada **cinco minutos** até confirmar um novo abate, mesmo sem aviso de manutenção. Se a conta voltar para a cidade durante a recuperação, o app tenta enviá-la à hunt anterior. Contas ligadas com credenciais salvas também tentam novamente quando ficam presas no login. CAPTCHA pendente, 2FA e campos em edição pausam as recargas e continuam manuais. Uma conta parada voluntariamente na cidade, sem recuperação pendente, não é enviada para uma hunt.
 
 - **🛡 Venda protegida**: pede confirmação antes de vender shiny, qualidade Lendária ou acima e itens raros. Na engrenagem do Painel dá pra travar seus próprios itens (**🔒 Cadeado de venda**)
