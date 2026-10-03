@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.15 — IV no cursor e recomendação de hunts
+
+- Botão **IV: ON/OFF** ativa ou desativa o cálculo automático. O resultado aparece junto ao cursor sobre um Pokémon, com a preferência salva.
+- O card calculado substitui o tooltip original após a leitura, evitando informações sobrepostas. Textos explicativos redundantes foram removidos.
+- Leitura de Pokémon no Mercado Global, incluindo a seleção e os atributos do anúncio.
+- Bases de atributos carregadas com o catálogo do jogo e consultas compartilhadas em cache reduzem a espera no primeiro cálculo de IV.
+- Botão **Recomendar hunt** no topo e em cada conta avalia o Pokémon principal, níveis, golpes aprendidos, vantagens elementais, ataque, HP, defesas e medições de XP/h.
+- O botão do topo prioriza a conta conectada em foco ou expandida. A leitura reconhece os atributos especiais do jogo e valoriza vantagens de tipo, incluindo Squirtle contra Geodude Lv1.
+- **Ir para esta hunt** usa a navegação nativa do jogo para mudar o mapa, verifica a confirmação da hunt e fecha a recomendação. A ação permanece vinculada à conta e ao Pokémon escolhidos.
+- Seção separada **Melhor hunt do tipo do dia**, com borda na cor do tipo, bônus de XP/loot e horário de término lidos do evento atual do jogo. A recomendação considera ambos os tipos do selvagem e atualiza ao fim do evento.
+- Testes de regressão para hover de IV, Mercado Global, cache de atributos, recomendação, seleção de conta, viagem e bônus diário.
+
 ## 1.1.14 — Aptidão natural, sinergia e nomes nos alertas
 
 - Card de IV mostra a aptidão física, especial ou equilibrada da espécie e o perfil dos atributos observados do exemplar.

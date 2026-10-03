@@ -14,7 +14,8 @@ O PokeMux usa uma barra superior compacta, sem uma barra lateral fixa. Assim, to
 | **📊 Painel** | Abre o resumo da conta, onde fica a engrenagem de configuração e a compra de Pokébolas |
 | **🃏 Cartas** | Alterna para o Dashboard de baixo consumo com métricas das quatro contas |
 | **📌 Overlay** | Abre o resumo flutuante somente-leitura |
-| **IV's** | Abre a calculadora de IV integrada |
+| **IV: ON/OFF** | Ativa ou desativa o cálculo automático de IV ao passar o mouse sobre um Pokémon |
+| **🎯 Recomendar hunt** | Recomenda onde upar o Pokémon principal da conta; clique em uma opção para ir até ela |
 | **☰ Opções** | Tudo o mais: Hunt, Tierlist, Ditto, Alertas, Venda protegida, Eco, atualização e FAQ... |
 
 Atalhos de teclado (só quando o foco está no app, não dentro do jogo): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Opções, **M** menu do jogo, **E** Eco, **A** Alertas.
@@ -57,7 +58,13 @@ Onde caçar com um Ditto e em que pokémon virar. Escolha **Shiny** ou **Comum**
 
 ## Proteções
 
-A calculadora de IV mostra a **aptidão natural** da espécie (física, especial ou equilibrada), o **perfil do exemplar** pelos atributos observados e a **sinergia** com os golpes disponíveis. Até 10% de diferença entre Ataque e Ataque Especial é mostrado como equilíbrio; esse limite é uma convenção de apresentação. Golpes de nível superior e TMs sem aprendizado confirmado ficam fora da contagem de sinergia. A comparação não substitui a análise de efetividade contra a hunt. Para Pokémon abaixo do nível 15, o card recomenda subir ao menos até esse nível para uma medição de IV mais precisa; simular nível maior não melhora os dados já lidos.
+Quando o jogo informa um **Tipo do Dia** ativo, a recomendação de hunt mostra uma seção separada com a melhor hunt acessível desse tipo para o principal. A borda usa a cor do tipo; a seção informa bônus de XP/loot e horário de término. Ambos os tipos do selvagem contam. O bônus vem do evento do jogo, sem multiplicar novamente medições de XP/h. A seção atualiza ao término do evento; use **⟳** para buscar mudanças com o painel aberto.
+
+O botão **🎯 Recomendar hunt** no topo permite escolher a conta. O **🎯** no cabeçalho de cada painel abre diretamente aquela conta. A recomendação usa o Pokémon marcado como principal no jogo, seu nível, qualidade, IV, golpes aprendidos e vantagens de tipo. Considera ataque físico/especial, HP e defesas de ambos os lados e prioriza rendimento com resistência aceitável. Atributos observados são usados quando disponíveis; os demais são estimados. Medições de XP/h pertencentes ao mesmo Pokémon ajudam a calibrar as sugestões.
+
+A janela apresenta a melhor opção e até quatro alternativas, com golpe, efetividade, golpes estimados por abate e risco. **Ir para esta hunt** envia uma única solicitação naquela conta e aguarda confirmação do jogo. Troca de personagem ou líder invalida a sugestão; conta desconectada, Pokémon sem HP e hunt acima do nível da conta impedem a entrada. Regiões com liberação especial continuam sujeitas às regras do servidor. A recomendação não troca o Pokémon principal nem cria uma rotação automática.
+
+A calculadora de IV mostra a **aptidão natural** da espécie (física, especial ou equilibrada), o **perfil do exemplar** pelos atributos observados e a **sinergia** com os golpes disponíveis. Até 10% de diferença entre Ataque e Ataque Especial é mostrado como equilíbrio; esse limite é uma convenção de apresentação. Golpes de nível superior e TMs sem aprendizado confirmado ficam fora da contagem de sinergia. A comparação não substitui a análise de efetividade contra a hunt. Para Pokémon abaixo do nível 15, o card recomenda subir ao menos até esse nível para uma medição de IV mais precisa.
 
 Depois de **dez minutos sem novos abates** em uma hunt confirmada, o app recarrega o painel. A recuperação continua com novas tentativas a cada **cinco minutos** até confirmar um novo abate, mesmo sem aviso de manutenção. Se a conta voltar para a cidade durante a recuperação, o app tenta enviá-la à hunt anterior. Contas ligadas com credenciais salvas também tentam novamente quando ficam presas no login. CAPTCHA pendente, 2FA e campos em edição pausam as recargas e continuam manuais. Uma conta parada voluntariamente na cidade, sem recuperação pendente, não é enviada para uma hunt.
 
@@ -70,7 +77,7 @@ Depois de **dez minutos sem novos abates** em uma hunt confirmada, o app recarre
 
 ## Coisas que confundem no começo
 
-- **Calculadora de IV vazia**: passe o mouse sobre um Pokémon no jogo para alimentar o card. O helper embutido só entra depois do login e nunca roda na tela que contém senha, CAPTCHA ou 2FA
+- **IV automático**: deixe o botão **IV: ON** e passe o mouse sobre um Pokémon no jogo. O resultado aparece em uma caixa junto ao cursor e desaparece ao sair do Pokémon. A caixa mostra IV total, IV por atributo, qualidade, poder e aptidão, sem precisar clicar ou editar campos. **IV: OFF** desativa a exibição e a preferência fica salva. O helper embutido só entra depois do login e nunca roda na tela que contém senha, CAPTCHA ou 2FA
 - **A opção marcada não mudou nada?** Provavelmente é uma seção que precisa de configuração (Fixados e Alvo shiny). Elas agora dizem isso na tela
 - **Não consigo trocar a pokébola**: confira se o **🧼 Limpar jogo** está verde. Essa opção vem desligada por padrão; quando ativada, esconde o Auto-Helper até você passar o mouse no canto
 - **O ouro da sessão**: desde a 1.5.16 vem do próprio servidor do jogo, então é o mesmo número do Hunt Analyzer

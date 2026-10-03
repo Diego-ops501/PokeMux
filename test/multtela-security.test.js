@@ -41,7 +41,7 @@ ok(main.includes("ipcMain.handle('overlay:toggle'") && html.includes('id="overla
 ok(main.includes("ipcMain.handle('shiny:capture'") && html.includes("let shotShinyOn = lsGet('shotShiny') === '1'"), 'print de shiny é opcional e local');
 
 console.log('\n--- Instalador e atualização ---');
-ok(pkg.name === 'pokemux' && pkg.build.productName === 'PokeMux' && pkg.version === '1.1.14', 'produto PokeMux está na versão 1.1.14');
+ok(pkg.name === 'pokemux' && pkg.build.productName === 'PokeMux' && pkg.version === '1.1.15', 'produto PokeMux está na versão 1.1.15');
 ok(!html.includes('id="appSidebar"') && !html.includes('--pg-sidebar') && html.includes('id="statsBtn"') && html.includes('id="cardsBtn"'), 'layout clássico remove a sidebar fixa e restaura os controles no topo');
 ok(html.includes('class="cd-catches-list"') && html.includes('.cd-catches-list { max-height: clamp(') && html.includes('overflow-y: auto'), 'últimas capturas têm altura responsiva e rolagem interna');
 ok(html.includes('captureFilters.filterCaptures(lifeCatch, f)') && !html.includes('.slice(-40)'), 'últimas capturas mostram todos os resultados que passam pelos filtros');

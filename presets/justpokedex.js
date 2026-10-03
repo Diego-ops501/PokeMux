@@ -317,6 +317,8 @@
 
     let creaturesData = [];
     let creaturesMapByName = new Map();
+    let creaturesReady = null;
+    const baseRequests = new Map();
 
     async function carregarCreatures() {
         try {
@@ -327,6 +329,7 @@
                 for (const c of creaturesData) {
                     if (c && c.name) {
                         creaturesMapByName.set(c.name.toLowerCase().trim(), c);
+                        atributosDoCatalogo(c.name); // Prepara todas as espécies antes do primeiro hover.
                     }
                 }
                 console.log("[Poké Leitor] Dados de creatures.json carregados:", creaturesMapByName.size);
@@ -983,7 +986,7 @@
         // nem regra externa nem outro userscript consegue reexibir a pilula.
         painel.style.setProperty(
             "display",
-            painel.classList.contains("minimized") ? "none" : "flex",
+            window.__pgIvBundled || painel.classList.contains("minimized") ? "none" : "flex",
             "important"
         );
     }
@@ -2084,7 +2087,44 @@
         } catch { return null; }
     }
 
+    function atributosDoCatalogo(nome) {
+        const c = criaturaDoJogo(nome);
+        if (!c) return null;
+        const values = [c.baseHp, c.baseAtk, c.baseDef, c.baseSpAtk, c.baseSpDef, c.baseSpeed];
+        if (!values.every(v => v != null && Number.isFinite(Number(v)) && Number(v) > 0)) return null;
+        const info = {
+            id: +c.captureBase || +c.pokeId || 0,
+            hp: +c.baseHp, atk: +c.baseAtk, def: +c.baseDef,
+            spa: +c.baseSpAtk, spd: +c.baseSpDef, vel: +c.baseSpeed,
+            tipos: [c.type1, c.type2].filter(Boolean).map(type => {
+                const key = String(type).toLowerCase();
+                return TYPE_SYSTEM.TRADUCOES[key] || type;
+            })
+        };
+        apiCache[normalizarNomePokemon(nome)] = info;
+        return info;
+    }
+
     async function buscarAtributosBase(nome) {
+        const key = normalizarNomePokemon(nome);
+        if (!key) throw new Error('Nome do Pokémon inválido.');
+        const local = atributosDoCatalogo(nome);
+        if (local) return local;
+        if (apiCache[key]) return apiCache[key];
+        if (baseRequests.has(key)) return baseRequests.get(key);
+        const pending = (async () => {
+            // O catálogo já começa a carregar no boot; não inicia outra requisição no hover.
+            if (creaturesReady) await creaturesReady;
+            const loaded = atributosDoCatalogo(nome);
+            if (loaded) return loaded;
+            return buscarAtributosBaseRemoto(nome);
+        })();
+        baseRequests.set(key, pending);
+        try { return await pending; }
+        finally { baseRequests.delete(key); }
+    }
+
+    async function buscarAtributosBaseRemoto(nome) {
         const nomeNormalizado =
             normalizarNomePokemon(nome);
 
@@ -3255,14 +3295,18 @@
     }
 
     function processarTooltip(tooltip) {
-        if (!mouseTrackingEnabled) return;
+        if (window.__pgIvBundled && window.__pgIvHoverEnabled === false) return;
+        if (!mouseTrackingEnabled && !window.__pgIvHoverEnabled) return;
+        if (tooltip && tooltip.getClientRects && (!tooltip.getClientRects().length
+            || getComputedStyle(tooltip).visibility === 'hidden')) { ivHoverSai(); return; }
 
         const texto =
             tooltip?.innerText?.trim();
 
-        if (!texto || texto === ultimoTexto) {
+        if (!texto) {
             return;
         }
+        if (texto === ultimoTexto && ivHover.ativo && ivHover.texto === texto) return;
 
         if (
             !/Poder|Power/i.test(texto) ||
@@ -3274,6 +3318,20 @@
         const pokemon = parsePokemon(texto);
 
         if (!pokemon) return;
+
+        const novaLeitura = ivHover.texto !== texto;
+        if (novaLeitura) {
+            ivTooltipRestaura();
+            ivHover.texto = texto;
+            ivHover.alvo = tooltip.hoverTarget || null;
+            ivHover.id++;
+            ivHover.ativo = true;
+            ivHoverEnvia();
+        }
+        if (texto === ultimoTexto) {
+            if (novaLeitura) window.__pgIv.reportar();
+            return;
+        }
 
         if (ultimoPokemon && normalizarNomePokemon(ultimoPokemon.nome) !== normalizarNomePokemon(pokemon.nome)) {
             danoPorGolpe.clear();
@@ -3351,12 +3409,16 @@
                         tooltipAtual
                     );
                 }
+                ivHoverConfere();
+                processarDadosMercado();
             });
 
         observer.observe(document.body, {
             childList: true,
             subtree: true,
-            characterData: true
+            characterData: true,
+            attributes: true,
+            attributeFilter: ['class', 'style', 'hidden']
         });
 
         console.log(
@@ -3366,6 +3428,8 @@
 
     function criarCSS() {
         return `
+            ${window.__pgIvBundled ? '#pokemon-reader-panel, #moves-panel { display: none !important; }' : ''}
+            .inv-tip[data-pg-iv-replaced] { opacity: 0 !important; pointer-events: none !important; }
             #${CONFIG.panelId} {
                 position: fixed;
                 top: 60px;
@@ -5316,18 +5380,24 @@
     // =========================================================================
     // NOVO: SISTEMA DE LEITURA DO MERCADO GLOBAL (VIA CLIQUE NA LINHA)
     // =========================================================================
+    let ivMercadoSelecionado = null;
     function processarDadosMercado() {
+        if (window.__pgIvHoverEnabled === false) return;
         const lateral = document.querySelector("aside.mkt2-details");
-        if (!lateral) return;
+        if (!lateral || !lateral.getClientRects().length) return;
+        const alvo = lateral.matches(':hover') ? lateral
+            : ivMercadoSelecionado && ivMercadoSelecionado.isConnected && ivMercadoSelecionado.matches(':hover')
+                ? ivMercadoSelecionado : null;
+        if (!alvo) return;
 
         // 1. Nome e Nível (Ex: "Geodude Lv.1")
         const nomeNivelTexto = lateral.querySelector(".mkt2-details-name")?.innerText?.trim() || "";
         if (!nomeNivelTexto) return;
 
-        const nivelMatch = nomeNivelTexto.match(/Lv\.?\s*(\d+)/i);
+        const nivelMatch = nomeNivelTexto.match(/(?:Lv|Nv)\.?\s*(\d+)/i);
         const nivel = nivelMatch ? Number(nivelMatch[1]) : 1;
         // Remove o "Lv.X" para isolar o nome limpo
-        const nome = nomeNivelTexto.replace(/Lv\.?\s*\d+/i, "").trim();
+        const nome = nomeNivelTexto.replace(/(?:Lv|Nv)\.?\s*\d+/i, "").trim();
 
         // 2. Qualidade / Multiplicador (Ex: "Lendária ×1.70" ou "Lendária x1.70")
         const qualidadeTexto = lateral.innerText.match(/(?:Raridade|Rarity)\s+([^\n]+)/i)?.[1]?.trim() || "";
@@ -5337,6 +5407,14 @@
         const ivMatch = lateral.innerText.match(/IV\s*(\d+)\s*\/\s*(\d+)/i);
         const ivAtual = ivMatch ? Number(ivMatch[1]) : null;
         const ivMaximo = ivMatch ? Number(ivMatch[2]) : 192;
+        if (ivAtual == null || !nivelMatch) return; // Anúncios de itens não são Pokémon.
+        if (alvo !== lateral) {
+            const linha = alvo.innerText || '';
+            const ivLinha = linha.match(/\bIV\s*(\d+)/i);
+            const qLinha = linha.match(/[×x]\s*(\d+(?:[.,]\d+)?)/i);
+            if ((ivLinha && Number(ivLinha[1]) !== ivAtual)
+                || (qLinha && Math.abs(numeroDecimal(qLinha[1]) - multiplicador) > 0.001)) return;
+        }
 
         // 4. Poder
         const poderMatch = lateral.innerText.match(/(?:Poder|Power)\s*.*?(\d+)/i);
@@ -5345,7 +5423,7 @@
         // 5. Tipos (Mapeia as badges de tipo dentro da lateral)
         const tipos = Array.from(lateral.querySelectorAll(".mkt2-card-badges span, .mkt2-statlist span"))
             .map(el => el.innerText.trim())
-            .filter(txt => txt && !/Poder|Power|Ativo|Active|Somente|Only/i.test(txt));
+            .filter(txt => obterChaveTipo(txt));
 
         // 6. Atributos Atuais (Stats vindos da grid de células .mkt2-statcell)
         const statsCelas = Array.from(lateral.querySelectorAll(".mkt2-stats .mkt2-statcell"));
@@ -5363,6 +5441,7 @@
         const spa = obterValorCela(3);
         const spd = obterValorCela(4);
         const vel = obterValorCela(5);
+        if (![hp, atk, def, spa, spd, vel].every(v => Number.isFinite(v) && v > 0)) return;
 
         // Monta o objeto estruturado identicamente ao seu leitor original
         const pokemon = {
@@ -5378,13 +5457,21 @@
             poder
         };
 
+        // A loja não abre .inv-tip: inicia seu próprio hover com os atributos do anúncio.
+        // A assinatura completa distingue exemplares da mesma espécie e nível.
+        const assinatura = 'MKT-' + JSON.stringify(pokemon);
+        if (ivHover.ativo && ivHover.texto === assinatura && ivHover.alvo === alvo) return;
+        ivTooltipRestaura();
+        ivHover.texto = assinatura; ivHover.alvo = alvo; ivHover.id++; ivHover.ativo = true;
+        ivHoverEnvia();
+
         // Reseta o cache de golpes da caçada se mudar de Pokémon
         if (ultimoPokemon && normalizarNomePokemon(ultimoPokemon.nome) !== normalizarNomePokemon(pokemon.nome)) {
             danoPorGolpe.clear();
             ultimoGolpeUsado = null;
         }
 
-        ultimoTexto = `MKT-${nome}-${nivel}-${poder}`; // Evita travamento de repetição idêntica
+        ultimoTexto = assinatura;
         ultimoPokemon = pokemon;
         try { window.__pgIv && window.__pgIv.reportar(); } catch (x) {} // pokemon do mercado tambem alimenta o card do app
 
@@ -5407,11 +5494,20 @@
     function iniciarEscutasEventos() {
         // Escuta Cliques no Mercado Global usando Event Delegation (suporta modo linhas e cards)
         document.addEventListener("click", (evento) => {
-            const clicado = evento.target.closest(".mkt2-trow.clickable, .mkt2-card.clickable");
+            const clicado = evento.target.closest(".mkt2-trow:not(.mkt2-trow--head), .mkt2-card");
             if (clicado) {
+                ivMercadoSelecionado = clicado;
+                ivHover.x = evento.clientX; ivHover.y = evento.clientY; ivHover.posicao = true;
+                ivHoverSai();
                 // Pequeno delay de 60ms para esperar o jogo renderizar os dados na barra lateral
                 setTimeout(processarDadosMercado, 60);
             }
+        });
+        document.addEventListener('mouseover', evento => {
+            const alvo = evento.target.closest('aside.mkt2-details, .mkt2-trow, .mkt2-card');
+            if (!alvo || alvo.contains(evento.relatedTarget)) return;
+            ivHover.x = evento.clientX; ivHover.y = evento.clientY; ivHover.posicao = true;
+            processarDadosMercado();
         });
     }
 
@@ -5568,11 +5664,65 @@
         console.warn("[Poké Leitor] Erro ao carregar dados salvos:", e);
     }
 
+    // Hover usa coordenadas do viewport do jogo; o app converte para a janela e o zoom.
+    const ivHover = { ativo: false, texto: '', id: 0, x: 0, y: 0, posicao: false };
+    let ivHoverFrame = null;
+    // Opacidade preserva texto e geometria usados pelo leitor. display:none/visibility:hidden
+    // interromperiam o cálculo e fariam o observer alternar entre os dois tooltips.
+    function ivTooltipRestaura() {
+        if (ivHover.tooltip) ivHover.tooltip.removeAttribute('data-pg-iv-replaced');
+        ivHover.tooltip = null;
+    }
+    function ivTooltipSubstitui() {
+        if (!window.__pgIvBundled || window.__pgIvHoverEnabled === false || !ivHover.ativo || ivHover.alvo) return;
+        const tooltip = document.querySelector(CONFIG.tooltipSelector);
+        if (!tooltip || (tooltip.innerText || '').trim() !== ivHover.texto) return;
+        ivTooltipRestaura();
+        tooltip.setAttribute('data-pg-iv-replaced', '');
+        ivHover.tooltip = tooltip;
+    }
+    function ivHoverEnvia() {
+        console.log('__PGIVH__' + JSON.stringify({ ativo: ivHover.ativo && ivHover.posicao,
+            id: ivHover.id, x: ivHover.x, y: ivHover.y, width: innerWidth, height: innerHeight }));
+    }
+    function ivHoverSai() {
+        ivTooltipRestaura();
+        if (!ivHover.ativo) return;
+        ivHover.ativo = false;
+        ivHover.texto = '';
+        ivHover.id++;
+        ivHoverEnvia();
+    }
+    function ivHoverConfere() {
+        if (ivHover.alvo) {
+            if (!ivHover.alvo.isConnected || !ivHover.alvo.matches(':hover')) ivHoverSai();
+            return;
+        }
+        const tooltip = document.querySelector(CONFIG.tooltipSelector);
+        if (!tooltip || !tooltip.getClientRects().length || getComputedStyle(tooltip).visibility === 'hidden'
+            || !/Poder|Power/i.test(tooltip.innerText || '') || !/(?:Nv|Lv)\s*\d+/i.test(tooltip.innerText || '')) ivHoverSai();
+    }
+    document.addEventListener('mousemove', event => {
+        ivHover.x = event.clientX; ivHover.y = event.clientY; ivHover.posicao = true;
+        if (ivHoverFrame !== null) return;
+        ivHoverFrame = setTimeout(() => {
+            ivHoverFrame = null;
+            ivHoverConfere();
+            if (ivHover.ativo) ivHoverEnvia();
+        }, 50);
+    }, true);
+    document.documentElement.addEventListener('mouseleave', () => { ivHover.posicao = false; ivHoverSai(); });
+    window.addEventListener('blur', ivHoverSai);
+    window.addEventListener('pagehide', ivHoverSai);
+
     // ===== Ponte pro card unico do PokeMux =====
-    // O card fica na janela do app (fora dos paineis), pra poder abrir no centro da tela e maior.
-    // O calculo continua aqui, que e onde estao as formulas e a busca dos atributos-base, entao
-    // nao existe formula duplicada: o app so pede o resultado e mostra.
+    // O resultado acompanha o cursor na janela do app. O cálculo continua aqui, junto
+    // das fórmulas e dos atributos-base; a identidade do hover cancela leituras atrasadas.
     window.__pgIv = {
+        setEnabled(on) {
+            window.__pgIvHoverEnabled = !!on;
+            ivHoverSai();
+        },
         async calc(entrada) {
             const e = entrada || {};
             const pk = e.pokemon || ultimoPokemon;
@@ -5645,7 +5795,18 @@
         },
         // avisa o app: o canal e o console do painel, que o app escuta (sem ficar consultando)
         async reportar() {
-            try { const r = await window.__pgIv.calc(); if (r) console.log("__PGIV__" + JSON.stringify(r)); } catch (x) {}
+            const id = ivHover.id;
+            const pokemon = ultimoPokemon;
+            if (!ivHover.ativo || window.__pgIvHoverEnabled === false) return;
+            try {
+                const r = await window.__pgIv.calc({ pokemon });
+                ivHoverConfere();
+                if (r && window.__pgIvHoverEnabled !== false && ivHover.ativo && id === ivHover.id && pokemon === ultimoPokemon) {
+                    ivHoverEnvia();
+                    console.log("__PGIV__" + JSON.stringify({ ...r, hoverId: id }));
+                    if (!r.erro) ivTooltipSubstitui();
+                }
+            } catch (x) {}
         }
     };
 
@@ -5656,7 +5817,7 @@
     function observarDepositoFamilia() {
         document.addEventListener('mouseover', (e) => {
             try {
-                if (!mouseTrackingEnabled) return;
+                if (!mouseTrackingEnabled && !window.__pgIvHoverEnabled) return;
                 const alvo = e.target && e.target.closest ? e.target.closest('div,li,button,article') : null;
                 if (!alvo) return;
                 if (alvo.childElementCount > 6) return; // container grande: nem le o texto (custa caro no mousemove)
@@ -5665,11 +5826,11 @@
                 const m = tx.match(/^(.{2,40}?)\s*\u00b7\s*(?:Nv|Lv)\s*(\d+)\s*\u00b7\s*IV\s*(\d+)\s*\u00b7\s*Q\s*([\d.,]+)/i);
                 if (!m) return;
                 const texto = m[1].trim() + '\nNv ' + m[2] + '\nIV ' + m[3] + '/192\nQualidade \u00d7' + m[4].replace(',', '.') + '\nPoder 0';
-                processarTooltip({ innerText: texto });
+                processarTooltip({ innerText: texto, hoverTarget: alvo });
             } catch (x) {}
         }, true);
     }
-    carregarCreatures();
+    creaturesReady = carregarCreatures();
     criarPainel();
     observarTooltips();
     iniciarEscutasEventos();

@@ -13,7 +13,9 @@
 
 [Baixar para Windows](https://github.com/Diego-ops501/PokeMux/releases/latest) · [Manual](MANUAL.md) · [FAQ](FAQ.md) · [Changelog](CHANGELOG.md)
 
-<img src="docs/modo-simples.png" width="880" alt="Modo Simples do PokeMux">
+<img src="docs/recomendacao-hunt.png" width="880" alt="PokeMux 1.1.15: recomendação de hunt com seção separada do tipo do dia">
+
+*Recomendação de hunt e bônus do tipo do dia — demonstração com Squirtle Lv1.*
 
 </div>
 
@@ -28,6 +30,18 @@ A base do PokeGrid forneceu a grade de quatro contas, sessões separadas, login 
 Algumas ideias de interface e leitura de eventos também foram inspiradas pelo [Poke Idle Launcher](https://github.com/AntonioFleck/poke-idle-launcher), igualmente MIT. Consulte [NOTICE.md](NOTICE.md) para os avisos completos.
 
 ## Recursos
+
+### IV automático no cursor
+
+Ative **IV: ON** e passe o mouse sobre um Pokémon. O resultado aparece junto ao cursor, com IV por atributo, qualidade, poder e aptidão.
+
+<img src="docs/iv-automatico.png" width="880" alt="PokeMux 1.1.15: card de IV automático junto ao cursor sobre Charizard">
+
+*Demonstração da interface com dados de exemplo.*
+
+### Modo Simples
+
+<img src="docs/modo-simples.png" width="880" alt="Modo Simples do PokeMux">
 
 ### Quatro contas e login
 
@@ -54,9 +68,11 @@ Algumas ideias de interface e leitura de eventos também foram inspiradas pelo [
 - Gold/h líquido, XP/h, kills/h, capturas, gasto de Pokébolas e suprimentos.
 - Overkill, golpes por abate, dano relativo e ETA de nível/metas.
 - Recomendação de hunt usando medições da própria conta.
+- Botão **Recomendar hunt** para o Pokémon principal de cada conta, com tipos, golpes, ataque, HP, defesas, nível, risco estimado e medições de XP/h; entrada na opção escolhida com um clique e confirmação do jogo.
+- Melhor hunt do **Tipo do Dia** em uma seção separada, com borda na cor do tipo, bônus de XP/loot e término do evento informados pelo jogo.
 - Hunt Analyzer, ranking de hunts, tierlist e painel especializado para Ditto.
 - Mochila por categoria, itens fixados, equipe, patrimônio e acompanhamento de alvo shiny.
-- Calculadora de IV integrada, com projeção de poder, tipos, golpes e classificação de potencial.
+- IV automático ao passar o mouse sobre um Pokémon, com resultado junto ao cursor, atributos, poder e classificação de potencial; botão IV: ON/OFF com preferência salva.
 - Helper de IV fixo e auditável, carregado somente depois do login; não há carregamento de userscripts externos.
 
 ### Alertas
@@ -82,7 +98,7 @@ Algumas ideias de interface e leitura de eventos também foram inspiradas pelo [
 - Venda protegida para shiny, qualidade alta e itens definidos pelo usuário.
 - Retorno experimental à mesma hunt após recarregamento, desligado por padrão, com slug validado, intervalo de 12 segundos e no máximo três tentativas.
 
-O aplicativo não inclui refill automático, venda automática, rotação de hunts, resolução de CAPTCHA ou novas ações repetitivas. As ações de jogo mantidas são o login assistido, a compra confirmada de Pokébolas e o retorno experimental à mesma hunt.
+O aplicativo não inclui refill automático, venda automática, rotação de hunts, resolução de CAPTCHA ou novas ações repetitivas. As ações de jogo são o login assistido, a compra confirmada de Pokébolas, a entrada pontual em uma hunt recomendada escolhida pelo usuário e o retorno experimental à mesma hunt.
 
 ## Instalação no Windows
 
