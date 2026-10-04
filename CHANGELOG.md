@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.16 — Alertas de suprimentos e foco do Resumo
+
+- Removidos os alertas de revives em todos os modos, incluindo voz, notificações do Windows e Discord. Os avisos de Pokébolas e poções continuam disponíveis.
+- O Resumo aberto acompanha o treinador da tela ampliada, mantendo a seleção manual pelas abas. Respostas atrasadas de outra conta não sobrescrevem a seleção atual.
+
 ## 1.1.15 — IV no cursor e recomendação de hunts
 
 - Botão **IV: ON/OFF** ativa ou desativa o cálculo automático. O resultado aparece junto ao cursor sobre um Pokémon, com a preferência salva.

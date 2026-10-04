@@ -83,7 +83,7 @@ Ative **IV: ON** e passe o mouse sobre um Pokémon. O resultado aparece junto ao
 - Voz para:
   - captura de shiny concluída com sucesso;
   - captura de Pokémon com IV 160 ou mais, informando IV e raridade;
-  - Pokébolas, poções e revives acabando, com nome da conta e quantidade;
+  - Pokébolas e poções acabando, com nome da conta e quantidade;
   - Strange Pheromones ou Boss Token, com nome da conta e do item;
   - captura exatamente na faixa de qualidade **Lendária** (`1,7 ≤ qualidade < 2,0`), informando também o IV.
 - Voz e notificações do Windows não avisam a aparição nem a falha de captura de shiny. Capturas com IV 160+ ou raridade Lendária recebem uma única mensagem com conta, Pokémon, IV e raridade.

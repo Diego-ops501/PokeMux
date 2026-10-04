@@ -22,7 +22,7 @@ Atalhos de teclado (só quando o foco está no app, não dentro do jogo): **H** 
 
 ## 📊 Painel: a barra lateral
 
-Mostra os números da conta que está em foco. Clique no painel de outra conta para trocar.
+Com o Resumo aberto, ampliar uma tela seleciona automaticamente o treinador daquela conta. Você também pode escolher um treinador específico ou o total Σ pelas abas do Resumo. A seleção manual permanece até você ampliar outra tela.
 
 Na **engrenagem ⚙** do topo dela você escolhe **quais seções aparecem** e arrasta pra reordenar. Duas seções precisam de um passo antes de mostrar algo:
 

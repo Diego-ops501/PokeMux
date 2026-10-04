@@ -18,6 +18,8 @@ function ok(value, message) {
 }
 
 console.log('\n--- Voz local e eventos anunciados ---');
+ok(!/msgRevivesLow|revivesLow|REVIVE_MIN/.test(html), 'revives não disparam alertas, voz ou Discord em nenhum modo');
+ok([...html.matchAll(/alLocal_balls:'([^']*)'/g)].every(m => !/reviv/i.test(m[1])), 'opções de suprimentos não anunciam revives nos três idiomas');
 ok(html.includes("if (sndShinyOn) beepShiny()") && html.includes("if (sndShinyOn) beepShiny(true)") && !html.includes('sndShinyOn && !voiceOn'), 'acorde de shiny funciona junto com a voz');
 ok(html.includes("if (_ac.state === 'suspended') await _ac.resume()") && html.includes("_ac.state !== 'running'"), 'WebAudio suspenso é reativado antes do alerta');
 ok(html.includes('function beepVoiceFallback()') && html.includes("logError('audio-alerta'") && html.includes("fim('tempo esgotado')"), 'falha ou travamento da voz gera fallback e diagnóstico');
