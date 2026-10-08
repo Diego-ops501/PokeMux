@@ -17,6 +17,8 @@ $checksums = Join-Path $root "dist\CHECKSUMS-SHA256.txt"
 
 npm test
 if ($LASTEXITCODE -ne 0) { throw "Testes falharam." }
+npm run test:market-refresh
+if ($LASTEXITCODE -ne 0) { throw "Teste de atualização do mercado falhou." }
 npm run dist
 if ($LASTEXITCODE -ne 0) { throw "Build falhou." }
 

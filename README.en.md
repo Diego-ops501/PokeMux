@@ -20,12 +20,18 @@ PokeMux adds a Windows installer and updater, hardened storage and navigation, l
 
 ## Highlights
 
+- Global Market available from the gold icon in the top bar, with account selection, categories, Pokémon filters, sorting, pagination and listing details. Open market data refreshes every 60 seconds while preserving the current search, filters, page, selection and scroll.
+- Visual inventory picker using the game's bag artwork to compare owned items and Pokémon with listings in dollars and diamonds. Adjustable IV, level and quality tolerances; lowest price, sample median and highest buy request. No global completed-sales history.
+- Header cards for the lowest Diamond price in dollars, Strange Pheromone and Bronze Boss Token prices in both currencies.
+- Up to 10 local market alerts per account/character, autocomplete search, maximum unit price and Pokémon conditions. Windows notifications and local speech; checks every 60 seconds while the app runs, even with the market window closed. The first check is silent and repeat listings are deduplicated.
+- Include evolutions and pre-evolutions from the game's catalog in Pokémon searches and alerts. The search checkbox is inside the Pokémon filters, with sorting beside quality options above results.
+- Compact top bar: support and referral on the left; IV, Market and Options artwork on the right, with Options last. Game Menu and Overlay use text buttons.
 - Hard limit of four persistent, isolated accounts.
 - Assisted auto-login with credentials protected by Electron `safeStorage`/Windows DPAPI.
 - Dashboard, Simple mode, history, gold/XP/kills metrics, overkill, ETA and hunt recommendations.
 - Hunt Analyzer, tier list, Ditto analysis, inventory and IV calculator.
 - Windows, popup and Discord alerts; optional local shiny screenshot.
-- Offline Windows speech for a live shiny, shiny catch/loss, low supplies and Legendary-quality catches.
+- Local Windows speech for successful shiny captures, low Poké Ball/potion supplies, rare drops, IV 160+ or Legendary-quality captures and configured market alerts.
 - Read-only floating overlay.
 - One-shot Poké Ball purchases with account, quantity, total cost and balance confirmation.
 - Experimental return to the same hunt after reload, off by default and limited to three attempts.
@@ -44,6 +50,18 @@ npm start
 ```
 
 Build the Windows x64 NSIS installer with `npm run dist`.
+
+Run `npm run test:market-refresh` for the real Electron renderer refresh test. `npm run docs:market` renders the following screenshots with fictional data and no access to saved accounts.
+
+## New market screens
+
+![Global Market with Pokémon filters and evolution family](docs/mercado-global.png)
+
+![Owned inventory comparison](docs/comparacao-mercado.png)
+
+![Market alert conditions and autocomplete](docs/alertas-mercado.png)
+
+These are demonstrations with fictional prices. Purchases and negotiations take place in the game. See the [manual](MANUAL.md) for monitoring limits and sample details.
 
 ## Security
 

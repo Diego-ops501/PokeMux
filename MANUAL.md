@@ -6,6 +6,8 @@ Guia curto do que cada coisa faz. Se você só quer resolver um problema pontual
 
 O PokeMux usa uma barra superior compacta, sem uma barra lateral fixa. Assim, toda a largura da janela fica disponível para as telas do jogo. Os recursos ficam na barra superior e no menu **☰ Opções**:
 
+A barra combina comandos com texto e alguns ícones no estilo do jogo. Ajude o projeto e Referral ficam juntos à esquerda. À direita ficam os ícones de IV, Mercado e Opções, nessa ordem, com Opções no fim. Menu do jogo e Overlay ficam junto dos outros comandos, com texto e sem ícone. Passe o mouse para ver a descrição; use Tab para navegar e Enter para ativar. O Mercado Global mantém sua arte original.
+
 | Botão | O que faz |
 |---|---|
 | **▶ Logar equipe** | Loga as 4 contas de uma vez, com as senhas salvas |
@@ -16,9 +18,36 @@ O PokeMux usa uma barra superior compacta, sem uma barra lateral fixa. Assim, to
 | **📌 Overlay** | Abre o resumo flutuante somente-leitura |
 | **IV: ON/OFF** | Ativa ou desativa o cálculo automático de IV ao passar o mouse sobre um Pokémon |
 | **🎯 Recomendar hunt** | Recomenda onde upar o Pokémon principal da conta; clique em uma opção para ir até ela |
+| **Ícone dourado do Mercado Global** | Abre a consulta de preços, anúncios e Pokémon sem sair da hunt, com seleção de conta, categorias, busca, filtros, paginação e detalhes |
 | **☰ Opções** | Tudo o mais: Hunt, Tierlist, Ditto, Alertas, Venda protegida, Eco, atualização e FAQ... |
 
 Atalhos de teclado (só quando o foco está no app, não dentro do jogo): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Opções, **M** menu do jogo, **E** Eco, **A** Alertas.
+
+O ícone do Mercado Global abre uma janela de consulta usando a sessão da conta selecionada. A categoria Pokémon permite escolher uma espécie ou todos os Pokémon, filtrar shiny, IV, nível, qualidade, tipo e raridade, ordenar e navegar pelas páginas. Selecione um anúncio para ver seus detalhes. Estão disponíveis Comprar, Comparar com o mercado, Alertas, Meus Anúncios, Solicitações e Histórico da conta. A aba Solicitações inclui uma prévia; compras e negociações continuam sendo feitas pelo mercado do jogo. **⟳** atualiza os dados e **Esc** fecha a janela.
+
+Em **Comparar com o mercado**, busque e selecione um item, Poké Ball, Diamonds ou Pokémon da conta. Itens são comparados pelo identificador e tipo; Pokémon pela espécie/forma, condição shiny e margens ajustáveis de IV, nível e qualidade (padrão: ±10 IV, ±10 níveis e ±0,10 qualidade). **Ampliar para toda a espécie** remove essas três margens e mantém espécie/forma e shiny. O resumo separa dollars e diamonds, com menor preço e mediana dos anúncios consultados e maior solicitação de compra disponível. A mediana é por oferta/grupo, sem ponderar quantidade; anúncios somente por proposta não entram nos preços. Pokémon são consultados em páginas: **Carregar mais anúncios** aumenta a amostra e recalcula o resumo. A quantidade consultada fica visível. Solicitações representam intenções de compra, sem histórico global de vendas concluídas. **⟳** também atualiza o inventário da conta.
+
+Na busca normal de **Pokémon**, escolha uma espécie e marque **Incluir evoluções** nos filtros de IV, nível e qualidade para reunir toda a cadeia cadastrada no catálogo do jogo, incluindo evoluções anteriores. Por exemplo, Venusaur inclui Bulbasaur e Ivysaur; Alakazam inclui Abra e Kadabra. Os filtros, a ordenação e a paginação são mantidos. A cadeia aparece acima dos anúncios. A caixa não aparece na seleção geral de espécies. Formas diferentes não são agrupadas pelo nome.
+
+O cabeçalho mostra três cards com os menores preços unitários dos anúncios ativos: Diamante em dollars, Strange Pheromone e Boss Token (Bronze Boss Token) em dollars e diamonds. Anúncios somente por proposta e sem quantidade disponível não entram no cálculo. Os cards usam o mercado da conta selecionada, independentemente dos filtros e da aba aberta; **⟳** atualiza os preços. Quando não há uma oferta na moeda, aparece “Sem anúncio”.
+
+A seleção na comparação usa a moldura e as categorias da bag do jogo: Todos, Pokémon, Poké Balls e Itens (incluindo Diamonds). Clique no slot para consultar o bem. As células mostram quantidade ou nível, shiny e equipe; o nome e as condições aparecem ao passar o mouse e no painel do selecionado. A busca filtra a grade e inventários maiores têm páginas de 60 bens.
+
+Os anúncios mostram há quanto tempo foram publicados, quando o jogo fornece a data. Nos detalhes aparece também a data completa. Em ofertas agrupadas de vários vendedores, essa data pertence à oferta representada pelo grupo; não representa todos os anúncios individuais. O tempo exibido é atualizado a cada minuto enquanto a janela está aberta.
+
+Com o Mercado Global aberto, os dados são atualizados automaticamente a cada 60 segundos em segundo plano. A busca, os filtros, a ordenação, a página, a seleção e a rolagem são preservados, assim como campos de alertas ainda não salvos. A consulta não substitui os resultados por uma tela de carregamento. Ao fechar a janela, essa atualização para; os alertas salvos continuam com seu próprio monitor. Em falhas, os dados anteriores permanecem visíveis. Se o servidor limitar as consultas, a atualização automática aguarda cinco minutos. **⟳** continua disponível para atualizar manualmente.
+
+## Alertas do Mercado Global
+
+As [telas de demonstração no README](README.md#mercado-global-comparação-e-alertas) mostram a busca com filtros, a comparação pela bag e o formulário de alertas com dados fictícios.
+
+A aba **Alertas** permite salvar até 10 regras, vinculadas ao personagem e à conta selecionados. Escolha um item/Poké Ball/Diamonds ou uma espécie/forma de Pokémon, moeda e preço máximo unitário. Pokémon também permitem filtrar comum/shiny, IV, nível e qualidade. Digite em **O que monitorar?** para ver as sugestões do catálogo com suas imagens; selecione pelo mouse ou pelas setas e Enter. Notificação no PC e voz podem ser escolhidas por regra e respeitam os controles gerais de alertas e voz do PokeMux.
+
+Para Pokémon, a caixa **Incluir evoluções** acrescenta evoluções e pré-evoluções à regra e mostra quais espécies serão monitoradas. Todas precisam atender aos mesmos filtros de preço, moeda, shiny, IV, nível e qualidade. A caixa começa desmarcada; alertas existentes mantêm a espécie original.
+
+O monitor consulta o mercado a cada 60 segundos enquanto o aplicativo estiver aberto, inclusive com a janela do mercado fechada ou o app minimizado. A primeira consulta após criar, ativar ou reabrir o app estabelece uma referência e não avisa anúncios já existentes. Ofertas repetidas não geram novos avisos. **Pausar**, **Ativar**, **Remover** e **Verificar agora** controlam as regras; a lista informa a última consulta, oferta detectada ou problema de conexão. Se o personagem da conta mudou, a regra antiga não é aplicada ao novo personagem.
+
+O jogo não envia um evento público de novo anúncio: a detecção depende das consultas. Para Pokémon são consultadas até 60 ofertas recentes por espécie nas faixas configuradas, incluindo as evoluções quando marcadas. Ofertas que surgem e desaparecem entre consultas ou ficam fora dessa janela podem não ser detectadas. Se o jogo limitar as consultas, o monitor aguarda cinco minutos antes de tentar novamente. As regras são salvas localmente; a referência dos anúncios é refeita ao reiniciar o app.
 
 ## 📊 Painel: a barra lateral
 

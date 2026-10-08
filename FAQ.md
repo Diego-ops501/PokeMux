@@ -16,6 +16,21 @@ Electron (Chromium, o motor do Chrome). Cada conta roda numa sessão separada.
 
 ## Uso diário
 
+### Como consulto o Mercado Global sem sair da hunt?
+Clique no ícone dourado do mercado no topo e escolha a conta conectada. Use categorias, busca, filtros e detalhes dos anúncios. A janela atualiza automaticamente a cada 60 segundos sem alterar sua pesquisa, filtros, página ou rolagem; **⟳** também permite atualizar manualmente.
+
+### Como vejo o preço de um item ou Pokémon que já tenho?
+Abra **Comparar com o mercado**, selecione o bem na bag e consulte os valores em dollars e diamonds. Pokémon permitem ajustar as margens de IV, nível e qualidade ou ampliar para toda a espécie/forma. A mediana representa somente a amostra consultada; **Carregar mais anúncios** amplia essa amostra.
+
+### Há histórico global de vendas concluídas?
+Não. São consultados anúncios ativos e solicitações de compra, que não comprovam vendas. **Histórico** mostra apenas o histórico da conta disponibilizado pelo jogo.
+
+### Os alertas funcionam com a janela do mercado fechada?
+Sim, enquanto o PokeMux estiver aberto. Na aba **Alertas**, digite e selecione o bem, configure preço/moeda e condições e salve a regra. As consultas ocorrem a cada 60 segundos; a primeira não avisa ofertas antigas. Notificação e voz respeitam os controles gerais do app. Anúncios removidos entre consultas ou fora da janela de até 60 ofertas recentes por espécie podem não ser detectados.
+
+### Incluir evoluções também inclui evoluções anteriores?
+Sim. A opção reúne a cadeia cadastrada no jogo: Venusaur inclui Bulbasaur e Ivysaur. Na busca normal, ela fica nos filtros após escolher a espécie; nos alertas, fica no formulário de Pokémon. Os mesmos filtros são aplicados a toda a cadeia.
+
 ### Onde vejo a sugestão de hunts?
 **Simples → seção Hunts**: ordene por **Sugerido** e escolha o atacante no **"caçar com"**. Com Ditto no time, aparece a melhor transformação por elemento. As estimativas de kills/h e XP/h surgem depois que o app mede algumas hunts suas.
 
@@ -56,4 +71,4 @@ Pelo botão **Ajude o projeto** ao lado do logo, no topo do app, ou direto em [l
 
 
 ### Como contribuo?
-Fork de https://github.com/soufoka/PokeGrid-source, rode `npm test` e abra o PR. A `main` é protegida, tudo entra por PR.
+Faça um fork de [Diego-ops501/PokeMux](https://github.com/Diego-ops501/PokeMux), rode `npm test` e abra um PR neste repositório. Para mudanças no mercado, rode também `npm run test:market-refresh`. Os créditos e a licença da base [PokeGrid](https://github.com/soufoka/PokeGrid-source) devem ser preservados.

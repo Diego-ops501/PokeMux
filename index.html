@@ -4,13 +4,18 @@
 <meta charset="UTF-8">
 <!-- Defesa em profundidade: a interface nao faz rede (fetch/XHR/WS bloqueados), so carrega img do jogo/data.
      Se algum dado escapar do escape, nao ha canal pra vazar as contas salvas. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: https://poke.idleworld.online https://raw.githubusercontent.com https://pokexguides.com; font-src 'self' data:; connect-src https://api.github.com; frame-src https://poke.idleworld.online; child-src https://poke.idleworld.online; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://poke.idleworld.online https://raw.githubusercontent.com https://pokexguides.com; font-src 'self' data:; connect-src https://api.github.com; frame-src https://poke.idleworld.online; child-src https://poke.idleworld.online; base-uri 'none'; form-action 'none'">
 <title>PokeMux</title>
 <script src="src/domain/iv-math.js"></script>
 <script src="src/domain/capture-filters.js"></script>
 <script src="src/domain/hunt-measurements.js"></script>
 <script src="src/domain/pokemon-aptitude.js"></script>
 <script src="src/domain/hunt-recommendations.js"></script>
+<script src="src/domain/global-market.js"></script>
+<script src="src/domain/market-alerts.js"></script>
+<script src="src/renderer/global-market.js"></script>
+<link rel="stylesheet" href="src/renderer/global-market.css">
+<link rel="stylesheet" href="src/renderer/toolbar.css">
 <style>
   :root {
     --brand-cyan: #22d3ee;
@@ -512,46 +517,51 @@
       <img src="pokemux-logo-ui.png" alt="PokeMux">
       <span class="ver" id="appVer"></span>
     </span>
-    <button id="donTop">Ajude o projeto</button>
+    <div id="supportLinks">
+      <button id="donTop" class="game-tool">Ajude o projeto</button>
+      <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)" class="game-tool">🔗</button>
+    </div>
     <button id="loginAll" class="primary">▶ Logar equipe</button>
     <button id="accounts">👤 Treinadores</button>
     <button id="reloadAll">⟳ Atualizar tudo</button>
-    <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">🎛 Menu do jogo</button>
     <button id="statsBtn" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">📊 Painel</button>
     <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">🃏 Cartas</button>
-    <button id="overlayBtn" title="Abre um resumo flutuante somente-leitura">📌 Overlay</button>
-    <button id="ivsBtn" title="Ativa ou desativa o IV automático ao passar o mouse sobre um Pokémon" aria-pressed="true">IV: ON</button>
     <button id="recommendBtn">🎯 Recomendar hunt</button>
-    <div id="menuWrap">
-      <button id="menuBtn">☰ Opções</button>
-      <div id="menu">
-        <button id="hunt" title="Abre o Hunt Analyzer em todos os painéis">🎯 Hunt</button>
-        <button id="tierBtn">🏆 Tierlist</button>
-        <button id="dittoBtn" title="Onde caçar com o Ditto (comum ou shiny) e em que pokémon virar, no seu nível">✨ Ditto</button>
-        <button id="count" title="Quantas contas rodar ao mesmo tempo (1 a 4)">🔢 Painéis: 4</button>
-        <button id="alerts" title="Avisa quando uma conta cai ou fica sem pokébola">🔔 Alertas</button>
-        <button id="sellguard" title="Pede confirmação antes de vender shiny, Lendária+ ou item raro">🛡 Venda protegida</button>
-        <button id="chat" title="Mostra ou esconde o chat do jogo em todos os painéis">💬 Chat</button>
-        <button id="cleanHud" title="Opcional: esconde o auto-helper, o popup de captura e o HUD do canto; desligado por padrão">🧼 Limpar jogo</button>
-        <button id="muteAll">🔊 Som</button>
-        <button id="eco">⚡ Eco</button>
-        <button id="awake" title="Impede o PC de dormir enquanto farma (a tela ainda pode desligar)">💤 Dormir</button>
-        <button id="minTray" title="O que o botão minimizar faz: esconder na bandeja ou minimizar normal na barra de tarefas">📥 Minimiza p/ bandeja</button>
-        <button id="autoStart" style="display:none" title="Cria um atalho na pasta Inicializar do Windows pra abrir o PokeMux junto com o sistema">🚀 Abrir com o Windows</button>
-        <button id="sndShiny" title="Toca um acorde quando um shiny aparece e quando é capturado">✨🔊 Som do shiny</button>
-        <button id="voiceAlerts" title="Fala alertas importantes usando uma voz instalada no Windows">🗣️ Voz dos alertas</button>
-        <button id="shotShiny" title="Salva localmente um print quando aparece um shiny">📷 Print de shiny: off</button>
-        <button id="voltaHunt">↩ Voltar pra hunt</button>
-        <button id="updateBtn" style="display:none">⬇ Atualização</button>
-        <button id="manBtn" title="Manual: o que cada parte do app faz">📖 Manual</button> <button id="faqBtn" title="Perguntas frequentes: abre o FAQ no navegador">❓ FAQ</button> <button id="bkExp" title="Salva um arquivo com todas as configurações e o histórico (senhas ficam fora)">💾 Exportar config</button>
-        <button id="bkImp" title="Restaura configurações e histórico de um arquivo exportado">📂 Importar config</button>
-        <button id="layout">▦ Grade</button>
-        <button id="propNat" title="Mantém a proporção original do jogo, sem esticar a imagem (sobra fundo escuro quando o painel não bate com a proporção)">🖼 Proporção original</button>
-        <div id="langRow" title="Idioma / Language / Idioma"><span>🌐</span><button data-lang="pt">PT</button><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
-        <button id="errlogBtn" title="Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.">🐞 Erros</button>
+    <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">Menu do jogo</button>
+    <button id="overlayBtn" title="Abre um resumo flutuante somente-leitura">Overlay</button>
+    <div id="toolbarIcons">
+      <button id="ivsBtn" title="Ativa ou desativa o IV automático ao passar o mouse sobre um Pokémon" aria-pressed="true" class="game-tool">IV: ON</button>
+      <button id="marketBtn" title="Mercado Global" aria-label="Mercado Global" aria-haspopup="dialog" aria-expanded="false" class="game-tool"><img src="src/renderer/market-icon.png" alt=""></button>
+      <div id="menuWrap">
+        <button id="menuBtn" class="game-tool">☰ Opções</button>
+        <div id="menu">
+          <button id="hunt" title="Abre o Hunt Analyzer em todos os painéis">🎯 Hunt</button>
+          <button id="tierBtn">🏆 Tierlist</button>
+          <button id="dittoBtn" title="Onde caçar com o Ditto (comum ou shiny) e em que pokémon virar, no seu nível">✨ Ditto</button>
+          <button id="count" title="Quantas contas rodar ao mesmo tempo (1 a 4)">🔢 Painéis: 4</button>
+          <button id="alerts" title="Avisa quando uma conta cai ou fica sem pokébola">🔔 Alertas</button>
+          <button id="sellguard" title="Pede confirmação antes de vender shiny, Lendária+ ou item raro">🛡 Venda protegida</button>
+          <button id="chat" title="Mostra ou esconde o chat do jogo em todos os painéis">💬 Chat</button>
+          <button id="cleanHud" title="Opcional: esconde o auto-helper, o popup de captura e o HUD do canto; desligado por padrão">🧼 Limpar jogo</button>
+          <button id="muteAll">🔊 Som</button>
+          <button id="eco">⚡ Eco</button>
+          <button id="awake" title="Impede o PC de dormir enquanto farma (a tela ainda pode desligar)">💤 Dormir</button>
+          <button id="minTray" title="O que o botão minimizar faz: esconder na bandeja ou minimizar normal na barra de tarefas">📥 Minimiza p/ bandeja</button>
+          <button id="autoStart" style="display:none" title="Cria um atalho na pasta Inicializar do Windows pra abrir o PokeMux junto com o sistema">🚀 Abrir com o Windows</button>
+          <button id="sndShiny" title="Toca um acorde quando um shiny aparece e quando é capturado">✨🔊 Som do shiny</button>
+          <button id="voiceAlerts" title="Fala alertas importantes usando uma voz instalada no Windows">🗣️ Voz dos alertas</button>
+          <button id="shotShiny" title="Salva localmente um print quando aparece um shiny">📷 Print de shiny: off</button>
+          <button id="voltaHunt">↩ Voltar pra hunt</button>
+          <button id="updateBtn" style="display:none">⬇ Atualização</button>
+          <button id="manBtn" title="Manual: o que cada parte do app faz">📖 Manual</button> <button id="faqBtn" title="Perguntas frequentes: abre o FAQ no navegador">❓ FAQ</button> <button id="bkExp" title="Salva um arquivo com todas as configurações e o histórico (senhas ficam fora)">💾 Exportar config</button>
+          <button id="bkImp" title="Restaura configurações e histórico de um arquivo exportado">📂 Importar config</button>
+          <button id="layout">▦ Grade</button>
+          <button id="propNat" title="Mantém a proporção original do jogo, sem esticar a imagem (sobra fundo escuro quando o painel não bate com a proporção)">🖼 Proporção original</button>
+          <div id="langRow" title="Idioma / Language / Idioma"><span>🌐</span><button data-lang="pt">PT</button><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
+          <button id="errlogBtn" title="Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.">🐞 Erros</button>
+        </div>
       </div>
     </div>
-    <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)">🔗</button>
   </div>
   <div id="grid"></div>
   <div id="cards"></div>
@@ -686,7 +696,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       sound:'🔊 Som', muted:'🔇 Mudo', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Dormir', awake:'☕ Acordado',
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visível',
       optionsBtn:'☰ Opções', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
-      dockLabel:'🎛 Menu do jogo', dockTitle:'Mostra ou esconde o menu de ícones do jogo (verde = visível). F2 alterna no painel em foco.',
+      dockLabel:'Menu do jogo', dockTitle:'Mostra ou esconde o menu de ícones do jogo (verde = visível). F2 alterna no painel em foco.',
       dtBtn:'✨ Ditto', dtBtnTitle:'Onde caçar com o Ditto (comum ou shiny) e em que pokémon virar, no seu nível (tecla D)', dtTitle:'Ditto: onde caçar e o que virar',
       dtHint:'Escolha shiny ou comum, o nível do Ditto e o nível da conta (só entram hunts que ela alcança). Cada hunt mostra a melhor transformação pra ela. Regras do jogo: IV e qualidade do Ditto são fixos; Shiny Ditto tem -20% de Ataque e Sp. Atk (e -25% de HP e defesas), o comum -25% de Ataque e defesas; nenhum usa TM. Comum dura 12 h, shiny é permanente.',
       dtShiny:'Shiny', dtComum:'Comum', dtLevel:'Nível do Ditto', dtFixos:'IV {iv} · qualidade {q} (fixos no jogo)', dtReach:'Nível da conta', dtReachTip:'Só hunts até este nível (0 = todas)',
@@ -729,7 +739,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       sound:'🔊 Sound', muted:'🔇 Muted', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Sleep', awake:'☕ Awake',
       chatHidden:'💬 Chat hidden', chatShown:'💬 Chat shown',
       optionsBtn:'☰ Options', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
-      dockLabel:'🎛 Game menu', dockTitle:'Shows or hides the game icon menu (green = shown). F2 toggles it in the focused panel.',
+      dockLabel:'Game menu', dockTitle:'Shows or hides the game icon menu (green = shown). F2 toggles it in the focused panel.',
       dtBtn:'✨ Ditto', dtBtnTitle:'Where to hunt with Ditto (regular or shiny) and what to turn into, at your level (key D)', dtTitle:'Ditto: where to hunt and what to become',
       dtHint:'Pick shiny or regular, the Ditto level and your account level (only hunts you can reach count). Each hunt shows its best transformation. Game rules: Ditto IV and quality are fixed; Shiny Ditto has -20% Atk and Sp. Atk (and -25% HP and defenses), regular -25% Atk and defenses; neither uses TMs. Regular lasts 12 h, shiny is permanent.',
       dtShiny:'Shiny', dtComum:'Regular', dtLevel:'Ditto level', dtFixos:'IV {iv} · quality {q} (fixed in the game)', dtReach:'Account level', dtReachTip:'Only hunts up to this level (0 = all)',
@@ -773,7 +783,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       sound:'🔊 Sonido', muted:'🔇 Silencio', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Dormir', awake:'☕ Despierto',
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visible',
       optionsBtn:'☰ Opciones', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
-      dockLabel:'🎛 Menú del juego', dockTitle:'Muestra u oculta el menú de iconos del juego (verde = visible). F2 alterna en el panel enfocado.',
+      dockLabel:'Menú del juego', dockTitle:'Muestra u oculta el menú de iconos del juego (verde = visible). F2 alterna en el panel enfocado.',
       dtBtn:'✨ Ditto', dtBtnTitle:'Dónde cazar con el Ditto (común o shiny) y en qué pokémon convertirse, en tu nivel (tecla D)', dtTitle:'Ditto: dónde cazar y en qué convertirse',
       dtHint:'Elige shiny o común, el nivel del Ditto y el nivel de la cuenta (solo entran hunts que alcanza). Cada hunt muestra su mejor transformación. Reglas del juego: IV y calidad del Ditto son fijos; Shiny Ditto tiene -20% de Ataque y Sp. Atk (y -25% de HP y defensas), el común -25% de Ataque y defensas; ninguno usa TM. El común dura 12 h, el shiny es permanente.',
       dtShiny:'Shiny', dtComum:'Común', dtLevel:'Nivel del Ditto', dtFixos:'IV {iv} · calidad {q} (fijos en el juego)', dtReach:'Nivel de la cuenta', dtReachTip:'Solo hunts hasta este nivel (0 = todas)',
@@ -2307,10 +2317,14 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   function applyLang() {
     document.documentElement.lang = lang === 'en' ? 'en' : lang === 'es' ? 'es' : 'pt-BR';
     document.getElementById('loginAll').textContent = t('loginAll');
+    document.getElementById('loginAll').title = t('loginAll');
     document.getElementById('accounts').textContent = t('accounts');
+    document.getElementById('accounts').title = t('accounts');
     document.getElementById('reloadAll').textContent = t('reloadAll');
+    document.getElementById('reloadAll').title = t('reloadAll');
     applyLayout(); // o rotulo do botao depende do modo atual, nao so do idioma
     document.getElementById('menuBtn').textContent = t('optionsBtn');
+    document.getElementById('menuBtn').title = t('optionsBtn');
     const eb = document.getElementById('errlogBtn'); eb.textContent = t('errlog'); eb.title = t('errlogTitle');
     const be = document.getElementById('bkExp'); be.textContent = t('bkExp'); be.title = t('bkExpTitle');
     const bi = document.getElementById('bkImp'); bi.textContent = t('bkImp'); bi.title = t('bkImpTitle');
@@ -2327,6 +2341,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const db2 = document.getElementById('dittoBtn'); db2.textContent = t('dtBtn'); db2.title = t('dtBtnTitle');
     ivToggleRender();
     document.getElementById('recommendBtn').textContent = '🎯 ' + t('hrTitle');
+    document.getElementById('recommendBtn').title = t('hrTitle');
     statsBtn.textContent = t('stats'); statsBtn.title = t('statsTitle');
     cardsBtn.textContent = t('cards'); cardsBtn.title = t('cardsTitle');
     statsEl.querySelector('.st-head span').textContent = '📊 ' + t('statsResumo');
@@ -2380,8 +2395,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const refBtn = document.getElementById('refBtn');
   refBtn.onclick = async () => {
     try { await navigator.clipboard.writeText(HOME_URL); } catch {}
-    refBtn.textContent = t('refCopied');
-    setTimeout(() => { refBtn.textContent = '🔗'; }, 1500);
+    refBtn.textContent = t('refCopied'); refBtn.title = t('refCopied'); refBtn.classList.add('copied');
+    setTimeout(() => { refBtn.textContent = '🔗'; refBtn.title = t('refTitle'); refBtn.classList.remove('copied'); }, 1500);
   };
   document.getElementById('reloadAll').onclick = () => webviews.forEach((w, i) => { if (!off[i]) { clearTimeout(loginLoadTimers[i]); loginLoadTimers[i] = setTimeout(() => { loginLoadTimers[i] = null; if (off[i]) return; try { w.reloadIgnoringCache(); } catch { w.reload(); } }, i * LOGIN_STAGGER_MS); } }); // evita quatro Turnstiles simultaneos e ignora pagina de login velha em cache
   const overlayBtn = document.getElementById('overlayBtn');
@@ -4244,7 +4259,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     ivsBtn.textContent = 'IV: ' + (ivAtivo ? 'ON' : 'OFF');
     ivsBtn.classList.toggle('on', ivAtivo);
     ivsBtn.setAttribute('aria-pressed', String(ivAtivo));
-    ivsBtn.title = t('ivsTitle');
+    ivsBtn.title = ivsBtn.textContent + ' · ' + t('ivsTitle');
     webviews.forEach(w => {
       if (podeModificarPagina(w)) w.executeJavaScript('window.__pgIvHoverEnabled=' + ivAtivo + ';if(window.__pgIv)window.__pgIv.setEnabled(' + ivAtivo + ')').catch(() => {});
     });
@@ -4570,6 +4585,36 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   });
 
   // ----- Init -----
+  let marketFocusedPanel = -1;
+  const marketUI = window.PokeMuxMarketUI.mount({
+    language: () => lang, load: lsGet, save: lsSet,
+    notifyMarket: (text, desktop, voice) => {
+      if (!alertsOn) return;
+      if (desktop) try { window.pokeAPI.notify('PokeMux · Mercado', text); } catch {}
+      if (voice && voiceOn) { if (voiceQueue.length >= 8) voiceQueue.shift(); voiceQueue.push({ text }); proximaFala(); }
+    },
+    rememberFocus: element => { marketFocusedPanel = webviews.indexOf(element); },
+    preferred: () => {
+      const expanded = [...grid.children].findIndex(panel => panel.classList.contains('expanded'));
+      return expanded >= 0 ? expanded : statsIdx;
+    },
+    accounts: async () => Promise.all(Array.from({ length: count }, async (_, i) => {
+      const w = webviews[i]; let d = null;
+      if (w && !off[i] && podeModificarPagina(w)) try { d = await w.executeJavaScript(READ_STATE); } catch {}
+      return { name: d && d.name || alertAccountName(i), off: off[i], live: !!(d && d.ok && d.live), focused: i === marketFocusedPanel };
+    })),
+    read: async (i, script) => {
+      const w = webviews[i];
+      if (!w || off[i] || !podeModificarPagina(w)) return { ok: false, reason: 'offline' };
+      const response = await w.executeJavaScript(script);
+      return webviews[i] === w && !off[i] ? response : { ok: false, reason: 'changed' };
+    },
+    sprite: (id, shiny) => {
+      const dex = dexId(Number(id));
+      return Number.isInteger(dex) && dex > 0 && dex < 20000 ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + (shiny ? 'shiny/' : '') + dex + '.png' : '';
+    }
+  });
+  document.getElementById('langRow').addEventListener('click', () => marketUI.updateLanguage());
   (async () => {
     try { accounts = normalize(await window.pokeAPI.loadCreds()); }
     catch { accounts = normalize([]); }

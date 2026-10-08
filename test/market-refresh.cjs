@@ -1,0 +1,64 @@
+const { app, BrowserWindow } = require('electron');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+app.setPath('userData', path.join(os.tmpdir(), 'pokemux-market-refresh-test-' + process.pid));
+app.whenReady().then(async () => {
+  const win = new BrowserWindow({ show: false, webPreferences: { backgroundThrottling: false } });
+  try {
+    await win.loadURL('data:text/html,<button id="marketBtn">Market</button>');
+    await win.webContents.executeJavaScript(fs.readFileSync(path.join(__dirname, '../src/domain/global-market.js'), 'utf8'));
+    await win.webContents.executeJavaScript(fs.readFileSync(path.join(__dirname, '../src/renderer/global-market.js'), 'utf8'));
+    const result = await win.webContents.executeJavaScript(`(async () => {
+      const check = (ok, message) => { if (!ok) throw Error(message); };
+      const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+      let tick, active = false, version = 1, fail = '', held = null, reads = [];
+      window.setInterval = (callback, ms) => { check(ms === 60000, 'interval'); tick = callback; active = true; return 1; };
+      window.clearInterval = () => { active = false; };
+      window.PokeMuxMarketAlerts = { normalize: x => x, create: () => ({ setRules() {}, state() {}, check() {}, stop() {} }) };
+      const read = async (_account, script) => {
+        const query = JSON.parse(script.match(/\\}\\)\\((\\{[^\\n]*?\\}),/)[1]); reads.push(query);
+        if (held) await new Promise(resolve => held.push(resolve));
+        if (fail) return { ok: false, reason: fail };
+        const listings = Array.from({ length: 12 }, (_, i) => ({ id: 'listing' + i, kind: 'pokemon', name: 'Abra', speciesId: 63, price: version * 100 + i, currency: 'GOLD', ivTotal: 160, quality: 1.5, level: 20, at: new Date().toISOString() }));
+        return { ok: true, data: { cid: 'c1', name: 'Tester', listings, total: 36, pages: 3, catalog: { items: [{ kind: 'item', refId: 9, name: 'Potion' }] }, species: [{ speciesId: 63, name: 'Abra', total: 36 }], alertCatalog: [{ kind: 'pokemon', speciesId: 63, name: 'Abra' }] } };
+      };
+      const ui = PokeMuxMarketUI.mount({ load: () => '', save() {}, language: () => 'pt', sprite: () => '', preferred: () => 0, accounts: async () => [{ focused: true, live: true, off: false, name: 'Tester' }], read, rememberFocus() {} });
+      const el = selector => document.querySelector(selector);
+      await ui.open(); await pause(30);
+      el('[data-category="Pokemon"]').click(); await pause(30);
+      el('[data-species="63"]').click(); await pause(30);
+      el('#mkIvMin').value = '150'; el('#mkIvMin').dispatchEvent(new Event('input', { bubbles: true })); await pause(400);
+      el('#mkSort').value = 'price-asc'; el('#mkSort').dispatchEvent(new Event('change')); await pause(400);
+      el('[data-page="2"]').click(); await pause(30);
+      el('[data-listing="listing0"]').click();
+      el('#mkIvMin').focus(); el('#mkResults').style.height = '150px'; el('#mkResults').style.overflow = 'auto'; el('#mkResults').scrollTop = 80;
+      const scroll = el('#mkResults').scrollTop;
+      reads = []; version = 2; tick(); await pause(30);
+      const query = reads.find(x => x.browse === 'pokemon');
+      check(query.page === '2' && query.ivMin === '150' && query.sort === 'price-asc', 'query state preserved');
+      check(el('#mkPage').value === '2' && el('#mkIvMin').value === '150', 'page and filters preserved');
+      check(document.activeElement.id === 'mkIvMin', 'focus preserved');
+      check(el('#mkResults').scrollTop === scroll, 'scroll preserved');
+      check(el('[data-listing="listing0"]').classList.contains('selected'), 'selected listing preserved');
+      check(el('.mk-details').textContent.includes('200'), 'listing data refreshed');
+      const previous = el('#mkResults').innerHTML;
+      fail = 'network'; tick(); await pause(30);
+      check(el('#mkResults').innerHTML === previous, 'failed refresh keeps visible results');
+      fail = ''; held = []; reads = []; tick(); await pause(10); const count = reads.length; tick(); await pause(10);
+      check(reads.length === count, 'overlapping automatic refresh skipped');
+      ui.close(); held.splice(0).forEach(resolve => resolve()); held = null; await pause(30);
+      check(!active && !el('#pmMarket').classList.contains('show'), 'closing stops refresh');
+      await ui.open(); await pause(30);
+      el('[data-tab="alerts"]').click(); await pause(30);
+      el('#mkAlertSearch').value = 'Pot'; el('#mkAlertSearch').dispatchEvent(new Event('input', { bubbles: true }));
+      el('[name="priceMax"]').value = '123'; el('[name="voice"]').checked = false; el('#mkAlertSearch').focus();
+      tick(); await pause(30);
+      check(el('#mkAlertSearch').value === 'Pot' && el('[name="priceMax"]').value === '123' && !el('[name="voice"]').checked, 'alert draft preserved');
+      check(document.activeElement.id === 'mkAlertSearch', 'draft focus preserved');
+      ui.close();
+      return 'ok market-refresh: 60s, query, page, filters, focus, scroll, selected listing, draft, failures, overlap and close';
+    })()`);
+    console.log(result); win.destroy(); app.exit(0);
+  } catch (error) { console.error(error); win.destroy(); app.exit(1); }
+});

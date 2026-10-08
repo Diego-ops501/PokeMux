@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.17 — Mercado Global, comparação e alertas
+
+- Mercado Global acessível pelo ícone dourado da barra superior, sem sair da hunt. Consulta por conta com categorias, espécies, filtros, ordenação, cards/linhas, paginação e detalhes dos anúncios.
+- Comparação com itens e Pokémon da conta em um seletor visual com a moldura e categorias da bag do jogo. Preços em dollars e diamonds, menor preço, mediana da amostra e maior solicitação de compra; margens ajustáveis de IV, nível e qualidade.
+- Três cards no cabeçalho mostram os menores preços unitários de Diamante em dollars, Strange Pheromone e Bronze Boss Token nas duas moedas.
+- Aba Alertas com até 10 regras locais por personagem/conta, busca com sugestões ao digitar, preço máximo e condições de Pokémon. Notificação do Windows e voz do app para novos anúncios compatíveis; verificação a cada 60 segundos, inclusive com a janela do mercado fechada.
+- **Incluir evoluções** reúne toda a cadeia cadastrada no jogo, incluindo pré-evoluções, na busca de Pokémon e nos alertas. Na busca, a caixa aparece somente nos filtros; ordenação fica ao lado das qualidades, acima dos resultados.
+- Atualização automática do mercado aberto a cada 60 segundos, preservando pesquisa, filtros, ordenação, página, seleção, rolagem e alertas ainda não salvos. Falhas mantêm os dados anteriores; limites de consultas geram pausa de cinco minutos.
+- Tempo de publicação e data dos anúncios quando disponíveis; grupos de vendedores identificados. Meus Anúncios, Solicitações e Histórico da conta permanecem para consulta. Sem histórico global de vendas concluídas; compras e negociações são feitas no jogo.
+- Barra superior reorganizada: Ajude o projeto e Referral juntos à esquerda; IV, Mercado e Opções com artes próprias à direita, com Opções sempre no fim. Menu do jogo e Overlay junto aos botões com texto.
+- Novas imagens de demonstração, manual, FAQ e README em português e inglês. Testes para consulta, comparação, famílias de evolução, regras de alertas e atualização sem perder o estado da tela.
+
 ## 1.1.16 — Alertas de suprimentos e foco do Resumo
 
 - Removidos os alertas de revives em todos os modos, incluindo voz, notificações do Windows e Discord. Os avisos de Pokébolas e poções continuam disponíveis.

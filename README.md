@@ -13,9 +13,9 @@
 
 [Baixar para Windows](https://github.com/Diego-ops501/PokeMux/releases/latest) · [Manual](MANUAL.md) · [FAQ](FAQ.md) · [Changelog](CHANGELOG.md)
 
-<img src="docs/recomendacao-hunt.png" width="880" alt="PokeMux 1.1.15: recomendação de hunt com seção separada do tipo do dia">
+<img src="docs/mercado-global.png" width="880" alt="PokeMux 1.1.17: Mercado Global com filtros de Pokémon, evoluções e menores preços">
 
-*Recomendação de hunt e bônus do tipo do dia — demonstração com Squirtle Lv1.*
+*Mercado Global — demonstração com dados fictícios; os preços reais são consultados na conta conectada.*
 
 </div>
 
@@ -30,6 +30,26 @@ A base do PokeGrid forneceu a grade de quatro contas, sessões separadas, login 
 Algumas ideias de interface e leitura de eventos também foram inspiradas pelo [Poke Idle Launcher](https://github.com/AntonioFleck/poke-idle-launcher), igualmente MIT. Consulte [NOTICE.md](NOTICE.md) para os avisos completos.
 
 ## Recursos
+
+### Mercado Global, comparação e alertas
+
+Abra o mercado pelo ícone dourado no topo, selecione a conta e consulte itens e Pokémon sem sair da hunt. A janela atualiza os dados automaticamente a cada **60 segundos**, preservando sua busca, filtros, ordenação, página, seleção e rolagem. Os cards do cabeçalho mostram os menores preços de Diamante, Strange Pheromone e Bronze Boss Token.
+
+Na busca de Pokémon, filtre shiny, IV, nível, qualidade, tipo e raridade. **Incluir evoluções**, dentro dos filtros, inclui também pré-evoluções: Venusaur reúne Bulbasaur e Ivysaur. A ordenação fica junto às qualidades, acima dos resultados; anúncios mostram o tempo de publicação quando informado pelo jogo.
+
+<img src="docs/comparacao-mercado.png" width="880" alt="Comparação de um Pokémon selecionado na bag com anúncios semelhantes em dollars e diamonds">
+
+**Comparar com o mercado** usa a bag da conta para selecionar um bem e consultar menor preço, mediana dos anúncios consultados e maior solicitação de compra, separados por moeda. Pokémon têm margens ajustáveis de IV, nível e qualidade. O resumo informa o tamanho da amostra; solicitações são intenções de compra, sem histórico global de vendas concluídas.
+
+<img src="docs/alertas-mercado.png" width="880" alt="Alertas do Mercado Global com busca digitável, evoluções, preço e condições de Pokémon">
+
+Salve até **10 alertas** por conta/personagem, com busca por nome, preço máximo unitário, moeda e condições de Pokémon, incluindo sua cadeia de evolução. O monitor consulta a cada 60 segundos enquanto o app está aberto, mesmo com a janela do mercado fechada, e avisa pelo Windows e pela voz do app. A primeira consulta estabelece uma referência silenciosa; anúncios repetidos não geram novos avisos. Consulte as condições e limites no [manual](MANUAL.md#alertas-do-mercado-global).
+
+*Imagens de comparação e alertas renderizadas pela interface do app com dados fictícios. Compras e negociações são feitas no mercado do jogo.*
+
+<img src="docs/barra-superior.png" width="880" alt="Barra superior: apoio e referral à esquerda, IV, Mercado e Opções à direita">
+
+*Ajude o projeto e Referral juntos à esquerda; IV, Mercado e Opções à direita, com Opções sempre no fim.*
 
 ### IV automático no cursor
 
@@ -56,6 +76,7 @@ Ative **IV: ON** e passe o mouse sobre um Pokémon. O resultado aparece junto ao
 
 - Interface compacta sem barra lateral fixa, aproveitando toda a largura para as telas do jogo.
 - Barra superior com acesso direto ao Dashboard, Painel, Overlay, calculadora de IV e controles operacionais.
+- Ícone do Mercado Global no topo: consulta por conta sem sair da hunt, com categorias, espécies, filtros de Pokémon e detalhes dos anúncios. Comparar com o mercado permite selecionar bens da conta e consultar preços semelhantes e solicitações de compra em dollars e diamonds, com margens ajustáveis e indicação da amostra consultada. A aba Alertas salva até 10 regras de preço e condições, consulta novos anúncios a cada 60 segundos e avisa pelo Windows e pela voz do app, inclusive com a janela do mercado fechada. Comprar, Meus Anúncios, Solicitações e Histórico da conta ficam disponíveis para consulta; negociações são feitas no mercado do jogo.
 - Grade, foco individual, uma coluna ou uma linha.
 - Modo Simples de baixo consumo, mantendo o farm do servidor ativo.
 - Overlay flutuante somente-leitura, individual ou agregado.
@@ -143,7 +164,7 @@ Gerar o instalador NSIS x64:
 npm run dist
 ```
 
-Os artefatos são criados em `dist/`. A suíte cobre inicialização, isolamento das quatro sessões, cofre, compra de bolas, retorno à hunt, coleta de métricas, voz, IV e atualização.
+Os artefatos são criados em `dist/`. A suíte cobre inicialização, isolamento das quatro sessões, cofre, compra de bolas, retorno à hunt, coleta de métricas, voz, IV, mercado, comparação, evoluções, alertas e atualização. Use `npm run test:market-refresh` para testar a preservação da tela durante a atualização automática em um renderer Electron real. `npm run docs:market` recria as imagens do mercado com dados fictícios, sem acessar contas salvas.
 
 ## Estrutura
 
