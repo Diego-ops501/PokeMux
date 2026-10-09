@@ -30,6 +30,22 @@ async function run() {
   assert.deepEqual(M.filterListings(list, { pokemonOnly: true, gradesOff: ['Épica'] }).map(x => x.id), ['b']);
   assert.deepEqual(M.filterListings(list, { sort: 'price-asc' }).map(x => x.id), ['b', 'a']);
   assert.equal(list[0].id, 'a');
+  const mixed = [
+    {id:'diamond',currency:'DIAMONDS',price:2},
+    {id:'dollar-cheap',currency:'GOLD',price:5000},
+    {id:'dollar-expensive',currency:'GOLD',price:30000},
+    {id:'proposal',currency:'GOLD',price:0,offerOnly:true},
+    {id:'unknown',currency:'UNKNOWN',price:1}
+  ];
+  assert.equal(M.diamondRate([{kind:'diamonds',currency:'GOLD',price:10000,quantity:2},{kind:'diamonds',currency:'GOLD',price:1,quantity:0}]),10000);
+  assert.equal(M.diamondRate([{kind:'diamonds',currency:'GOLD',price:1,offerOnly:true}]),null);
+  assert.equal(M.equivalentDiamonds(mixed[1],10000),.5);
+  assert.equal(M.equivalentDiamonds(mixed[1],0),null);
+  assert.equal(M.equivalentDiamonds({price:NaN,currency:'GOLD'},10000),null);
+  assert.deepEqual(M.filterListings(mixed,{sort:'price-asc',diamondRate:10000}).map(x=>x.id),['dollar-cheap','diamond','dollar-expensive','proposal','unknown']);
+  assert.deepEqual(M.filterListings(mixed,{sort:'price-desc',diamondRate:10000}).map(x=>x.id),['dollar-expensive','diamond','dollar-cheap','proposal','unknown']);
+  assert.deepEqual(M.sortPrices([{currency:'GOLD',price:15000},{currency:'DIAMONDS',price:1.5}],'price-asc',10000).map(x=>x.currency),['GOLD','DIAMONDS'],'equivalências empatadas preservam a ordem');
+  assert.deepEqual(M.sortPrices(mixed,'price-asc',null),mixed,'sem cotação não inventa uma taxa');
   const own = { kind: 'pokemon', speciesId: 63, shiny: false, level: 30, ivTotal: 100, quality: 1.5 };
   const offers = [
     { ...own, id: 'near', level: 35, price: 200, currency: 'GOLD' },
@@ -121,6 +137,120 @@ async function run() {
   assert.equal(groupCalls.every(x => x.ivMin === '150' && x.shiny === '1'), true);
   assert.equal((await M.readPokemonGroup(async () => ({ ok: false, reason: 'limited' }), { speciesId: 63 }, 'trainer1', chain)).reason, 'limited');
   assert.equal((await M.readPokemonGroup(async () => ({ ok: true, data: { cid: 'other', listings: [] } }), { speciesId: 63 }, 'trainer1', chain)).reason, 'changed');
+  let bookCalls = 0;
+  const bookRead = async script => {
+    const q = JSON.parse(script.match(/\}\)\((\{[^\n]*?\}),/)[1]);
+    bookCalls++;
+    const page = Number(q.page);
+    // O servidor deixa todos os dólares depois dos diamantes.
+    const listings = page===1 ? Array.from({length:12},(_,i)=>({id:'dia'+i,currency:'DIAMONDS',price:i+1,kind:'pokemon'}))
+      : [{id:'gold-cheapest',currency:'GOLD',price:100,kind:'pokemon'},{id:'gold-expensive',currency:'GOLD',price:500000,kind:'pokemon'}];
+    return {ok:true,data:{cid:'trainer1',listings,pages:2,total:14}};
+  };
+  const book = await M.readPriceBook(bookRead,{speciesId:63,sort:'price-asc',page:1},'trainer1',chain,10000);
+  assert.equal(bookCalls,2,'consulta páginas antes de converter');
+  assert.equal(book.data.listings[0].id,'gold-cheapest','oferta em dólares da página 2 passa à primeira posição');
+  assert.equal(book.data.total,14);
+  const cached = await M.readPriceBook(bookRead,{speciesId:63,sort:'price-desc',page:1},'trainer1',chain,10000,book.book);
+  assert.equal(bookCalls,2,'troca da ordenação reaproveita a consulta completa');
+  assert.equal(cached.data.listings[0].id,'gold-expensive');
+  const page2 = await M.readPriceBook(bookRead,{speciesId:63,sort:'price-asc',page:2},'trainer1',chain,10000,book.book);
+  assert.deepEqual(page2.data.listings.map(x=>x.id),['dia11','gold-expensive']);
+  assert.equal((await M.readPriceBook(async()=>({ok:false,reason:'limited'}),{speciesId:63},'trainer1',chain,10000)).reason,'limited');
+  assert.equal((await M.readPriceBook(async()=>({ok:true,data:{cid:'other',listings:[]}}),{speciesId:63},'trainer1',chain,10000)).reason,'changed');
+  const failedBook = await M.readPriceBook(async script=> {
+    const q=JSON.parse(script.match(/\}\)\((\{[^\n]*?\}),/)[1]);
+    return q.page==='2'?{ok:false,reason:'limited'}:bookRead(script);
+  },{speciesId:63},'trainer1',chain,10000);
+  assert.equal(failedBook.reason,'limited','consulta incompleta não vira ranking global');
+  assert.equal(failedBook.book,undefined);
+  const evolutionBook = await M.readPriceBook(async script=> {
+    const q=JSON.parse(script.match(/\}\)\((\{[^\n]*?\}),/)[1]);
+    const result=await bookRead(script);
+    result.data.listings=result.data.listings.map(x=>({...x,id:q.speciesId+':'+x.id}));
+    return result;
+  },{speciesId:63,includeEvolutions:true,sort:'price-asc'},'trainer1',chain,10000);
+  assert.equal(evolutionBook.data.total,42,'converte todas as páginas de todas as evoluções');
+  assert(evolutionBook.data.listings.slice(0,3).every(x=>x.id.endsWith('gold-cheapest')));
+  // A fresh bag can arrive in chunks, with updates between parts.
+  context.location.pathname = '/play'; P.api['/api/characters/me'].character.id = 'trainer1';
+  context.fetch = async (url, options) => { calls.push({ url, options }); return { ok: true, json: async () => payload }; };
+  const listeners = new Set(), sent = [];
+  P.sock = { readyState: 1, addEventListener(type, callback) { listeners.add(callback); }, removeEventListener(type, callback) { listeners.delete(callback); },
+    send(raw) {
+      const type = JSON.parse(raw).type; sent.push(type);
+      const emit = event => { for (const callback of [...listeners]) callback({ data: JSON.stringify(event) }); };
+      if (type === 'inv-get') emit({ type: 'inventory', items: [{ itemId: 9, quantity: 8 }] });
+      if (type === 'balls-get') emit({ type: 'balls', catalog: [{ id: 1, name: 'Ball' }, { id: 2, bound: true }, { id: 3 }], counts: { 1: 5, 2: 4, 3: 2 }, expires: { 3: '2000-01-01' } });
+      if (type === 'pokes-get') {
+        emit({ type: 'pokes-chunk', gen: 7, seq: 1, total: 2, list: [{ id: 'regional', speciesId: 10063, name: 'Regional Abra', level: 30, quality: 1.5, ivTotal: 170, stats: { spa: 120, spd: 70 } }] });
+        emit({ type: 'poke-xp', id: 'regional', level: 31, xp: 123 });
+        emit({ type: 'pokes-chunk', gen: 7, seq: 0, total: 2, list: [{ id: 'starter', speciesId: 1, name: 'Bulbasaur', starter: true, level: 10, quality: 1, ivTotal: 100 }] });
+      }
+    }
+  };
+  status = 200; payload = { listings: [], catalog: {} };
+  result = await read({ includeOwned: true });
+  assert.equal(result.data.ownedReady, true);
+  assert.deepEqual(sent, ['inv-get', 'balls-get', 'pokes-get']);
+  assert.equal(listeners.size, 0, 'snapshot listeners cleaned up');
+  const bag = result.data.owned;
+  assert.equal(bag.find(x => x.id === 'item:9').quantity, 8);
+  assert.equal(bag.find(x => x.id === 'ball:1').quantity, 5);
+  assert.equal(bag.some(x => x.id === 'ball:2' || x.id === 'ball:3'), false);
+  const regional = bag.find(x => x.id === 'pokemon:regional');
+  assert.equal(regional.speciesId, 10063, 'regional form preserved');
+  assert.equal(regional.level, 31, 'XP delta preserved during chunk assembly');
+  assert.equal(regional.stats.spAtk, 120);
+  assert.equal(regional.stats.spDef, 70);
+  const snapshotSend = P.sock.send, realTimeout = context.setTimeout;
+  P.sock.send = () => {};
+  context.setTimeout = (callback, ms) => setTimeout(callback, ms === 2500 ? 0 : ms);
+  result = await read({ includeOwned: true });
+  assert.equal(result.data.ownedReady, false, 'missing snapshots are not presented as fresh inventory');
+  assert.equal(listeners.size, 0, 'snapshot timeout removes listener');
+  context.setTimeout = realTimeout;
+  P.sock.send = raw => { snapshotSend(raw); if (JSON.parse(raw).type === 'pokes-get') P.api['/api/characters/me'].character.id = 'trainer2'; };
+  assert.equal((await read({ includeOwned: true })).reason, 'changed', 'character change during bag refresh rejected');
+  assert.equal(listeners.size, 0);
+  P.api['/api/characters/me'].character.id = 'trainer1';
+  delete P.sock;
+  delete P.api['/game/items.json'];
+  const originalFetch = context.fetch;
+  context.fetch = async (url, options) => url === '/game/items.json' ? { ok: true, json: async () => ({ items: [{ id: 9, name: 'Potion', npcPrice: 5 }] }) } : originalFetch(url, options);
+  result = await read({ includeOwned: true });
+  assert.equal(result.data.owned.find(x => x.id === 'item:9').name, 'Potion', 'uncached item definitions fetched');
+  const asset = { kind: 'item', refId: 9, npcPrice: 5 };
+  const prices = [{ ...asset, id: 'gold', currency: 'GOLD', price: 10000, quantity: 2 }, { ...asset, id: 'dia', currency: 'DIAMONDS', price: 3 }, { ...asset, id: 'mine', currency: 'GOLD', price: 1 }, { ...asset, id: 'offers', offerOnly: true, currency: 'GOLD', price: 1 }, { ...asset, id: 'empty', currency: 'GOLD', price: 1, quantity: 0 }];
+  assert.deepEqual(M.saleRecommendation(prices, asset, {}, 10000, [{ id: 'mine' }]), { GOLD: 20000, DIAMONDS: 2, count: 2, converted: true });
+  assert.deepEqual(M.saleRecommendation(prices.slice(0,2), asset, {}, null), { GOLD: 10000, DIAMONDS: 3, count: 2, converted: false });
+  assert.equal(M.saleRecommendation([{ ...asset, price: 2, currency: 'GOLD' }], asset, {}, null).GOLD, 5, 'NPC price floor');
+  assert.equal(M.saleRecommendation([], asset, {}, 10000).count, 0);
+  assert.equal(M.saleRecommendation([{ ...own, price: 100, currency: 'GOLD' }], { ...own, ivTotal: null }, {}, 10000).count, 0);
+  assert.equal(M.saleRecommendation([{ ...own, price: 100, currency: 'GOLD' }], { ...own, starter: true }, {}, 10000).count, 0);
+  let clock = 0, pacedCalls = 0, limited = false;
+  const starts = [];
+  const paced = M.createMarketReader(async () => {
+    pacedCalls++; starts.push(clock);
+    return limited ? {ok:false,reason:'limited',retryAfterMs:120000} : {ok:true,data:{}};
+  }, {now:()=>clock, wait:async ms=>{clock+=ms;},interval:2000,ttl:300000});
+  const pageScript = '"browse":"pokemon":page1';
+  await Promise.all([paced(0,pageScript),paced(0,pageScript)]);
+  assert.equal(pacedCalls,1,'identical concurrent listing reads coalesce');
+  await paced(0,pageScript);
+  assert.equal(pacedCalls,1,'received pages reused for five minutes');
+  await paced(0,'quote');
+  assert.deepEqual(starts,[0,2000],'market requests spaced');
+  limited = true;
+  await paced(0,'limited');
+  const afterLimit = pacedCalls;
+  assert.equal((await paced(1,'another-account')).reason,'limited');
+  assert.equal(pacedCalls,afterLimit,'cooldown shared with alerts and other accounts');
+  assert.equal((await paced(0,pageScript)).ok,true,'cached page remains usable during cooldown');
+  clock += 120001; limited = false;
+  assert.equal((await paced(0,'resume')).ok,true,'Retry-After elapsed resumes requests');
+  assert.equal((await paced(0,'obsolete',()=>false)).reason,'changed');
+  assert.equal(pacedCalls,afterLimit+1,'obsolete queued requests do not reach game');
   console.log('ok global-market: filtros, paginação, consulta GET, isolamento de sessão e respostas inválidas');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

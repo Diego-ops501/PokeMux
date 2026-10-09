@@ -1,6 +1,6 @@
-#pmMarket { --mk-gold: #d5b567; --mk-line: #71603a; display: none; position: fixed; inset: 0; z-index: 9600; background: #03070bbd; padding: 20px; align-items: center; justify-content: center; color-scheme: dark; }
+#pmMarket { --mk-gold: #d5b567; --mk-line: #71603a; display: none; position: fixed; inset: 0; z-index: 9600; background: #03070bbd; padding: 12px; align-items: center; justify-content: center; color-scheme: dark; }
 #pmMarket.show { display: flex; }
-#pmMarket .mk-window { width: 1380px; max-width: 100%; height: min(790px, 94vh); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--mk-line); border-radius: 13px; background: linear-gradient(120deg,#121923,#080e15 65%,#101822); box-shadow: 0 25px 90px #000b; }
+#pmMarket .mk-window { width: calc(100vw - 24px); max-width: 100%; height: calc(100dvh - 24px); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--mk-line); border-radius: 13px; background: linear-gradient(120deg,#121923,#080e15 65%,#101822); box-shadow: 0 25px 90px #000b; }
 #pmMarket button, #pmMarket input, #pmMarket select { font: inherit; font-size: 12px; }
 #pmMarket button { background: #151e2a; border: 1px solid #293445; color: #d8dde5; padding: 8px 12px; }
 #pmMarket button:hover { border-color: var(--mk-gold); background: #222c39; }
@@ -58,7 +58,7 @@
 #pmMarket .mk-min-price { color: #7cdc90; font-size: 11px; }
 #pmMarket .mk-list-head, #pmMarket .mk-row { display: grid; grid-template-columns: 30px minmax(120px,1.5fr) minmax(120px,1fr) minmax(100px,auto); gap: 12px; align-items: center; padding: 10px 12px; }
 #pmMarket .mk-list-head { font-size: 10px; color: #929eac; border-bottom: 1px solid #35404e; text-transform: uppercase; }
-#pmMarket .mk-row { border-bottom: 1px solid #26303b; cursor: pointer; font-size: 12px; }
+#pmMarket .mk-row { border-bottom: 1px solid #26303b; cursor: pointer; font-size: 13px; }
 #pmMarket .mk-row:hover, #pmMarket .mk-row.selected { background: #222a30; }
 #pmMarket .mk-row-name { display: flex; align-items: center; gap: 9px; min-width: 0; }
 #pmMarket .mk-row-name > div { min-width: 0; }
@@ -67,9 +67,13 @@
 #pmMarket .mk-art { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; flex: none; }
 #pmMarket .mk-price { color: #7ce58a; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
 #pmMarket .mk-price.diamonds { color: #7ed2fa; }
+#pmMarket .mk-price-group { display:inline-flex; flex-direction:column; align-items:flex-end; gap:3px; }
+#pmMarket .mk-equivalent { color:#7ed2fa; font-size:11px; font-weight:400; white-space:nowrap; }
+#pmMarket .mk-rate { padding:6px 22px; color:#8fa5bf; font-size:11px; border-bottom:1px solid #222e3d; }
 #pmMarket .mk-price img { width: 17px; height: 17px; object-fit: contain; vertical-align: middle; margin-right: 4px; }
+#pmMarket .mk-iv-hint { margin: 0; color: #55e6d3; font-size: 12px; flex: none; }
 #pmMarket .mk-meta { font-size: 11px; color: #b7c3d3; line-height: 1.7; }
-#pmMarket .mk-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(245px,1fr)); gap: 10px; }
+#pmMarket .mk-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 10px; }
 #pmMarket .mk-card { border: 1px solid #2b3745; border-radius: 9px; padding: 13px; background: #131c26; cursor: pointer; }
 #pmMarket .mk-card:hover, #pmMarket .mk-card.selected { border-color: var(--mk-gold); }
 #pmMarket .mk-card .mk-art { width: 58px; height: 58px; }
@@ -78,7 +82,6 @@
 #pmMarket .mk-pages { display: flex; align-items: center; justify-content: center; gap: 5px; flex: none; }
 #pmMarket .mk-pages button { min-width: 34px; padding: 7px; }
 #pmMarket .mk-page-input { width: 64px; text-align: center; padding: 6px; }
-#pmMarket .mk-details { width: 290px; border-left: 1px solid #283344; padding: 18px 20px; overflow: auto; flex: none; }
 #pmMarket .mk-hero { width: 100%; height: 145px; object-fit: contain; image-rendering: pixelated; background: radial-gradient(#263047,#101720 70%); border: 1px solid var(--mk-line); border-radius: 12px; padding: 20px; margin: 12px 0; }
 #pmMarket .mk-detail-name { color: #ebd8a3; font: bold 20px Georgia,serif; text-align: center; margin-bottom: 15px; overflow-wrap: anywhere; }
 #pmMarket .mk-detail-line { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #25303b; padding: 10px 0; font-size: 12px; }
@@ -118,51 +121,44 @@
 #pmMarket .mk-record small { display: block; color: #95a2b3; margin-top: 6px; }
 #pmMarket .mk-note { color: #b5a680; font-size: 11px; line-height: 1.6; margin-top: 10px; }
 #pmMarket [hidden] { display: none !important; }
-@media (max-width: 1200px) { #topbar { gap: 5px; padding-left: 8px; padding-right: 8px; flex-wrap: wrap; } #topbar button { padding-left: 8px; padding-right: 8px; } #pmMarket .mk-details { width: 240px; padding: 15px 12px; } #pmMarket .mk-categories { width: 140px; } }
-@media (max-width: 900px) { #pmMarket { padding: 8px; } #pmMarket h2 { font-size: 19px; } #pmMarket .mk-head { gap: 8px; flex-wrap: wrap; padding: 12px; } #pmMarket .mk-crest { width: 45px; height: 45px; } #pmMarket .mk-main { padding: 12px; } #pmMarket .mk-categories { width: 110px; } #pmMarket .mk-categories button { padding: 9px 6px; } #pmMarket .mk-categories img { display: none; } #pmMarket .mk-details { width: 200px; } #pmMarket .mk-row, #pmMarket .mk-list-head { grid-template-columns: minmax(90px,1fr) minmax(85px,auto); gap: 5px; padding: 10px 5px; } #pmMarket .mk-row > :first-child, #pmMarket .mk-list-head > :first-child { display: none; } #pmMarket .mk-row > .mk-meta, #pmMarket .mk-list-head > :nth-child(3) { display: none; } }
-@media (max-width: 650px) { #pmMarket .mk-layout { flex-wrap: wrap; overflow-y: auto; } #pmMarket .mk-main { flex: 1 1 70%; min-height: 350px; } #pmMarket .mk-details { width: 100%; border-left: 0; border-top: 1px solid #283344; } #pmMarket .mk-categories { width: 90px; } #pmMarket .mk-footer { flex-wrap: wrap; } }
+@media (max-width: 1200px) { #topbar { gap: 5px; padding-left: 8px; padding-right: 8px; flex-wrap: wrap; } #topbar button { padding-left: 8px; padding-right: 8px; } #pmMarket .mk-categories { width: 140px; } }
+@media (max-width: 900px) { #pmMarket { padding: 8px; } #pmMarket .mk-window { width: calc(100vw - 16px); height: calc(100dvh - 16px); } #pmMarket h2 { font-size: 19px; } #pmMarket .mk-head { gap: 8px; flex-wrap: wrap; padding: 12px; } #pmMarket .mk-crest { width: 45px; height: 45px; } #pmMarket .mk-main { padding: 12px; } #pmMarket .mk-categories { width: 110px; } #pmMarket .mk-categories button { padding: 9px 6px; } #pmMarket .mk-categories img { display: none; } #pmMarket .mk-row, #pmMarket .mk-list-head { grid-template-columns: minmax(90px,1fr) minmax(85px,auto); gap: 5px; padding: 10px 5px; } #pmMarket .mk-row > :first-child, #pmMarket .mk-list-head > :first-child { display: none; } #pmMarket .mk-row > .mk-meta, #pmMarket .mk-list-head > :nth-child(3) { display: none; } }
+@media (max-width: 650px) { #pmMarket .mk-layout { flex-wrap: wrap; overflow-y: auto; } #pmMarket .mk-main { flex: 1 1 70%; min-height: 350px; } #pmMarket .mk-categories { width: 90px; } #pmMarket .mk-footer { flex-wrap: wrap; } }
 #topbar #marketBtn { width: 36px; height: 34px; flex: 0 0 36px; padding: 3px; display: inline-flex; align-items: center; justify-content: center; border-color: #71603a; }
 #topbar #marketBtn img { width: 28px; height: 28px; object-fit: contain; }
 #topbar #marketBtn.on { border-color: #d5b567; background: #332b19; }
 #pmMarket .mk-listed { display: block; color: #9caebf; font-size: 11px; margin-top: 5px; font-weight: 400; }
 #pmMarket .mk-compare-summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px; }
 #pmMarket .mk-compare-summary .mk-form { margin-bottom: 0; }
-#pmMarket .mk-inventory-picker { display: grid; grid-template-columns: 354px minmax(0,1fr); align-items: start; gap: 22px; }
-#pmMarket .mk-own-info { min-width: 0; padding-top: 12px; }
+#pmMarket .mk-inventory-picker { display: grid; grid-template-columns: minmax(320px,420px) minmax(0,1fr); align-items: start; gap: 22px; margin-top: 16px; }
+#pmMarket .mk-own-info { min-width: 0; }
 #pmMarket .mk-own-info .mk-compare-summary { grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); margin-top: 20px; }
 #pmMarket .mk-own-info .mk-compare-summary .mk-form { padding: 12px; }
 #pmMarket .mk-own-info .mk-detail-line { flex-wrap: wrap; gap: 5px; }
-#pmMarket .mk-own-info > .mk-row-name { margin: 24px 0 18px; }
+#pmMarket .mk-own-info > .mk-row-name { margin: 0 0 18px; }
 #pmMarket .mk-own-info .mk-art { width: 64px; height: 64px; }
 #pmMarket .mk-own-search { display: flex; flex-direction: column; gap: 8px; color: #a5b1c2; font-size: 12px; }
-#pmMarket .mk-bag { width: 354px; padding-bottom: 66px; border-radius: 28px; background: url(inventory-art/bag_top.webp) top/100% no-repeat, url(inventory-art/bag_bottom.webp) bottom/100% no-repeat, url(inventory-art/bag_mid.webp) top/100% repeat-y; box-shadow: 0 12px 28px #0007; }
-#pmMarket .mk-bag-title { height: 46px; margin: 17px 16px 0; padding: 9px 2px 0 186px; display: flex; align-items: center; justify-content: center; color: #e1c585; font: bold 12px Georgia,serif; letter-spacing: .04em; }
-#pmMarket .mk-bag-tabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; height: 58px; margin: 20px 29px 0 28px; }
-#pmMarket .mk-bag-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; border: 0; border-radius: 6px; background: transparent; font-size: 10px; color: #8fa0b3; }
-#pmMarket .mk-bag-tabs button.active { color: #ffdf5e; box-shadow: inset 0 0 14px #ffdf5e2e, 0 0 0 1px #d5b567; }
-#pmMarket .mk-bag-tabs button:hover { color: #e8d7bd; background: #ffdf5e0b; }
-#pmMarket .mk-bag-icon { display: block; width: 32px; height: 32px; flex: none; background-position: 0 0; background-size: 32px auto; background-repeat: no-repeat; image-rendering: pixelated; }
-#pmMarket .mk-bag-icon.icon-all { background-image: url(inventory-art/tab_all.png); }
-#pmMarket .mk-bag-icon.icon-poke { background-image: url(inventory-art/tab_poke.png); animation: mk-bag-poke .9s steps(8,end) infinite; }
-#pmMarket .mk-bag-icon.icon-ball { background-image: url(inventory-art/tab_ball.png); }
-#pmMarket .mk-bag-icon.icon-item { background-image: url(inventory-art/tab_item.png); }
-@keyframes mk-bag-poke { to { background-position: 0 -256px; } }
-@media (prefers-reduced-motion: reduce) { #pmMarket .mk-bag-icon.icon-poke { animation: none; } }
-#pmMarket .mk-bag-count { display: grid; grid-template-columns: 1fr 32px 1fr; height: 26px; align-items: center; margin: 5px 42px 0; text-align: center; color: #8a93a0; font-size: 10px; }
-#pmMarket .mk-bag-grid { display: grid; grid-template-columns: repeat(6,38px); justify-content: center; gap: 6px; margin: 11px 42px 0; padding: 4px 6px; max-height: 266px; overflow: auto; scrollbar-width: thin; scrollbar-color: #71603a #0b131d; }
-#pmMarket .mk-bag-slot { position: relative; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; border: 1px solid; border-color: #050910 #14202f #2a3a4e; border-radius: 7px; background: linear-gradient(#060b13,#0b1420); box-shadow: inset 0 2px 5px #000b; }
-#pmMarket .mk-bag-slot.empty { border-color: #070c14 #101a27 #223142; }
-#pmMarket .mk-bag-slot.team { border-color: #c8aa6ea6; background: radial-gradient(circle at 50% 35%,#3c321a80,#0006); }
-#pmMarket .mk-bag-slot.selected { border-color: #ffdf5e; box-shadow: inset 0 0 9px #ffdf5e3b, 0 0 4px #ffdf5e59; }
-#pmMarket .mk-bag-slot .mk-art { width: 32px; height: 32px; }
-#pmMarket .mk-bag-slot.pokemon { overflow: hidden; }
-#pmMarket .mk-bag-slot.pokemon .mk-art { width: 64px; height: 64px; max-width: none; }
-#pmMarket .mk-slot-qty { position: absolute; bottom: 1px; right: 2px; color: #fff; font-size: 9px; font-weight: bold; text-shadow: 0 1px 2px #000, 1px 0 #000; pointer-events: none; }
-#pmMarket .mk-slot-mark { position: absolute; top: 0; left: 1px; color: #ffdf5e; font-size: 9px; pointer-events: none; }
-#pmMarket .mk-bag-empty { font-size: 10px; color: #9aa8b8; text-align: center; margin: 8px 42px 0; }
-#pmMarket .mk-bag-paging { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 8px; font-size: 11px; }
-#pmMarket .mk-bag-paging button { padding: 2px 10px; }
-@media (max-width: 1050px) { #pmMarket .mk-inventory-picker { grid-template-columns: minmax(0,1fr); } #pmMarket .mk-bag { justify-self: center; } }
-@media (max-width: 420px) { #pmMarket .mk-bag { zoom: .8; } }
+#pmMarket .mk-bag { min-width: 0; padding: 14px; border: 1px solid #2a394b; border-radius: 8px; background: #101923; }
+#pmMarket .mk-bag-title { margin: 0 0 12px; color: #e1c585; font: bold 13px Georgia,serif; letter-spacing: .04em; }
+#pmMarket .mk-bag-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; }
+#pmMarket .mk-bag-tabs button { padding: 9px 3px; font-size: 11px; white-space: normal; }
+#pmMarket .mk-bag-tabs button.active { color: #ffdf5e; border-color: #d5b567; background: #ffdf5e15; }
+#pmMarket .mk-bag-icon { display: none; }
+#pmMarket .mk-bag-count { display: flex; justify-content: space-between; gap: 8px; padding: 12px 0; color: #a5b1c2; font-size: 12px; }
+#pmMarket .mk-bag-grid { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow: auto; scrollbar-width: thin; scrollbar-color: #71603a #0b131d; }
+#pmMarket .mk-bag-slot { display: flex; flex-shrink: 0; align-items: center; gap: 12px; width: 100%; min-height: 78px; padding: 10px; border: 1px solid #2a394b; border-radius: 6px; background: #15212d; text-align: left; }
+#pmMarket .mk-bag-slot:hover { background: #1c2b39; }
+#pmMarket .mk-bag-slot.selected { border-color: #ffdf5e; background: #ffdf5e12; box-shadow: inset 3px 0 #ffdf5e; }
+#pmMarket .mk-bag-slot:focus-visible { outline: 2px solid #ffdf5e; outline-offset: -2px; }
+#pmMarket .mk-bag-slot .mk-art { width: 44px; height: 44px; flex-shrink: 0; object-fit: contain; }
+#pmMarket .mk-inventory-description { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+#pmMarket .mk-inventory-description b { font-size: 14px; overflow-wrap: anywhere; }
+#pmMarket .mk-inventory-description > span { color: #bac7d6; font-size: 12px; }
+#pmMarket .mk-inventory-description small { color: #98a6b8; font-size: 11px; overflow-wrap: anywhere; }
+#pmMarket .mk-bag-empty { font-size: 12px; color: #9aa8b8; text-align: center; }
+#pmMarket .mk-bag-paging { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; }
+#pmMarket .mk-bag-paging button { padding: 4px 12px; }
+#pmMarket .mk-account-link { display: inline-block; padding: 3px 7px; margin-top: 4px; font-size: 12px; color: #7fd4ff; text-decoration: underline; border: 1px solid #334b61; background: #122331; }
+@media (max-width: 1050px) { #pmMarket .mk-inventory-picker { grid-template-columns: minmax(0,1fr); } #pmMarket .mk-bag-grid { max-height: 360px; } }
 #pmMarket [data-compare-more] { margin: 15px 0; }
 @media (min-width: 1201px) and (max-width: 1600px) { #topbar { gap: 5px; } #topbar button { padding-left: 8px; padding-right: 8px; white-space: nowrap; } }

@@ -46,4 +46,16 @@ ok(rec['hunt ruim'].xph === 5500 && !rec['hunt ruim'].estimated, 'medição exat
 ok(rec['hunt boa'].xph === 11000 && rec['hunt boa'].sourceLevel === 20, 'hunt de nível próximo é normalizada pela hunt medida nos dois níveis');
 ok(Object.keys(H.recommendationStatsFor(normalized, 'acc-2', { ...pikachu21, level: 27 })).length === 0, 'recomendação não usa nível distante');
 
+const financeContexts = [], financeStore = {};
+H.isolateSample(financeContexts,0,'acc-finance','wooper',pikachu20,
+  {...metric(1000,5000),lootGold:1000,capturesGold:300,supplyGold:200},1);
+const finance = H.isolateSample(financeContexts,0,'acc-finance','wooper',pikachu20,
+  {...metric(1300,6000),lootGold:1200,capturesGold:350,supplyGold:225},2);
+ok(Math.abs(finance.metrics.lootPerKill-24)<.001,'loot por abate usa somente o delta da amostra');
+ok(Math.abs(finance.metrics.capturePerKill-6)<.001,'valor das capturas não se mistura com loot');
+ok(Math.abs(finance.metrics.supplyPerKill-3)<.001,'suprimentos ficam separados do saldo líquido');
+H.recordMeasurement(financeStore,finance);
+ok(H.statsFor(financeStore,'acc-finance',pikachu20).wooper.lootPerKill>0,'componentes financeiros persistem por Pokémon');
+ok(pika.metrics.lootPerKill===null,'amostra antiga sem componentes não vira loot zero');
+
 console.log(`\nMedições de hunt por Pokémon: ${checks} checks passaram`);

@@ -20,8 +20,9 @@ PokeMux adds a Windows installer and updater, hardened storage and navigation, l
 
 ## Highlights
 
-- Global Market available from the gold icon in the top bar, with account selection, categories, Pokémon filters, sorting, pagination and listing details. Open market data refreshes every 60 seconds while preserving the current search, filters, page, selection and scroll.
-- Visual inventory picker using the game's bag artwork to compare owned items and Pokémon with listings in dollars and diamonds. Adjustable IV, level and quality tolerances; lowest price, sample median and highest buy request. No global completed-sales history.
+- Global Market automatically uses an available connected account. Inventories and personal listings from up to four accounts are combined, with an account filter and owner links that open the corresponding panel. Open market data refreshes every 60 seconds while preserving filters and scroll; the complete Pokémon cache refreshes approximately every five minutes.
+- Inventory list identifies each specimen by name, level, IV, quality, rarity and owner. Comparisons require the same rarity and adjustable level, IV and quality tolerances. Selling estimates use complete comparable sets; no matching listings means no reliable estimate. Whole-species references require explicit widening.
+- Pokémon browsing opens all listings directly. Price sorting converts dollars and diamonds using the active Diamond quote and loads only the pages needed. The wider window includes hover IV calculation and prioritizes visible queries over background synchronization.
 - Header cards for the lowest Diamond price in dollars, Strange Pheromone and Bronze Boss Token prices in both currencies.
 - Up to 10 local market alerts per account/character, autocomplete search, maximum unit price and Pokémon conditions. Windows notifications and local speech; checks every 60 seconds while the app runs, even with the market window closed. The first check is silent and repeat listings are deduplicated.
 - Include evolutions and pre-evolutions from the game's catalog in Pokémon searches and alerts. The search checkbox is inside the Pokémon filters, with sorting beside quality options above results.

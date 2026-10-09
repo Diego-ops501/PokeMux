@@ -15,7 +15,7 @@ const card = {
 const storage = {};
 let rendered = 0;
 const env = {
-  ivAtivo: true, ivDados: null, ivFonte: -1, ivHoverAtual: null,
+  ivAtivo: true, ivDados: null, ivFonte: -1, ivHoverAtual: null, ivMarketPoint: null,
   ivEl: card, off: [], innerWidth: 1000, innerHeight: 800,
   webviews: [
     { getBoundingClientRect: () => ({ left: 100, top: 50, width: 400, height: 300 }) },
@@ -63,6 +63,14 @@ assert.equal(rendered, 2, 'desativar impede exibição');
 env.ivsBtn.onclick();
 assert.equal(storage.ivHoverEnabled, '1');
 assert(!classes.has('show'), 'ativar não abre resultado antigo');
+
+// Market coordinates are already in the app window, rather than inside a game webview.
+env.ivAtivo = true; env.ivMarketPoint = { x: 900, y: 700 }; env.ivHoverAtual = { id: -1 }; env.ivFonte = 1;
+env.ivHoverRecebe(0, { ativo: false });
+assert.equal(env.ivFonte, 1, 'background game hover cannot replace the market tooltip');
+new Function('env', 'with(env) {' + section(html, '  function ivPosiciona()', '  // Poder pela fórmula') + 'ivPosiciona(); }')(env);
+assert.equal(card.style.left, '504px'); assert.equal(card.style.top, '174px');
+env.ivOculta(); assert.equal(env.ivMarketPoint, null);
 
 async function testHelper() {
   const messages = [], pending = [];

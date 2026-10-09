@@ -11,6 +11,7 @@
 <script src="src/domain/hunt-measurements.js"></script>
 <script src="src/domain/pokemon-aptitude.js"></script>
 <script src="src/domain/hunt-recommendations.js"></script>
+<script src="src/domain/pokemon-state.js"></script>
 <script src="src/domain/global-market.js"></script>
 <script src="src/domain/market-alerts.js"></script>
 <script src="src/renderer/global-market.js"></script>
@@ -268,6 +269,7 @@
     background: linear-gradient(165deg, #161b22, #0d1117 60%); border: 1px solid #30363d; border-top: 2px solid #e3350d;
     border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
   #ivCard.show { display: block; }
+  #ivCard.market { z-index: 9700; overflow-y: auto; }
   #ivCard::-webkit-scrollbar { width: 9px; }
   #ivCard::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
   #ivCard .iv-hd { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-bottom: 1px solid #21262d; user-select: none; }
@@ -498,6 +500,10 @@
   .hr-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .hr-head h2 { margin: 0 auto 0 0; font-size: 19px; }
   .hr-head select { background: #161b22; color: #e6edf3; border: 1px solid #30363d; padding: 7px; border-radius: 7px; max-width: 220px; }
+  .hr-controls { display:flex; flex-wrap:wrap; gap:12px; margin-top:14px; }
+  .hr-controls label { display:grid; gap:5px; color:#adbac7; font-size:12px; }
+  .hr-controls select, .hr-controls input { background:#161b22; color:#e6edf3; border:1px solid #30363d; padding:7px; border-radius:7px; }
+  .hr-controls input { width:75px; }
   .hr-summary, .hr-note { margin: 12px 0; color: #8b949e; line-height: 1.5; font-size: 12px; }
   .hr-row { margin: 10px 0; border: 1px solid #30363d; border-radius: 10px; padding: 13px; background: #161b22; }
   .hr-row.best { border-color: #3fb950; }
@@ -568,7 +574,12 @@
 
   <div id="ivCard"></div>
   <div id="huntRecommend" role="dialog" aria-modal="true" aria-labelledby="hrTitle">
-    <div class="hr-modal"><div class="hr-head"><h2 id="hrTitle"></h2><select id="hrAccount" aria-label="Conta"></select><button id="hrRefresh">⟳</button><button id="hrClose" aria-label="Fechar">✕</button></div><div id="hrStatus" role="status" aria-live="polite"></div><div id="hrBody"></div></div>
+    <div class="hr-modal"><div class="hr-head"><h2 id="hrTitle"></h2><select id="hrAccount" aria-label="Conta"></select><button id="hrRefresh">⟳</button><button id="hrClose" aria-label="Fechar">✕</button></div>
+      <div class="hr-controls">
+        <label><span id="hrFocusLabel">Foco</span><select id="hrFocus" aria-labelledby="hrFocusLabel"><option value="xp">Foco em XP</option><option value="gold">Foco em dólares</option></select></label>
+        <label><span id="hrPotionLabel">Poção na análise</span><select id="hrPotion" aria-labelledby="hrPotionLabel"><option value="observed">Gastos observados</option><option value="none">Sem poção</option><option value="200">Small Potion</option><option value="201">Great Potion</option><option value="202">Ultra Potion</option><option value="203">Hyper Potion</option><option value="204">Ultimate Potion</option></select></label>
+        <label><span id="hrThresholdLabel">Limiar de HP (%)</span><input id="hrThreshold" aria-labelledby="hrThresholdLabel" type="number" min="1" max="99" value="50"></label>
+      </div><div id="hrStatus" role="status" aria-live="polite"></div><div id="hrBody"></div></div>
   </div>
   <div id="shinyParty"></div>
   <div id="overlay">
@@ -823,6 +834,9 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
     }
   };
   Object.assign(I18N.pt, {
+    hrFocusLabel:"Foco", hrFocusXp:"Foco em XP", hrFocusGold:"Foco em dólares", hrPotionLabel:"Poção na análise", hrObservedCosts:"Gastos observados", hrNoPotion:"Sem poção", hrThresholdLabel:"Limiar de HP (%)", hrGoldMeasured:"Lucro líquido/h medido", hrGoldEstimated:"Lucro líquido/h estimado", hrPotionsPerHour:"Poções/h estimadas", hrNoGoldData:"Ainda não há dados suficientes de lucro para as hunts viáveis deste Pokémon. Faça uma caça por pelo menos cinco minutos e atualize.", hrXpOnly:"Foco em XP: dólares não entram no ranking.", hrGoldOnly:"Foco em dólares: XP não entra no ranking.", hrGoldHistory:"Saldo histórico do mesmo Pokémon: inclui drops e capturas e desconta bolas e curas nas condições medidas.", hrGoldModel:"Estimativa sem capturas: drops menos poções. Custos e cura das poções usam a tabela local; dano é aproximado, sem regeneração natural.", hrGoldMissing:"Hunts sem dados suficientes de lucro foram omitidas."
+  });
+  Object.assign(I18N.pt, {
     ivNatural: 'Aptidão natural', ivProfile: 'Perfil deste exemplar', ivSynergy: 'Sinergia',
     ivApt_physical: 'Físico (Ataque)', ivApt_special: 'Especial (Sp. Atk)', ivApt_balanced: 'Equilibrado', ivApt_unknown: 'Dados insuficientes',
     ivAligned: 'golpes disponíveis combinam com o perfil', ivNoMoves: 'sem dados suficientes de golpes disponíveis', ivTarget: 'ALVO',
@@ -831,12 +845,18 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
     ivTmUnknown: 'aprendizado não confirmado', ivTmLearned: 'aprendida', ivTmMissing: 'não aprendida'
   });
   Object.assign(I18N.en, {
+    hrFocusLabel:"Focus", hrFocusXp:"Focus on XP", hrFocusGold:"Focus on dollars", hrPotionLabel:"Potion in analysis", hrObservedCosts:"Observed expenses", hrNoPotion:"No potion", hrThresholdLabel:"HP threshold (%)", hrGoldMeasured:"Measured net profit/h", hrGoldEstimated:"Estimated net profit/h", hrPotionsPerHour:"Estimated potions/h", hrNoGoldData:"Not enough profit data for this Pokémon’s viable hunts yet. Hunt for at least five minutes and refresh.", hrXpOnly:"XP focus: dollars do not affect the ranking.", hrGoldOnly:"Dollar focus: XP does not affect the ranking.", hrGoldHistory:"Historical balance for this Pokémon: drops and catches minus balls and healing under the measured conditions.", hrGoldModel:"Estimate without catches: drops minus potions. Potion costs and healing use the local table; damage is approximate, without natural regeneration.", hrGoldMissing:"Hunts without enough profit data were omitted."
+  });
+  Object.assign(I18N.en, {
     ivNatural: 'Natural aptitude', ivProfile: 'This Pokémon’s profile', ivSynergy: 'Synergy',
     ivApt_physical: 'Physical (Attack)', ivApt_special: 'Special (Sp. Atk)', ivApt_balanced: 'Balanced', ivApt_unknown: 'Insufficient data',
     ivAligned: 'available moves match the profile', ivNoMoves: 'insufficient data on available moves', ivTarget: 'TARGET',
     ivAptHint: 'Aptitude uses species bases; profile uses observed stats. A difference up to 10% is balanced. Synergy does not predict damage against a hunt.',
     ivLowLevel: 'Pokémon below level 15: level this Pokémon up to at least level 15 for a more precise IV measurement. Simulating another level does not improve the current reading.',
     ivTmUnknown: 'learning not confirmed', ivTmLearned: 'learned', ivTmMissing: 'not learned'
+  });
+  Object.assign(I18N.es, {
+    hrFocusLabel:"Enfoque", hrFocusXp:"Enfoque en XP", hrFocusGold:"Enfoque en dólares", hrPotionLabel:"Poción en el análisis", hrObservedCosts:"Gastos observados", hrNoPotion:"Sin poción", hrThresholdLabel:"Umbral de HP (%)", hrGoldMeasured:"Ganancia neta/h medida", hrGoldEstimated:"Ganancia neta/h estimada", hrPotionsPerHour:"Pociones/h estimadas", hrNoGoldData:"Aún faltan datos de ganancias para las hunts viables de este Pokémon. Caza al menos cinco minutos y actualiza.", hrXpOnly:"Enfoque en XP: los dólares no afectan el ranking.", hrGoldOnly:"Enfoque en dólares: XP no afecta el ranking.", hrGoldHistory:"Saldo histórico del mismo Pokémon: drops y capturas menos bolas y curas en las condiciones medidas.", hrGoldModel:"Estimación sin capturas: drops menos pociones. Costos y cura usan la tabla local; daño aproximado, sin regeneración natural.", hrGoldMissing:"Se omitieron hunts sin datos suficientes de ganancias."
   });
   Object.assign(I18N.es, {
     ivNatural: 'Aptitud natural', ivProfile: 'Perfil de este ejemplar', ivSynergy: 'Sinergia',
@@ -850,13 +870,13 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
     hrDay:'Melhor hunt do tipo do dia', hrDayNone:'Nenhuma hunt deste tipo disponível para o nível da conta.', hrDayUntil:'Bônus até', hrGeneral:'Recomendações gerais', hrDayExpired:'O bônus do tipo do dia terminou. Atualize a recomendação.', hrTitle:'Recomendar hunt', hrLoading:'Analisando o Pokémon principal e as hunts…', hrGo:'Ir para esta hunt', hrBest:'Melhor opção', hrAlternatives:'Alternativas',
     hrNavigation:'Não foi possível acionar o mapa do jogo. Atualize a página desta conta e tente novamente.', hrOffline:'A conta precisa estar conectada ao jogo.', hrLeader:'Marque um Pokémon como principal no jogo.', hrCatalog:'Não foi possível carregar as hunts. Tente novamente.', hrNone:'Nenhuma hunt compatível foi encontrada para este Pokémon e nível da conta.',
     hrStale:'O personagem ou Pokémon principal mudou. Atualize a recomendação.', hrFainted:'O Pokémon principal está sem HP. Cure-o antes de entrar.', hrLocked:'Esta hunt exige um nível maior da conta.', hrTravel:'Entrando na hunt…', hrDone:'Entrada na hunt confirmada.', hrUnconfirmed:'O jogo não confirmou a entrada. Verifique o painel; a área pode exigir um desbloqueio.',
-    hrLow:'baixo', hrMedium:'moderado', hrHigh:'alto', hrUnknown:'não determinado', hrRisk:'Risco estimado', hrMeasured:'XP/h medido', hrEstimated:'XP/h estimado', hrNoMeasure:'Sem medição: ranking por XP por golpe e resistência.', hrModel:'Dano e resistência são estimativas. Liberações de região são verificadas pelo jogo.', hrMove:'Melhor golpe', hrHits:'golpes por abate', hrAccountLevel:'Nível da conta', hrObserved:'atributos disponíveis do jogo', hrProjected:'atributos estimados por nível, qualidade e IV', hrDitto:'Transforme o Ditto antes de recomendar uma hunt; o painel Ditto ajuda a escolher a forma.'
+    hrLow:'baixo', hrMedium:'moderado', hrHigh:'alto', hrUnknown:'não determinado', hrRisk:'Risco estimado', hrMeasured:'XP/h medido', hrEstimated:'XP/h estimado', hrNoMeasure:'Sem medição de cadência: ranking por XP por golpe.', hrModel:'Dano e resistência são estimativas. Liberações de região são verificadas pelo jogo.', hrMove:'Melhor golpe', hrHits:'golpes por abate', hrAccountLevel:'Nível da conta', hrObserved:'atributos disponíveis do jogo', hrProjected:'atributos estimados por nível, qualidade e IV', hrDitto:'Transforme o Ditto antes de recomendar uma hunt; o painel Ditto ajuda a escolher a forma.'
   });
   Object.assign(I18N.en, {
-    hrDay:'Best hunt for today’s type', hrDayNone:'No hunt of this type is available at this account level.', hrDayUntil:'Bonus until', hrGeneral:'General recommendations', hrDayExpired:'The daily type bonus ended. Refresh recommendations.', hrTitle:'Recommend hunt', hrLoading:'Analyzing the leader and available hunts…', hrGo:'Go to this hunt', hrBest:'Best option', hrAlternatives:'Alternatives', hrNavigation:'Could not activate the game map. Reload this account and try again.', hrOffline:'The account must be connected.', hrLeader:'Mark a Pokémon as leader in the game.', hrCatalog:'Could not load hunts. Try again.', hrNone:'No compatible hunt found for this Pokémon and account level.', hrStale:'The character or leader changed. Refresh recommendations.', hrFainted:'Heal the leader before entering.', hrLocked:'This hunt requires a higher account level.', hrTravel:'Entering hunt…', hrDone:'Hunt entry confirmed.', hrUnconfirmed:'The game did not confirm entry. Check the panel; the area may require unlocking.', hrLow:'low', hrMedium:'moderate', hrHigh:'high', hrUnknown:'unknown', hrRisk:'Estimated risk', hrMeasured:'Measured XP/h', hrEstimated:'Estimated XP/h', hrNoMeasure:'No measurements: ranked by XP per hit and resistance.', hrModel:'Damage and resistance are estimates. The game checks region unlocks.', hrMove:'Best move', hrHits:'hits per kill', hrAccountLevel:'Account level', hrObserved:'available game stats', hrProjected:'stats estimated from level, quality and IV', hrDitto:'Transform Ditto first; the Ditto panel helps choose a form.'
+    hrDay:'Best hunt for today’s type', hrDayNone:'No hunt of this type is available at this account level.', hrDayUntil:'Bonus until', hrGeneral:'General recommendations', hrDayExpired:'The daily type bonus ended. Refresh recommendations.', hrTitle:'Recommend hunt', hrLoading:'Analyzing the leader and available hunts…', hrGo:'Go to this hunt', hrBest:'Best option', hrAlternatives:'Alternatives', hrNavigation:'Could not activate the game map. Reload this account and try again.', hrOffline:'The account must be connected.', hrLeader:'Mark a Pokémon as leader in the game.', hrCatalog:'Could not load hunts. Try again.', hrNone:'No compatible hunt found for this Pokémon and account level.', hrStale:'The character or leader changed. Refresh recommendations.', hrFainted:'Heal the leader before entering.', hrLocked:'This hunt requires a higher account level.', hrTravel:'Entering hunt…', hrDone:'Hunt entry confirmed.', hrUnconfirmed:'The game did not confirm entry. Check the panel; the area may require unlocking.', hrLow:'low', hrMedium:'moderate', hrHigh:'high', hrUnknown:'unknown', hrRisk:'Estimated risk', hrMeasured:'Measured XP/h', hrEstimated:'Estimated XP/h', hrNoMeasure:'No cadence measurements: ranked by XP per hit.', hrModel:'Damage and resistance are estimates. The game checks region unlocks.', hrMove:'Best move', hrHits:'hits per kill', hrAccountLevel:'Account level', hrObserved:'available game stats', hrProjected:'stats estimated from level, quality and IV', hrDitto:'Transform Ditto first; the Ditto panel helps choose a form.'
   });
   Object.assign(I18N.es, {
-    hrDay:'Mejor hunt del tipo del día', hrDayNone:'No hay una hunt de este tipo disponible para el nivel de la cuenta.', hrDayUntil:'Bonus hasta', hrGeneral:'Recomendaciones generales', hrDayExpired:'El bonus del tipo del día terminó. Actualiza las recomendaciones.', hrTitle:'Recomendar hunt', hrLoading:'Analizando el Pokémon principal y las hunts…', hrGo:'Ir a esta hunt', hrBest:'Mejor opción', hrAlternatives:'Alternativas', hrNavigation:'No se pudo activar el mapa. Recarga esta cuenta e inténtalo de nuevo.', hrOffline:'La cuenta debe estar conectada.', hrLeader:'Marca un Pokémon como principal en el juego.', hrCatalog:'No se pudieron cargar las hunts. Inténtalo de nuevo.', hrNone:'No hay una hunt compatible con este Pokémon y nivel de cuenta.', hrStale:'El personaje o Pokémon principal cambió. Actualiza la recomendación.', hrFainted:'Cura al Pokémon principal antes de entrar.', hrLocked:'Esta hunt requiere un nivel de cuenta mayor.', hrTravel:'Entrando en la hunt…', hrDone:'Entrada a la hunt confirmada.', hrUnconfirmed:'El juego no confirmó la entrada. Revisa el panel; la zona puede requerir desbloqueo.', hrLow:'bajo', hrMedium:'moderado', hrHigh:'alto', hrUnknown:'no determinado', hrRisk:'Riesgo estimado', hrMeasured:'XP/h medido', hrEstimated:'XP/h estimado', hrNoMeasure:'Sin mediciones: ranking por XP por golpe y resistencia.', hrModel:'Daño y resistencia son estimaciones. El juego verifica las regiones desbloqueadas.', hrMove:'Mejor golpe', hrHits:'golpes por derrota', hrAccountLevel:'Nivel de cuenta', hrObserved:'atributos disponibles del juego', hrProjected:'atributos estimados por nivel, calidad e IV', hrDitto:'Transforma a Ditto primero; el panel Ditto ayuda a elegir la forma.'
+    hrDay:'Mejor hunt del tipo del día', hrDayNone:'No hay una hunt de este tipo disponible para el nivel de la cuenta.', hrDayUntil:'Bonus hasta', hrGeneral:'Recomendaciones generales', hrDayExpired:'El bonus del tipo del día terminó. Actualiza las recomendaciones.', hrTitle:'Recomendar hunt', hrLoading:'Analizando el Pokémon principal y las hunts…', hrGo:'Ir a esta hunt', hrBest:'Mejor opción', hrAlternatives:'Alternativas', hrNavigation:'No se pudo activar el mapa. Recarga esta cuenta e inténtalo de nuevo.', hrOffline:'La cuenta debe estar conectada.', hrLeader:'Marca un Pokémon como principal en el juego.', hrCatalog:'No se pudieron cargar las hunts. Inténtalo de nuevo.', hrNone:'No hay una hunt compatible con este Pokémon y nivel de cuenta.', hrStale:'El personaje o Pokémon principal cambió. Actualiza la recomendación.', hrFainted:'Cura al Pokémon principal antes de entrar.', hrLocked:'Esta hunt requiere un nivel de cuenta mayor.', hrTravel:'Entrando en la hunt…', hrDone:'Entrada a la hunt confirmada.', hrUnconfirmed:'El juego no confirmó la entrada. Revisa el panel; la zona puede requerir desbloqueo.', hrLow:'bajo', hrMedium:'moderado', hrHigh:'alto', hrUnknown:'no determinado', hrRisk:'Riesgo estimado', hrMeasured:'XP/h medido', hrEstimated:'XP/h estimado', hrNoMeasure:'Sin mediciones de cadencia: ranking por XP por golpe.', hrModel:'Daño y resistencia son estimaciones. El juego verifica las regiones desbloqueadas.', hrMove:'Mejor golpe', hrHits:'golpes por derrota', hrAccountLevel:'Nivel de cuenta', hrObserved:'atributos disponibles del juego', hrProjected:'atributos estimados por nivel, calidad e IV', hrDitto:'Transforma a Ditto primero; el panel Ditto ayuda a elegir la forma.'
   });
   let lang = ['en', 'es'].includes(lsGet('lang')) ? lsGet('lang') : 'pt';
   const t = (k) => (I18N[lang][k] != null ? I18N[lang][k] : I18N.pt[k]);
@@ -1009,7 +1029,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
               wv.executeJavaScript('window.__pokeSeed=' + j).catch(() => {});
             }
           } catch {}
-          wv.executeJavaScript(`(()=>{if(window.__poke)return;const nL=v=>{const m=String(v==null?'':v).match(/[0-9]+([.,][0-9]+)?/);return m?+m[0].replace(',','.'):0};const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,supGold:0,supN:0,slug:'',hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false,hunting:false};window.__poke=P;try{const sd=window.__pokeSeed;delete window.__pokeSeed;if(sd&&sd.s&&sd.s.start&&Date.now()-(sd.t||0)<600e3){P.sess=sd.s;if(sd.slug)P.lastSlug=sd.slug;if(sd.cl&&sd.cl.length)P.catchLog=sd.cl;if(sd.sl&&sd.sl.length)P.shinyLog=sd.sl;if(sd.ab&&typeof sd.ab==='object')P.anBase=sd.ab;}}catch(x){}let auth=null;const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);P.sock=s;const OS=s.send.bind(s);s.send=function(v){try{if(typeof v==='string'){const q=JSON.parse(v);if(q&&['set-city','leave-hunt','exit-hunt'].includes(q.type)){P.hunting=false;P.huntLeftT=Date.now();}else if(q&&q.type==='enter-hunt')P.huntPendingT=Date.now();}}catch(x){}return OS(v);};s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=JSON.parse(e.data);if(m&&m.type){P.ws[m.type]=m;if(['set-city','city','leave-hunt','exit-hunt','field-none','field-teleport-city','field-lost'].includes(m.type)){P.hunting=false;P.huntLeftT=Date.now();}const S=P.sess;if(m.type==='field-init'){const sl=m.slug||'';P.fiT=Date.now();P.hunting=true;P.huntSince=Date.now();if(P.lastSlug!==sl){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();P.sess.slug=sl;P.lastSlug=sl;}}else if(m.type==='field-kill'){P.hunting=true;P.lastCombatT=Date.now();S.kills++;S.lastKillT=Date.now();S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});if(m.shiny){S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:m.speciesName||m.name||'',sid:m.speciesId||m.pokeId||0,def:1,t:Date.now()});if(SL.length>30)SL.shift();}}else if(m.type==='catch-result'){S.balls++;S.sinceCatch=(S.sinceCatch||0)+1;const bbc=((P.ws.balls&&P.ws.balls.catalog)||[]).find(x=>x.id===m.ballId);if(bbc&&!bbc.infinite)S.supGold=(S.supGold||0)+(+bbc.priceGold||0);if(m.success){S.captures++;S.lastCatchT=Date.now();S.sinceCatch=0;}}else if(m.type==='field'){P.lastFieldT=Date.now();/* golpes do seu pokemon: hits[].slot>=0. Salva de area do TM = mesmo golpe em 2+ alvos no mesmo tick (premissa: um tick traz no maximo um golpe normal por alvo); crit/bloqueio contam como golpe mas ficam fora da media de dano */if(m.mobs&&m.mobs.length){for(const mb of m.mobs){if(mb&&+mb.maxHp>0)(S.slotHp=S.slotHp||{})[mb.slot]=+mb.maxHp;}}if(m.hits&&m.hits.length){const bm={};for(const h of m.hits){if(h&&h.slot>=0&&h.move){const k=String(h.move);(bm[k]=bm[k]||new Set()).add(h.slot);}}for(const h of m.hits){if(!(h&&h.slot>=0&&+h.amount>0)||(h.move&&bm[String(h.move)].size>=2))continue;S.hits=(S.hits||0)+1;const mh=S.slotHp&&S.slotHp[h.slot];if(mh>0&&!h.crit&&!h.blocked){S.pct=(S.pct||0)+(+h.amount)/mh;S.pctN=(S.pctN||0)+1;}}}}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const LP=P.ws.pokes&&P.ws.pokes.list;if(LP){const ix=LP.findIndex(x=>x.id===pk.id);if(ix>=0)Object.assign(LP[ix],pk);else LP.push(pk);}const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}else if(m.type==='inventory'){const S=P.sess;let now=0;const doc0=P.api['/game/items.json'];const cat0={};if(doc0&&doc0.items)doc0.items.forEach(it=>cat0[it.id]=it);const cur={};(m.items||[]).forEach(it=>{if(it.itemId===59195)now=it.quantity||0;const c=(cat0[it.itemId]||{}).category;if(c==='heal'||c==='potion'||c==='revive')cur[it.itemId]=it.quantity||0;});
+          wv.executeJavaScript(`(()=>{if(window.__poke)return;const nL=v=>{const m=String(v==null?'':v).match(/[0-9]+([.,][0-9]+)?/);return m?+m[0].replace(',','.'):0};const mk=()=>({start:Date.now(),kills:0,xp:0,balls:0,captures:0,drops:{},shinyN:0,shinySeen:{},shinyCapN:0,faintN:0,sellG:0,supGold:0,supN:0,slug:'',hp:{}});const P={ws:{},api:{},sess:mk(),prev:null,knownPokes:{},pokesBaselined:false,hunting:false};window.__poke=P;try{const sd=window.__pokeSeed;delete window.__pokeSeed;if(sd&&sd.s&&sd.s.start&&Date.now()-(sd.t||0)<600e3){P.sess=sd.s;if(sd.slug)P.lastSlug=sd.slug;if(sd.cl&&sd.cl.length)P.catchLog=sd.cl;if(sd.sl&&sd.sl.length)P.shinyLog=sd.sl;if(sd.ab&&typeof sd.ab==='object')P.anBase=sd.ab;}}catch(x){}let auth=null;const pokemonEvent=(${window.PokeMuxPokemonState.receive.toString()});const OW=window.WebSocket;window.WebSocket=function(...ar){const s=Reflect.construct(OW,ar);P.sock=s;P.pokeChunks=null;P.pokeGeneration=null;const OS=s.send.bind(s);s.send=function(v){try{if(typeof v==='string'){const q=JSON.parse(v);if(q&&['set-city','leave-hunt','exit-hunt'].includes(q.type)){P.hunting=false;P.huntLeftT=Date.now();}else if(q&&q.type==='enter-hunt')P.huntPendingT=Date.now();}}catch(x){}return OS(v);};s.addEventListener('message',e=>{try{if(typeof e.data==='string'){const m=pokemonEvent(P,JSON.parse(e.data));if(m&&m.type){P.ws[m.type]=m;if(['set-city','city','leave-hunt','exit-hunt','field-none','field-teleport-city','field-lost'].includes(m.type)){P.hunting=false;P.huntLeftT=Date.now();}const S=P.sess;if(m.type==='field-init'){const sl=m.slug||'';P.fiT=Date.now();P.hunting=true;P.huntSince=Date.now();if(P.lastSlug!==sl){P.prev=P.sess;P.prev.end=Date.now();P.sess=mk();P.sess.slug=sl;P.lastSlug=sl;}}else if(m.type==='field-kill'){P.hunting=true;P.lastCombatT=Date.now();S.kills++;S.lastKillT=Date.now();S.xp+=m.xpGained||0;(m.loot||[]).forEach(l=>{const d=S.drops[l.itemId]||(S.drops[l.itemId]={name:l.name,qty:0});d.qty+=l.qty||0;});if(m.shiny){S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:m.speciesName||m.name||'',sid:m.speciesId||m.pokeId||0,def:1,t:Date.now()});if(SL.length>30)SL.shift();}}else if(m.type==='catch-result'){S.balls++;S.sinceCatch=(S.sinceCatch||0)+1;const bbc=((P.ws.balls&&P.ws.balls.catalog)||[]).find(x=>x.id===m.ballId);if(bbc&&!bbc.infinite)S.supGold=(S.supGold||0)+(+bbc.priceGold||0);if(m.success){S.captures++;S.lastCatchT=Date.now();S.sinceCatch=0;}}else if(m.type==='field'){P.lastFieldT=Date.now();/* golpes do seu pokemon: hits[].slot>=0. Salva de area do TM = mesmo golpe em 2+ alvos no mesmo tick (premissa: um tick traz no maximo um golpe normal por alvo); crit/bloqueio contam como golpe mas ficam fora da media de dano */if(m.mobs&&m.mobs.length){for(const mb of m.mobs){if(mb&&+mb.maxHp>0)(S.slotHp=S.slotHp||{})[mb.slot]=+mb.maxHp;}}if(m.hits&&m.hits.length){const bm={};for(const h of m.hits){if(h&&h.slot>=0&&h.move){const k=String(h.move);(bm[k]=bm[k]||new Set()).add(h.slot);}}for(const h of m.hits){if(!(h&&h.slot>=0&&+h.amount>0)||(h.move&&bm[String(h.move)].size>=2))continue;S.hits=(S.hits||0)+1;const mh=S.slotHp&&S.slotHp[h.slot];if(mh>0&&!h.crit&&!h.blocked){S.pct=(S.pct||0)+(+h.amount)/mh;S.pctN=(S.pctN||0)+1;}}}}else if(m.type==='poke-delta'){const pk=m.poke;if(pk){const LP=P.ws.pokes&&P.ws.pokes.list;if(LP){const ix=LP.findIndex(x=>x.id===pk.id);if(ix>=0)Object.assign(LP[ix],pk);else LP.push(pk);}const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;}}else if(m.type==='pokes'){(m.list||[]).forEach(pk=>{const was=S.hp[pk.id];if(pk.team&&pk.hp===0&&was>0)S.faintN++;S.hp[pk.id]=pk.hp;if(P.pokesBaselined&&!P.knownPokes[pk.id]){S.sellG=(S.sellG||0)+(pk.sellValue||0);if(pk.shiny){S.shinyCapN++;S.shinyN=(S.shinyN||0)+1;const SL=P.shinyLog=P.shinyLog||[];SL.push({n:pk.name||'',sid:pk.speciesId||pk.pokeId||0,cap:1,t:Date.now()});if(SL.length>30)SL.shift();}const CL=P.catchLog=P.catchLog||[];const sd=pk.speciesId||pk.pokeId||0;const UL=P.usedList||[];CL.push({n:pk.name||'?',iv:nL(pk.ivTotal),q:nL(pk.quality),sh:!!pk.shiny,fx:!!(sd&&UL.length&&!UL.some(u=>u.sid===sd&&u.caught)),t:Date.now()});if(CL.length>50)CL.shift()}P.knownPokes[pk.id]=1;});if(!P.pokesBaselined)P.pokesBaselined=true;}else if(m.type==='inventory'){const S=P.sess;let now=0;const doc0=P.api['/game/items.json'];const cat0={};if(doc0&&doc0.items)doc0.items.forEach(it=>cat0[it.id]=it);const cur={};(m.items||[]).forEach(it=>{if(it.itemId===59195)now=it.quantity||0;const c=(cat0[it.itemId]||{}).category;if(c==='heal'||c==='potion'||c==='revive')cur[it.itemId]=it.quantity||0;});
 /* consumo de cura vira gasto: queda na quantidade x preco em gold. ponytail: o inventario e lido a cada 30s,
    entao item usado e reposto no intervalo passa batido, e vender potion no mercado conta como consumo.
    E estimativa, nao extrato. Upgrade: rastrear pelo evento de uso do item, se o jogo expor um. */
@@ -3362,7 +3382,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     if (mudou) { try { lsSet('huntStats3', JSON.stringify(huntStats)); } catch {} }
   }, 30000);
   // junta os marcadores do mapa com o catalogo de criaturas (tudo dado que o jogo ja entrega ao cliente)
-  const HUNTS_JS = `(async()=>{try{const [mk,cr]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null)]);const limpa=s=>String(s||'').toLowerCase().replace(/\\[.*?\\]/g,'').replace(/\\(.*?\\)/g,'').replace(/[_-]+/g,' ').replace(/\\s+/g,' ').trim();const chave=s=>limpa(s).replace(/female/g,'fe').replace(/male/g,'ma').replace(/[^a-z0-9]/g,'');const cs={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.name&&!(cs[chave(c.name)]&&!c.area&&+c.pokeId>=10000))cs[chave(c.name)]={nm0:c.name.toLowerCase().trim(),t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||c.priceNpc||0,xp:c.experience||c.xp||0,lvl:c.huntLevel||0,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string'),ar:String(c.area||'')||((+c.pokeId>=10000&&+c.pokeId<11000)?'outland':''),xm:+c.orreXpMul||0,tr:+c.orreTier||0};});const acha=nm=>{const k=chave(nm);if(cs[k])return cs[k];const pt=limpa(nm).split(/ e | and /);if(pt.length>1){const k2=chave(pt[0]);if(cs[k2])return cs[k2];}const w=limpa(nm).split(' ');for(let i=0;i<w.length;i++){const suf=chave(w.slice(i).join(' '));if(suf&&cs[suf])return cs[suf];}for(let i=0;i<w.length;i++){const kk=chave(w[i]);if(kk&&cs[kk])return cs[kk];}return null;};const ml={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null)ml[c.pokeId]=+c.huntLevel||0;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{const e=c?(+c.evolvesToId||0):0;if(!e||ml[e]==null)return;const v=Math.max(ml[c.pokeId]||0,+c.evolveLevel||0);if(v<ml[e])ml[e]=v;});const byId={},bs={},mv={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null&&c.name){byId[c.pokeId]=c.name;const pMv=mv[String(c.name).toLowerCase()];if(bs[String(c.name).toLowerCase()]&&!c.area&&+c.pokeId>=10000)return;bs[String(c.name).toLowerCase()]=[+c.baseHp||0,+c.baseAtk||0,+c.baseDef||0,+c.baseSpAtk||0,+c.baseSpDef||0,+c.baseSpeed||0];mv[String(c.name).toLowerCase()]={hl:+c.huntLevel||0,ml:(ml[c.pokeId]!=null?ml[c.pokeId]:(+c.huntLevel||0)),id:(pMv&&pMv.id&&pMv.id<(+c.pokeId||0))?pMv.id:(+c.pokeId||0),t:[String(c.type1||'').toUpperCase(),String(c.type2||'').toUpperCase()],a:(c.attacks||[]).slice(0,24).map(g=>[String((g&&g.name)||'').slice(0,24),+(g&&g.power)||0,String((g&&g.type)||'').toUpperCase(),String((g&&g.category)||'').toUpperCase()==='PHYSICAL'?'P':'S',+(g&&g.cooldownMs)||0,+(g&&g.learnLevel)||0,String((g&&g.tm)||'').toUpperCase().slice(0,12)])};}});const nat={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&+c.pokeId>=1&&+c.pokeId<1026)nat[chave(c.name)]=+c.pokeId;});const EXTRA={darumaka:554,darmanitan:555,pyroar:668};const dex={};((cr&&cr.creatures)||[]).forEach(c=>{if(!c||!((+c.pokeId>=10000&&+c.pokeId<11000)||(+c.pokeId>=50000&&+c.pokeId<51000)))return;const k=limpa(c.name);let d=nat[chave(k)];const w=k.split(' ');for(let i=0;i<w.length&&!d;i++)d=nat[chave(w.slice(i).join(' '))];for(let i=0;i<w.length&&!d;i++)d=nat[chave(w[i])]||EXTRA[chave(w[i])];if(d)dex[+c.pokeId]=d;});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const mlN={};ms.forEach(m2=>{const c=acha(m2.hunt||m2.name||m2.slug||m2.title||'');const lv=+(m2.level||m2.lvl||m2.minLevel)||0;if(c&&lv>0&&(mlN[c.nm0]==null||lv<mlN[c.nm0]))mlN[c.nm0]=lv;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{if(!c)return;const e=+c.evolvesToId||0;if(!e)return;const de=String(c.name||'').toLowerCase(),pa=String(byId[e]||'').toLowerCase();if(!pa||mlN[de]==null)return;const v=Math.max(mlN[de],+c.evolveLevel||0);if(mlN[pa]==null||v<mlN[pa])mlN[pa]=v;});for(const k in mv){if(mlN[k]!=null)mv[k].ml=mlN[k];}const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const c=acha(nm);out.push({sl:String(m2.slug||''),name:String(nm).replace(/[_-]+/g,' ').trim(),blocked:m2.locked===true||m2.unlocked===false||m2.available===false||m2.disabled===true,level:m2.level||m2.lvl||m2.minLevel||(c?c.lvl:0)||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?Math.round((+c.xp||0)*((c.ar==='orre'&&c.xm>0)?c.xm:1)):0,loot:c?c.loot:[],sp:c?c.nm0:'',ar:c?c.ar:'',tr:c?c.tr:0});});return {h:out,byId:byId,bs:bs,mv:mv,dex:dex};}catch(e){return null}})()`;
+  const HUNTS_JS = `(async()=>{try{const [mk,cr,it]=await Promise.all([fetch('/api/game/map-markers').then(r=>r.json()).catch(()=>null),fetch('/game/creatures.json').then(r=>r.json()).catch(()=>null),fetch('/game/items.json').then(r=>r.json()).catch(()=>null)]);const limpa=s=>String(s||'').toLowerCase().replace(/\\[.*?\\]/g,'').replace(/\\(.*?\\)/g,'').replace(/[_-]+/g,' ').replace(/\\s+/g,' ').trim();const chave=s=>limpa(s).replace(/female/g,'fe').replace(/male/g,'ma').replace(/[^a-z0-9]/g,'');const cs={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.name&&!(cs[chave(c.name)]&&!c.area&&+c.pokeId>=10000))cs[chave(c.name)]={nm0:c.name.toLowerCase().trim(),t1:c.type1||'',t2:c.type2||'',sv:c.sellValue||c.priceNpc||0,xp:c.experience||c.xp||0,lvl:c.huntLevel||0,drops:c.loot||null,loot:(c.loot||[]).map(l=>(l&&l.name)||l).filter(x=>typeof x==='string'),ar:String(c.area||'')||((+c.pokeId>=10000&&+c.pokeId<11000)?'outland':''),xm:+c.orreXpMul||0,tr:+c.orreTier||0};});const acha=nm=>{const k=chave(nm);if(cs[k])return cs[k];const pt=limpa(nm).split(/ e | and /);if(pt.length>1){const k2=chave(pt[0]);if(cs[k2])return cs[k2];}const w=limpa(nm).split(' ');for(let i=0;i<w.length;i++){const suf=chave(w.slice(i).join(' '));if(suf&&cs[suf])return cs[suf];}for(let i=0;i<w.length;i++){const kk=chave(w[i]);if(kk&&cs[kk])return cs[kk];}return null;};const ml={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null)ml[c.pokeId]=+c.huntLevel||0;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{const e=c?(+c.evolvesToId||0):0;if(!e||ml[e]==null)return;const v=Math.max(ml[c.pokeId]||0,+c.evolveLevel||0);if(v<ml[e])ml[e]=v;});const byId={},bs={},mv={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&c.pokeId!=null&&c.name){byId[c.pokeId]=c.name;const pMv=mv[String(c.name).toLowerCase()];if(bs[String(c.name).toLowerCase()]&&!c.area&&+c.pokeId>=10000)return;bs[String(c.name).toLowerCase()]=[+c.baseHp||0,+c.baseAtk||0,+c.baseDef||0,+c.baseSpAtk||0,+c.baseSpDef||0,+c.baseSpeed||0];mv[String(c.name).toLowerCase()]={hl:+c.huntLevel||0,ml:(ml[c.pokeId]!=null?ml[c.pokeId]:(+c.huntLevel||0)),id:(pMv&&pMv.id&&pMv.id<(+c.pokeId||0))?pMv.id:(+c.pokeId||0),t:[String(c.type1||'').toUpperCase(),String(c.type2||'').toUpperCase()],a:(c.attacks||[]).slice(0,24).map(g=>[String((g&&g.name)||'').slice(0,24),+(g&&g.power)||0,String((g&&g.type)||'').toUpperCase(),String((g&&g.category)||'').toUpperCase()==='PHYSICAL'?'P':'S',+(g&&g.cooldownMs)||0,+(g&&g.learnLevel)||0,String((g&&g.tm)||'').toUpperCase().slice(0,12)])};}});const nat={};((cr&&cr.creatures)||[]).forEach(c=>{if(c&&+c.pokeId>=1&&+c.pokeId<1026)nat[chave(c.name)]=+c.pokeId;});const EXTRA={darumaka:554,darmanitan:555,pyroar:668};const dex={};((cr&&cr.creatures)||[]).forEach(c=>{if(!c||!((+c.pokeId>=10000&&+c.pokeId<11000)||(+c.pokeId>=50000&&+c.pokeId<51000)))return;const k=limpa(c.name);let d=nat[chave(k)];const w=k.split(' ');for(let i=0;i<w.length&&!d;i++)d=nat[chave(w.slice(i).join(' '))];for(let i=0;i<w.length&&!d;i++)d=nat[chave(w[i])]||EXTRA[chave(w[i])];if(d)dex[+c.pokeId]=d;});const ms=Array.isArray(mk)?mk:((mk&&(mk.markers||mk.hunts))||[]);const mlN={};ms.forEach(m2=>{const c=acha(m2.hunt||m2.name||m2.slug||m2.title||'');const lv=+(m2.level||m2.lvl||m2.minLevel)||0;if(c&&lv>0&&(mlN[c.nm0]==null||lv<mlN[c.nm0]))mlN[c.nm0]=lv;});for(let it=0;it<4;it++)((cr&&cr.creatures)||[]).forEach(c=>{if(!c)return;const e=+c.evolvesToId||0;if(!e)return;const de=String(c.name||'').toLowerCase(),pa=String(byId[e]||'').toLowerCase();if(!pa||mlN[de]==null)return;const v=Math.max(mlN[de],+c.evolveLevel||0);if(mlN[pa]==null||v<mlN[pa])mlN[pa]=v;});for(const k in mv){if(mlN[k]!=null)mv[k].ml=mlN[k];}const out=[];ms.forEach(m2=>{const nm=m2.hunt||m2.name||m2.slug||m2.title||'';if(!nm)return;const c=acha(nm);out.push({sl:String(m2.slug||''),name:String(nm).replace(/[_-]+/g,' ').trim(),blocked:m2.locked===true||m2.unlocked===false||m2.available===false||m2.disabled===true,level:m2.level||m2.lvl||m2.minLevel||(c?c.lvl:0)||0,t1:c?c.t1:'',t2:c?c.t2:'',sv:c?c.sv:0,xp:c?Math.round((+c.xp||0)*((c.ar==='orre'&&c.xm>0)?c.xm:1)):0,loot:c?c.loot:[],drops:c?c.drops:null,sp:c?c.nm0:'',ar:c?c.ar:'',tr:c?c.tr:0});});return {h:out,items:(it&&it.items)||[],byId:byId,bs:bs,mv:mv,dex:dex};}catch(e){return null}})()`;
   let creaturesById = {};
   let basesByName = {}; // bases do creatures.json, por nome minusculo (poder do time)
   let movesByName = {}; // golpes compactos e nivel de hunt por especie (sugestao de onde cacar)
@@ -4254,7 +4274,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   // com a identidade do hover, evitando resultados atrasados de outro Pokémon.
   const ivEl = document.getElementById('ivCard');
   let ivAtivo = lsGet('ivHoverEnabled') !== '0', ivDados = null, ivFonte = -1;
-  let ivHoverAtual = null;
+  let ivHoverAtual = null, ivMarketPoint = null;
   function ivToggleRender() {
     ivsBtn.textContent = 'IV: ' + (ivAtivo ? 'ON' : 'OFF');
     ivsBtn.classList.toggle('on', ivAtivo);
@@ -4265,10 +4285,12 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     });
   }
   function ivOculta() {
-    ivHoverAtual = null; ivDados = null; ivFonte = -1;
+    ivHoverAtual = null; ivMarketPoint = null; ivDados = null; ivFonte = -1;
+    ivEl.classList.remove('market');
     ivEl.classList.remove('show');
   }
   function ivHoverRecebe(i, p) {
+    if (ivMarketPoint) return;
     if (!ivAtivo || !p || off[i]) return;
     if (p.ativo !== true) { if (ivFonte === i) ivOculta(); return; }
     if (![p.x, p.y, p.width, p.height, p.id].every(Number.isFinite) || p.width <= 0 || p.height <= 0
@@ -4289,11 +4311,17 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const IVST = [['hp', '#3fb950'], ['atk', '#f0883e'], ['def', '#f2c665'], ['spa', '#58a6ff'], ['spd', '#55e6d3'], ['vel', '#f778ba']];
 
   function ivPosiciona() {
-    const w = webviews[ivFonte];
-    if (!w || !ivHoverAtual) return;
-    const r = w.getBoundingClientRect(), card = ivEl.getBoundingClientRect();
-    if (!r.width || !r.height) { ivOculta(); return; }
-    const x = r.left + ivHoverAtual.x * r.width, y = r.top + ivHoverAtual.y * r.height;
+    if (!ivHoverAtual) return;
+    const card = ivEl.getBoundingClientRect();
+    let x, y;
+    if (ivMarketPoint) { x = ivMarketPoint.x; y = ivMarketPoint.y; }
+    else {
+      const w = webviews[ivFonte];
+      if (!w) return;
+      const r = w.getBoundingClientRect();
+      if (!r.width || !r.height) { ivOculta(); return; }
+      x = r.left + ivHoverAtual.x * r.width; y = r.top + ivHoverAtual.y * r.height;
+    }
     const left = x + 16 + card.width > innerWidth - 8 ? x - card.width - 16 : x + 16;
     const top = y + 16 + card.height > innerHeight - 8 ? y - card.height - 16 : y + 16;
     ivEl.style.left = Math.max(8, Math.min(innerWidth - card.width - 8, left)) + 'px';
@@ -4422,11 +4450,16 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   };
   window.addEventListener('resize', ivPosiciona);
   window.addEventListener('blur', ivOculta);
-  document.addEventListener('mousemove', ivOculta);
+  document.addEventListener('mousemove', () => { if (!ivMarketPoint) ivOculta(); });
 
   // Recomendação pontual do líder. A viagem é uma ação explícita, sem rotação automática.
   const hrEl = document.getElementById('huntRecommend'), hrBody = document.getElementById('hrBody');
   const hrAccount = document.getElementById('hrAccount'), hrStatus = document.getElementById('hrStatus');
+  const hrFocus = document.getElementById('hrFocus'), hrPotion = document.getElementById('hrPotion'), hrThreshold = document.getElementById('hrThreshold');
+  hrFocus.value = lsGet('hrFocus') === 'gold' ? 'gold' : 'xp';
+  hrPotion.value = ['none','200','201','202','203','204'].includes(lsGet('hrPotion')) ? lsGet('hrPotion') : 'observed';
+  hrThreshold.value = Math.max(1, Math.min(99, Number(lsGet('hrThreshold')) || 50));
+  const hrPotions = {200:{heal:60,price:5},201:{heal:150,price:10},202:{heal:400,price:22},203:{heal:1000,price:55},204:{heal:3000,price:135}};
   const hrEngine = window.PokeMuxHuntRecommendations;
   const hrState = { revision: 0, busy: false, rows: [], context: null };
   const hrFingerprint = (d, p) => [d.cid, p.id, p.name, p.level, p.q, p.ivt, JSON.stringify(p.tms || [])].join('|');
@@ -4443,6 +4476,11 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const focused = webviews.indexOf(document.activeElement);
     hrEl.classList.add('show');
     document.getElementById('hrTitle').textContent = t('hrTitle');
+    document.getElementById('hrFocusLabel').textContent = t('hrFocusLabel');
+    hrFocus.options[0].textContent = t('hrFocusXp'); hrFocus.options[1].textContent = t('hrFocusGold');
+    document.getElementById('hrPotionLabel').textContent = t('hrPotionLabel');
+    hrPotion.options[0].textContent = t('hrObservedCosts'); hrPotion.options[1].textContent = t('hrNoPotion');
+    document.getElementById('hrThresholdLabel').textContent = t('hrThresholdLabel');
     hrState.rows = []; hrState.context = null; hrStatus.textContent = '';
     hrBody.textContent = t('hrLoading');
     const states = await Promise.all(Array.from({ length:count }, async (_, n) => {
@@ -4483,13 +4521,18 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       const attacker = { sp, level:Number(p.level), q:Number(p.q), ivt:Number(p.ivt), tlv:Number(d.level),
         t1:String(p.t1 || '').toUpperCase(), t2:String(p.t2 || '').toUpperCase(), stats,
         tms:Array.isArray(p.tms) ? p.tms : [] };
-      const results = hrEngine.rank({ attacker, hunts:catalog.h.slice(0, 2000), offense:sugCalc, project:hrProject,
-        moves:sp => (movesByName[sp] || {}).a || [], effectiveness:efTipo, measurements:statsParaRecomendacao(d.cid, p) });
-      const generalRows = results.slice(0, 5);
-      const day = hrEngine.dayBonus(d.events), dayRow = hrEngine.bestForDay(results, day);
+      const objective = hrFocus.value === 'gold' ? 'gold' : 'xp';
+      const day = hrEngine.dayBonus(d.events);
+      const results = hrEngine.rank({ attacker, hunts:catalog.h.slice(0, 2000).map(h => ({...h, lootValue:hrEngine.lootValue(h.drops, catalog.items)})), offense:sugCalc, project:hrProject,
+        moves:sp => (movesByName[sp] || {}).a || [], effectiveness:efTipo, measurements:statsParaRecomendacao(d.cid, p), objective, day,
+        potion:hrPotion.value === 'observed' ? undefined : hrPotions[hrPotion.value] || null,
+        threshold:Number(hrThreshold.value) || 50 });
+      const usable = results.filter(r => r.viable && r.score != null);
+      const generalRows = usable.slice(0, 5);
+      const dayRow = hrEngine.bestForDay(usable, day);
       hrState.rows = dayRow ? [...generalRows, { ...dayRow, dayUntil:day.until }] : generalRows;
       hrState.context = { i, w, d, p, fingerprint:hrFingerprint(d, p) };
-      if (!hrState.rows.length) throw new Error('hrNone');
+      if (!hrState.rows.length) throw new Error(objective === 'gold' && results.some(r => r.viable && r.score == null) ? 'hrNoGoldData' : 'hrNone');
       const complete = ['atk','def','spa','spd'].every(k => stats[k] > 0);
       const shownStats = { ...hrProject(sp, attacker.level, attacker.q, attacker.ivt), ...stats };
       const renderRow = (r, n) => '<div class="hr-row' + (n === 0 ? ' best' : '') + '"><h3>'
@@ -4499,7 +4542,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
           + '<p>' + t('hrRisk') + ': <b style="color:' + (r.risk === 'high' ? '#f85149' : r.risk === 'low' ? '#3fb950' : '#f2c665') + '">'
           + t('hr' + r.risk[0].toUpperCase() + r.risk.slice(1)) + '</b>'
           + (r.exposure != null ? ' · ≈' + Math.round(r.exposure * 100) + '% HP / abate' : '') + '</p>'
-          + '<p>' + (r.xph != null ? t(r.measured && !r.measured.estimated ? 'hrMeasured' : 'hrEstimated') + ': <b>' + nf(r.xph) + '</b>' : t('hrNoMeasure')) + '</p>'
+          + '<p>' + (objective === 'gold' ? t(r.goldSource === 'measured' ? 'hrGoldMeasured' : 'hrGoldEstimated') + ': <b>' + nf(Math.round(r.gph)) + '</b>'
+            : r.xph != null ? t(r.measured && !r.measured.estimated ? 'hrMeasured' : 'hrEstimated') + ': <b>' + nf(Math.round(r.xph)) + '</b>' : t('hrNoMeasure')) + '</p>'
+          + (r.potionsPerHour != null ? '<p>' + t('hrPotionsPerHour') + ': ≈' + nf(Math.ceil(r.potionsPerHour)) + '</p>' : '')
           + '<button class="hr-go" data-row="' + n + '">' + t('hrGo') + '</button></div>';
       hrBody.innerHTML = '<div class="hr-summary"><b>' + esc(d.name || alertAccountName(i)) + ' · ' + esc(p.name)
         + ' Lv' + nf(p.level) + '</b><br>' + t('hrAccountLevel') + ': ' + nf(d.level) + ' · IV ' + nf(p.ivt)
@@ -4510,7 +4555,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + (day ? '<section class="hr-day" style="--day-color:' + tipoCor(day.type) + '"><h3>' + t('hrDay') + ' · ' + esc(day.label) + '</h3><p>+' + nf(day.xp) + '% XP · +' + nf(day.loot) + '% loot · ' + t('hrDayUntil') + ' ' + esc(new Date(day.until).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})) + '</p>' + (dayRow ? renderRow(hrState.rows[generalRows.length], generalRows.length) : '<p>' + t('hrDayNone') + '</p>') + '</section>' : '')
         + '<h3 class="hr-section">' + t('hrGeneral') + '</h3>'
         + generalRows.map(renderRow).join('')
-        + '<div class="hr-note">' + t('hrModel') + '</div>';
+        + '<div class="hr-note">' + t('hrModel') + '<br>' + t(objective === 'gold' ? 'hrGoldOnly' : 'hrXpOnly')
+        + (objective === 'gold' ? '<br>' + t(hrPotion.value === 'observed' ? 'hrGoldHistory' : 'hrGoldModel')
+          + (results.some(r => r.viable && r.score == null) ? '<br>' + t('hrGoldMissing') : '') : '') + '</div>';
       if (day) hrState.dayTimer = setTimeout(() => { if (hrEl.classList.contains('show')) refreshHuntRecommendations(); }, Math.min(2147483647, Math.max(100, day.until - Date.now() + 100)));
       hrBody.querySelectorAll('.hr-go').forEach(button => { button.onclick = () => travelToRecommendation(Number(button.dataset.row)); });
     } catch (error) {
@@ -4521,7 +4568,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     if (hrState.busy) return;
     const context = hrState.context, row = hrState.rows[index];
     if (!context || !row) return;
-    hrState.busy = true; hrAccount.disabled = true; document.getElementById('hrRefresh').disabled = true;
+    hrState.busy = true; [hrFocus,hrPotion,hrThreshold].forEach(c => c.disabled = true); hrAccount.disabled = true; document.getElementById('hrRefresh').disabled = true;
     hrBody.querySelectorAll('.hr-go').forEach(b => { b.disabled = true; if (Number(b.dataset.row) === index) b.textContent = t('hrTravel'); });
     hrStatus.textContent = t('hrTravel');
     try {
@@ -4546,13 +4593,18 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       w.focus();
     } catch (error) { hrStatus.textContent = t(error.message && I18N.pt[error.message] ? error.message : 'hrUnconfirmed'); }
     finally {
-      hrState.busy = false; hrAccount.disabled = false; document.getElementById('hrRefresh').disabled = false;
+      hrState.busy = false; [hrFocus,hrPotion,hrThreshold].forEach(c => c.disabled = false); hrAccount.disabled = false; document.getElementById('hrRefresh').disabled = false;
       hrBody.querySelectorAll('.hr-go').forEach(b => { b.disabled = false; b.textContent = t('hrGo'); });
     }
   }
   document.getElementById('recommendBtn').onclick = () => openHuntRecommendations();
   document.getElementById('hrRefresh').onclick = refreshHuntRecommendations;
   hrAccount.onchange = refreshHuntRecommendations;
+  [hrFocus, hrPotion, hrThreshold].forEach(control => { control.onchange = () => {
+    hrThreshold.value = Math.max(1, Math.min(99, Number(hrThreshold.value) || 50));
+    lsSet('hrFocus', hrFocus.value); lsSet('hrPotion', hrPotion.value); lsSet('hrThreshold', hrThreshold.value);
+    refreshHuntRecommendations();
+  }; });
   const closeRecommendations = () => { clearTimeout(hrState.dayTimer); hrState.revision++; hrEl.classList.remove('show'); };
   document.getElementById('hrClose').onclick = closeRecommendations;
   hrEl.onclick = e => { if (e.target === hrEl) closeRecommendations(); };
@@ -4588,12 +4640,41 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   let marketFocusedPanel = -1;
   const marketUI = window.PokeMuxMarketUI.mount({
     language: () => lang, load: lsGet, save: lsSet,
+    isIvEnabled: () => ivAtivo,
+    calculateIv: async (i, pokemon, cid) => {
+      const w = webviews[i];
+      if (!w || off[i] || !podeModificarPagina(w)) return { erro: t('ivcHint'), nome: pokemon.name };
+      const result = await w.executeJavaScript(window.PokeMuxGlobalMarket.ivScript(pokemon, cid));
+      if (webviews[i] !== w || off[i]) return null;
+      if (result && result.erro) {
+        const messages = {
+          pt: { ivUnavailable: 'Calculadora de IV ainda não carregada. Aguarde o jogo carregar.', missingConditions: 'O anúncio não informou todos os atributos necessários ao cálculo.', offline: 'Selecione uma conta conectada ao jogo.', changed: 'A conta ou o personagem mudou. Selecione novamente a conta.', noSpecies: 'As bases desta espécie/forma não foram encontradas.', network: 'Não foi possível carregar os dados para calcular o IV.' },
+          en: { ivUnavailable: 'The IV calculator has not loaded yet.', missingConditions: 'The listing is missing stats needed for calculation.', offline: 'Select an account connected to the game.', changed: 'The account or character changed. Select the account again.', noSpecies: 'Base stats for this species/form were not found.', network: 'Could not load the data needed to calculate IV.' },
+          es: { ivUnavailable: 'La calculadora de IV aún no se ha cargado.', missingConditions: 'Faltan atributos necesarios para el cálculo.', offline: 'Selecciona una cuenta conectada al juego.', changed: 'La cuenta o el personaje cambió. Selecciona la cuenta otra vez.', noSpecies: 'No se encontraron atributos base de esta especie/forma.', network: 'No se pudieron cargar los datos para calcular el IV.' }
+        };
+        result.erro = (messages[lang] || messages.pt)[result.erro] || result.erro;
+      }
+      const dex = dexId(Number(pokemon.speciesId));
+      const still = Number.isInteger(dex) && dex > 0 && dex < 20000 ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + (pokemon.shiny ? 'shiny/' : '') + dex + '.png' : '';
+      return result && { ...result, sprite: still ? { still, anim: still } : null };
+    },
+    showIv: (i, result, point) => {
+      if (!ivAtivo || !result || !point) return;
+      ivFonte = i; ivMarketPoint = point; ivHoverAtual = { id: -1 };
+      ivDados = ivSane(result); ivEl.classList.add('market'); ivRender();
+    },
+    hideIv: () => { if (ivMarketPoint) ivOculta(); },
     notifyMarket: (text, desktop, voice) => {
       if (!alertsOn) return;
       if (desktop) try { window.pokeAPI.notify('PokeMux · Mercado', text); } catch {}
       if (voice && voiceOn) { if (voiceQueue.length >= 8) voiceQueue.shift(); voiceQueue.push({ text }); proximaFala(); }
     },
     rememberFocus: element => { marketFocusedPanel = webviews.indexOf(element); },
+    openAccount: i => {
+      if (!Number.isInteger(i) || i < 0 || i >= count || !webviews[i]) return;
+      if (!grid.children[i]?.classList.contains('expanded')) toggleExpand(i);
+      webviews[i].focus();
+    },
     preferred: () => {
       const expanded = [...grid.children].findIndex(panel => panel.classList.contains('expanded'));
       return expanded >= 0 ? expanded : statsIdx;
@@ -4601,7 +4682,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     accounts: async () => Promise.all(Array.from({ length: count }, async (_, i) => {
       const w = webviews[i]; let d = null;
       if (w && !off[i] && podeModificarPagina(w)) try { d = await w.executeJavaScript(READ_STATE); } catch {}
-      return { name: d && d.name || alertAccountName(i), off: off[i], live: !!(d && d.ok && d.live), focused: i === marketFocusedPanel };
+      return { cid: String(d && d.cid || ''), name: d && d.name || alertAccountName(i), off: off[i], live: !!(d && d.ok && d.live), focused: i === marketFocusedPanel };
     })),
     read: async (i, script) => {
       const w = webviews[i];

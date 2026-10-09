@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.18 — Mercado unificado e focos de hunt (09/10/2026)
+
+- Mercado público abre usando automaticamente uma conta conectada com acesso. Inventários e anúncios pessoais das quatro contas são reunidos, com filtro local por conta e identificação do dono. Clique no nome da conta de um anúncio para abrir seu painel.
+- Inventário em lista com nome, nível, IV, qualidade, raridade, identificador e conta de cada Pokémon. Itens mostram tipo e quantidade; busca local e seleção preservam o exemplar correto.
+- Comparação exige mesma espécie/forma, shiny e raridade, além das margens de nível, IV e qualidade. Sem semelhantes, não inventa um preço nem usa automaticamente Pokémon de outros níveis. A ampliação da espécie é uma referência geral solicitada pelo usuário.
+- Comparação consulta as condições semelhantes diretamente no servidor e tem prioridade sobre a sincronização em segundo plano. Mediana usa todas as páginas compatíveis e exclui anúncios próprios das contas carregadas. Recuperação limitada de respostas de sessão alterada mantém o isolamento por personagem.
+- Menor/maior preço organiza dólares e diamantes pelo valor equivalente, usando a cotação ativa do diamante. Consulta as duas moedas separadamente e busca apenas as páginas necessárias para a página exibida; páginas anteriores são reaproveitadas.
+- Cache completo de Pokémon preparado e salvo localmente, revalidado em segundo plano aproximadamente a cada cinco minutos. Atualizações substituem o conjunto inteiro, removem anúncios que saíram e preservam o cache em falhas. A tela aberta continua atualizando dados a cada 60 segundos, com filtros, seleção e rolagem preservados.
+- Consultas compartilham uma fila espaçada com os alertas e respeitam os bloqueios e o Retry-After do jogo. Navegação recente e buscas específicas não aguardam a preparação do cache completo.
+- Corrigida a leitura da bag recebida em partes, incluindo atributos e atualizações de nível/XP; inventários ficam separados por conta e personagem. Contas offline ou sem dados atualizados são sinalizadas.
+- Categoria Pokémon abre diretamente todos os anúncios, com busca por nome no topo. Janela ampliada, painel lateral de detalhes removido e cálculo de IV integrado aos anúncios e ao inventário, respeitando IV: ON/OFF.
+- Recomendações de hunt têm Foco em XP e Foco em dólares: a classificação usa somente a métrica escolhida, com sobrevivência como critério de viabilidade. Dólares considera saldo líquido disponível; sem informação suficiente não estima um valor inventado.
+- Simulação opcional de poções e limiar de HP estima consumo e lucro dos drops menos curas. Medições guardam loot, capturas e gastos por abate separadamente; dados medidos e estimados são identificados.
+- Novos testes para cache, preço convertido, quatro contas, inventários em partes, sessão, raridade, comparação e focos de hunt. Manual e imagens de demonstração atualizados.
+
 ## 1.1.17 — Mercado Global, comparação e alertas
 
 - Mercado Global acessível pelo ícone dourado da barra superior, sem sair da hunt. Consulta por conta com categorias, espécies, filtros, ordenação, cards/linhas, paginação e detalhes dos anúncios.

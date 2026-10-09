@@ -1,6 +1,6 @@
 {
   "name": "pokemux",
-  "version": "1.1.17",
+  "version": "1.1.18",
   "description": "PokeMux: quatro contas de Poke Idle World, painel, alertas e ferramentas locais para Windows.",
   "main": "main.js",
   "author": "Diego-ops501",
@@ -8,11 +8,15 @@
     "start": "electron .",
     "test:market-refresh": "electron test/market-refresh.cjs",
     "docs:market": "electron scripts/market-screenshots.cjs",
-    "test": "node test/iv-math.test.js && node test/pokemon-aptitude.test.js && node test/iv-hover.test.js && node test/iv-market.test.js && node test/iv-base-cache.test.js && node test/capture-filters.test.js && node test/hunt-measurements.test.js && node test/hunt-recommendations.test.js && node test/boot.test.js && node test/atualizacao-jogo.test.js && node test/volta-hunt.test.js && node test/hunt-watchdog.test.js && node test/maintenance-login.test.js && node test/cacada-1521.test.js && node test/tierlist-ditto.test.js && node test/multtela-security.test.js && node test/voice-iv.test.js && node test/summary-focus.test.js && node test/global-market.test.js && node test/market-alerts.test.js",
+    "test": "node test/iv-math.test.js && node test/pokemon-aptitude.test.js && node test/iv-hover.test.js && node test/iv-market.test.js && node test/market-iv.test.js && node test/iv-base-cache.test.js && node test/capture-filters.test.js && node test/hunt-measurements.test.js && node test/hunt-recommendations.test.js && node test/boot.test.js && node test/atualizacao-jogo.test.js && node test/volta-hunt.test.js && node test/hunt-watchdog.test.js && node test/maintenance-login.test.js && node test/cacada-1521.test.js && node test/tierlist-ditto.test.js && node test/multtela-security.test.js && node test/voice-iv.test.js && node test/summary-focus.test.js && node test/pokemon-state.test.js && node test/market-price-page.test.js && node test/market-snapshot.test.js && node test/global-market.test.js && node test/market-alerts.test.js && node test/market-comparison.test.js",
     "dist": "electron-builder --win nsis --x64 --publish never",
     "dist:dir": "electron-builder --win dir --x64",
     "release:win": "electron-builder --win nsis --x64 --publish never",
-    "release:publish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-release.ps1"
+    "release:publish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-release.ps1",
+    "test:market-snapshot": "electron test/market-snapshot.cjs",
+    "test:market-cold-start": "electron test/market-cold-start.cjs",
+    "test:market-price-pages": "electron test/market-price-pages.cjs",
+    "test:market-accounts": "electron test/market-accounts.cjs"
   },
   "keywords": [
     "electron",

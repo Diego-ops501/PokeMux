@@ -5,7 +5,7 @@ const path = require('path');
 const zlib = require('zlib');
 const engine = require('../src/domain/hunt-recommendations');
 const math = require('../src/domain/iv-math');
-const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8').replace(/\r\n/g, '\n');
 const fixture = JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(__dirname, 'fixtures/jogo-2026-09-17.json.gz'))));
 async function run() {
   const accounts = [{off:false,live:false},{off:false,live:true},{off:false,live:true},{off:true,live:false}];
@@ -23,6 +23,7 @@ async function run() {
     document:{activeElement:null,getElementById:()=>({})},hrEl:{classList:{add:()=>{shown=true},contains:()=>shown}},
     webviews:[{executeJavaScript:async()=>({ok:false})},{executeJavaScript:async()=>({ok:true,live:true,name:'Conta conectada'})}],
     podeModificarPagina:()=>true,READ_STATE:'state',t:x=>x,esc:x=>x,alertAccountName:i=>'Conta '+i,
+    hrFocus:{options:[{},{}]},hrPotion:{options:[{},{}]},
     refreshHuntRecommendations:async()=>{refreshes++;}};
   const open = new Function(...Object.keys(ui), openingSource+';return openHuntRecommendations;')(...Object.values(ui));
   await open();
@@ -64,7 +65,7 @@ async function run() {
   const event = {key:'type-of-day',name:'🐛 Tipo do Dia: Inseto',desc:'+20% de XP e +20% de loot em Pokémon do tipo Inseto',pct:0,until};
   const day = engine.dayBonus([event]);
   assert.deepEqual(day,{type:'BUG',label:'Inseto',xp:20,loot:20,until},'evento real do jogo é lido mesmo com pct zero');
-  assert.equal(engine.bestForDay(lowRows,day).hunt.sl,'weedle','melhor hunt Inseto é separada da Geodude geral');
+  assert.equal(engine.bestForDay(lowRows,day).hunt.sl,'caterpie','tipo do dia usa o maior XP, sem bônus artificial por vantagem ou defesa');
   assert.equal(engine.dayBonus([{...event,until:Date.now()-1}]),null,'evento vencido é ignorado');
   assert.equal(engine.dayBonus([{...event,name:'Tipo do Dia: Desconhecido'}]),null,'não inventa tipo ausente');
   assert.equal(engine.dayBonus([{...event,name:'Tipo do Dia: Água'}]).type,'WATER','acentos reconhecidos');
@@ -79,13 +80,14 @@ async function run() {
     hrEl:{classList:{contains:()=>true}},podeModificarPagina:()=>true,READ_STATE:'state',HUNTS_JS:'catalog',
     hrEngine:engine,basesByName:{},movesByName:{},sugCalc,hrProject:project,efTipo,statsParaRecomendacao:()=>({}),
     hrFingerprint:()=>'',t:k=>k,nf:String,esc:String,alertAccountName:()=>'',tipoCor:()=> '#a8b820',
+    hrFocus:{value:'xp'},hrPotion:{value:'observed'},hrThreshold:{value:50},hrPotions:{},
     I18N:{pt:{}},clearTimeout:()=>{},setTimeout:()=>1};
   const refresh = new Function(...Object.keys(mocks),refreshSource+';return refreshHuntRecommendations;')(...Object.values(mocks));
   await refresh();
   assert(body.innerHTML.includes('--day-color:#a8b820'),'borda usa cor do tipo');
   assert(body.innerHTML.indexOf('hr-day')<body.innerHTML.indexOf('hr-section'),'seção do dia aparece antes das recomendações gerais');
   assert(body.innerHTML.includes('+20% XP · +20% loot'),'bônus exibido sem multiplicar medições novamente');
-  assert.equal(stateUI.rows[5].hunt.sl,'weedle','botão separado mantém índice próprio para viagem');
+  assert.equal(stateUI.rows[5].hunt.sl,'caterpie','botão separado mantém índice próprio para viagem');
   d.events=[];await refresh();assert(!body.innerHTML.includes('class="hr-day"'),'seção desaparece sem evento ativo');
   assert(rows.length > 20, 'líder real recebe recomendações com o catálogo do jogo');
   assert(rows.every(r => r.hunt.level <= 120 && r.hunt.level > 0 && engine.validSlug(r.hunt.sl)));
@@ -102,6 +104,36 @@ async function run() {
   const match = measured.find(r => r.hunt.sl === blocked.sl);
   assert.equal(match.xph, 12345, 'medição real daquele Pokémon tem prioridade');
   assert(measured.some(r => !r.measured && r.xph > 0), 'medição calibra XP/h das outras opções');
+
+  // Objetivos independentes, incluindo saldo negativo/zero e hunts sem XP.
+  const focusHunts = ['alpha','beta','gamma'].map((sl,i)=>({sl,name:sl,sp:'wild',level:1,xp:[100,10,0][i],t1:'NORMAL',lootValue:10}));
+  const focus = {attacker:{sp:'own',level:20,tlv:20,t1:'NORMAL'},hunts:focusHunts,
+    project:()=>({hp:100,atk:10,def:10,spa:10,spd:10}),moves:()=>[],effectiveness:()=>1,
+    offense:(a,h)=>({ritmo:1,xph:h.xp,nome:'Tackle',eff:1}),
+    measurements:{alpha:{xph:1000,kph:100,gph:-500},beta:{xph:10,kph:100,gph:0},gamma:{xph:0,kph:100,gph:500}}};
+  const order = (arg,obj) => engine.rank({...arg,objective:obj}).filter(r=>r.viable&&r.score!=null).map(r=>r.hunt.sl);
+  assert.deepEqual(order(focus,'xp'),['alpha','beta']);
+  assert.deepEqual(order(focus,'gold'),['gamma','beta','alpha'],'dólares aceita zero e prejuízo e não exige XP');
+  const changeGold = {...focus,measurements:{alpha:{...focus.measurements.alpha,gph:999999},beta:{...focus.measurements.beta,gph:-999999},gamma:focus.measurements.gamma}};
+  assert.deepEqual(order(changeGold,'xp'),order(focus,'xp'),'dólares nunca alteram foco em XP');
+  const changeXp = {...focus,hunts:focusHunts.map(h=>({...h,xp:999999})),measurements:Object.fromEntries(Object.entries(focus.measurements).map(([k,m])=>[k,{...m,xph:999999}]))};
+  assert.deepEqual(order(changeXp,'gold'),order(focus,'gold'),'XP nunca altera foco em dólares');
+  assert(engine.rank({...focus,objective:'gold',measurements:{}}).every(r=>r.gph===null),'sem saldo não inventa renda a partir do preço de venda');
+  assert.equal(engine.lootValue([{itemId:1,probability:.5,minQty:1,maxQty:3}],[{id:1,npcPrice:10}]),10);
+  assert.equal(engine.lootValue([{itemId:1,chance:50,minQty:1,maxQty:3}],[{id:1,npcPrice:10}]),null,'chance sem unidade conhecida não vira renda');
+  const costArgs = {...focus,objective:'gold',potion:{heal:60,price:5},threshold:50,
+    moves:()=>[['Tackle',10,'NORMAL','P',1000,1]],measurements:{alpha:{xph:1000,kph:100,gph:999999,lootPerKill:10}}};
+  const costRow = engine.rank(costArgs).find(r=>r.hunt.sl==='alpha');
+  assert.equal(costRow.goldSource,'estimated');
+  assert.equal(costRow.gph,100*(10-1.5/60*5),'poções descontadas da renda, sem usar XP ou descontar saldo histórico de novo');
+  assert.equal(engine.rank({...costArgs,potion:{heal:1,price:999}}).find(r=>r.hunt.sl==='alpha').viable,false,'cura insuficiente invalida hunt');
+  assert.equal(engine.rank({...costArgs,potion:{heal:60,price:999},objective:'xp'}).find(r=>r.hunt.sl==='alpha').score,
+    engine.rank({...costArgs,potion:{heal:60,price:1},objective:'xp'}).find(r=>r.hunt.sl==='alpha').score,'preço da poção não pesa em XP');
+  for (const sp of Object.keys(catalog.bs)) {
+    const typed = (catalog.mv[sp]||{}).t||[];
+    const allArgs = {...args,attacker:{sp,level:3000,q:1.2,ivt:96,tlv:3000,t1:typed[0],t2:typed[1]}};
+    for (const objective of ['xp','gold']) assert.doesNotThrow(()=>engine.rank({...allArgs,objective}),sp+' suporta ambos os focos');
+  }
 
   const expected = { cid:'char-1', id:'poke-1', level:100 };
   const hunt = {sl:'abra',level:10};

@@ -5,6 +5,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+  const known = value => value != null && value !== '' && Number.isFinite(Number(value));
   const validSlug = value => /^[a-z0-9_-]{1,60}$/i.test(String(value || ''))
     && !['cerulean', 'pewter', 'viridian', 'cassino', 'arena_pvp'].includes(String(value).toLowerCase());
   const amplify = value => value > 1 ? 1 + (value - 1) * 1.5 : value < 1 ? value / 1.5 : value;
@@ -79,16 +80,35 @@
     return null;
   }
 
-  function rank({ attacker, hunts, offense, project, moves, effectiveness, measurements }) {
+  // Não usa valor de venda do Pokémon como loot: capturas precisam de uma medição própria.
+  function lootValue(drops, items) {
+    if (!Array.isArray(drops) || !drops.length || !Array.isArray(items)) return null;
+    let total = 0;
+    for (const drop of drops) {
+      if (!drop || typeof drop !== 'object' || !known(drop.minQty) || !known(drop.maxQty)) return null;
+      const probability = known(drop.probability) ? drop.probability : drop.chanceUnit === 'fraction' ? drop.chance : null;
+      if (!known(probability)) return null;
+      const item = items.find(it => it && it.id === drop.itemId);
+      if (!item || !known(item.npcPrice)) return null;
+      const chance = Number(probability), min = Number(drop.minQty), max = Number(drop.maxQty);
+      // Só aceita probabilidades explícitas; não adivinha se a unidade é percentual.
+      if (chance < 0 || chance > 1 || min < 0 || max < min || Number(item.npcPrice) < 0) return null;
+      total += chance * (min + max) / 2 * Number(item.npcPrice);
+    }
+    return total;
+  }
+
+  function rank({ attacker, hunts, offense, project, moves, effectiveness, measurements, objective = 'xp', day, potion, threshold = 50 }) {
+    const dollars = objective === 'gold';
     if (!attacker || !(attacker.tlv > 0) || !(attacker.level > 0)) return [];
     const own = { ...project(attacker.sp, attacker.level, attacker.q, attacker.ivt), ...attacker.stats };
     if (!(own.hp > 0 && own.def > 0 && own.spd > 0)) return [];
     const rows = [], seen = new Set();
     for (const hunt of hunts || []) {
-      if (!validSlug(hunt.sl) || hunt.blocked === true || seen.has(hunt.sl) || !(hunt.level > 0) || hunt.level > attacker.tlv || !(hunt.xp > 0)) continue;
+      if (!validSlug(hunt.sl) || hunt.blocked === true || seen.has(hunt.sl) || !(hunt.level > 0) || hunt.level > attacker.tlv || (!dollars && !(hunt.xp > 0))) continue;
       seen.add(hunt.sl);
       const attack = offense(attacker, hunt);
-      if (!attack || !(attack.ritmo > 0) || !(attack.xph > 0)) continue;
+      if (!attack || !(attack.ritmo > 0)) continue;
       const wild = project(hunt.sp, hunt.level, 1, 96);
       if (!wild) continue;
       const learned = moves(hunt.sp);
@@ -107,21 +127,59 @@
       const safety = exposure == null ? 0.75 : 1 / (1 + 2 * exposure);
       const measured = measurements && (measurements[String(hunt.sl).replace(/[_-]+/g, ' ').toLowerCase()]
         || measurements[String(hunt.name).replace(/[_-]+/g, ' ').toLowerCase()]);
-      rows.push({ hunt, attack, exposure, safety, measured: measured && measured.xph > 0 ? measured : null });
+      rows.push({ hunt, attack, incoming, exposure, safety, measured: measured || null });
     }
-    const anchors = rows.filter(r => r.measured && !r.measured.estimated)
+    const exact = rows.filter(r => r.measured && !r.measured.estimated);
+    const calibrated = exact.length ? exact : rows.filter(r => r.measured);
+    const anchors = calibrated.filter(r => r.measured.xph > 0 && r.attack.xph > 0)
       .map(r => r.measured.xph / r.attack.xph).sort((a, b) => a - b);
     const anchor = anchors.length ? anchors[Math.floor(anchors.length / 2)] : 0;
+    // Cadência de abates é independente de XP e de dólares. Sem amostra não inventa abates/h.
+    const killAnchors = calibrated.filter(r => r.measured.kph > 0)
+      .map(r => r.measured.kph / r.attack.ritmo).sort((a, b) => a - b);
+    const killAnchor = killAnchors.length ? killAnchors[Math.floor(killAnchors.length / 2)] : 0;
     rows.forEach(r => {
-      r.xph = r.measured ? r.measured.xph : anchor > 0 ? r.attack.xph * anchor : null;
-      // A folga ofensiva ajuda a manter abates rápidos diante de variações de IV/qualidade.
-      // Limita o bônus para que uma vantagem de tipo não esconda XP baixo ou risco alto.
-      r.matchup = r.attack.eff > 1 ? 1 + Math.min(0.75, Math.log2(r.attack.eff) * 0.3) : 1;
-      r.score = (r.xph == null ? r.attack.xph : r.xph) * r.safety * r.matchup;
+      const activeDay = day && day.until > Date.now() && [r.hunt.t1, r.hunt.t2].includes(day.type);
+      r.kph = r.measured && r.measured.kph > 0 ? r.measured.kph : killAnchor > 0 ? r.attack.ritmo * killAnchor : null;
+      r.xph = r.measured && r.measured.xph > 0 ? r.measured.xph
+        : killAnchor > 0 ? r.kph * number(r.hunt.xp) * (1 + (activeDay ? number(day.xp) : 0) / 100)
+        : anchor > 0 ? r.attack.xph * anchor : null;
+      r.gph = null;
+      r.goldSource = 'unknown';
+      // Poção informada permite uma estimativa conservadora sem presumir regeneração natural.
+      const modeledPotion = potion !== undefined;
+      const heal = number(potion && potion.heal);
+      r.potionsPerKill = modeledPotion && r.incoming != null
+        ? heal > 0 ? r.incoming / r.attack.ritmo / heal : 0 : null;
+      r.potionsPerHour = r.kph != null && r.potionsPerKill != null ? r.potionsPerKill * r.kph : null;
+      if (dollars) {
+        if (!modeledPotion && r.measured && known(r.measured.gph)) {
+          // O saldo do analyzer já desconta suprimentos e inclui capturas: não descontar duas vezes.
+          r.gph = Number(r.measured.gph);
+          r.goldSource = r.measured.estimated ? 'estimated' : 'measured';
+        } else if (modeledPotion && r.kph != null && r.potionsPerKill != null) {
+          const loot = r.measured && known(r.measured.lootPerKill) ? Number(r.measured.lootPerKill)
+            : known(r.hunt.lootValue) ? Number(r.hunt.lootValue) * (1 + (activeDay ? number(day.loot) : 0) / 100) : null;
+          if (loot != null && (!potion || known(potion.price))) {
+            r.gph = r.kph * (loot - r.potionsPerKill * number(potion && potion.price));
+            r.goldSource = 'estimated';
+          }
+        }
+      }
+      // Somente a métrica escolhida pontua. Risco é uma condição de viabilidade, não um bônus.
+      r.score = dollars ? r.gph : r.xph == null ? r.attack.xph * (1 + (activeDay ? number(day.xp) : 0) / 100) : r.xph;
       r.risk = r.exposure == null ? 'unknown' : r.exposure >= 1 ? 'high' : r.exposure >= 0.35 ? 'medium' : 'low';
+      r.viable = r.risk !== 'high' || !!(r.measured && r.measured.kph > 0);
+      if (modeledPotion && r.incoming != null) {
+        const hpAtThreshold = own.hp * Math.max(1, Math.min(99, number(threshold))) / 100;
+        r.viable = potion ? heal >= r.incoming && hpAtThreshold > r.incoming : r.exposure < 1;
+      }
     });
-    // Prefere opções com resistência aceitável; opções arriscadas continuam visíveis como alternativas.
-    return rows.sort((a, b) => (a.risk === 'high') - (b.risk === 'high') || b.score - a.score || a.hunt.level - b.hunt.level);
+    // Sem dados financeiros a hunt permanece identificada, mas nunca vence um resultado conhecido.
+    return rows.sort((a, b) => Number(b.viable) - Number(a.viable)
+      || Number(b.score != null) - Number(a.score != null)
+      || (a.score != null && b.score != null ? b.score - a.score : 0)
+      || a.hunt.sl.localeCompare(b.hunt.sl));
   }
 
   function travelScript(expected, hunt) {
@@ -146,5 +204,5 @@
         if(current&&current.currentSlug===E.slug&&P.hunting&&P.lastSlug===E.slug&&(P.fiT||0)>before){clearInterval(timer);resolve({ok:true,requested});}
       },200);});})()`;
   }
-  return { rank, validSlug, travelScript, selectAccount, findNavigation, dayBonus, bestForDay };
+  return { rank, lootValue, validSlug, travelScript, selectAccount, findNavigation, dayBonus, bestForDay };
 });

@@ -13,7 +13,7 @@
 
 [Baixar para Windows](https://github.com/Diego-ops501/PokeMux/releases/latest) · [Manual](MANUAL.md) · [FAQ](FAQ.md) · [Changelog](CHANGELOG.md)
 
-<img src="docs/mercado-global.png" width="880" alt="PokeMux 1.1.17: Mercado Global com filtros de Pokémon, evoluções e menores preços">
+<img src="docs/mercado-global.png" width="880" alt="PokeMux 1.1.18: Mercado Global com filtros de Pokémon, evoluções e menores preços">
 
 *Mercado Global — demonstração com dados fictícios; os preços reais são consultados na conta conectada.*
 
@@ -39,7 +39,7 @@ Na busca de Pokémon, filtre shiny, IV, nível, qualidade, tipo e raridade. **In
 
 <img src="docs/comparacao-mercado.png" width="880" alt="Comparação de um Pokémon selecionado na bag com anúncios semelhantes em dollars e diamonds">
 
-**Comparar com o mercado** usa a bag da conta para selecionar um bem e consultar menor preço, mediana dos anúncios consultados e maior solicitação de compra, separados por moeda. Pokémon têm margens ajustáveis de IV, nível e qualidade. O resumo informa o tamanho da amostra; solicitações são intenções de compra, sem histórico global de vendas concluídas.
+**Comparar com o mercado** reúne os inventários das contas, com filtro por dono, para selecionar um bem e consultar menor preço, mediana dos anúncios consultados e maior solicitação de compra, separados por moeda. Pokémon são comparados pela mesma raridade e margens ajustáveis de IV, nível e qualidade. Sem semelhantes, o app não usa outros níveis como preço sugerido. O resumo informa o tamanho da amostra; solicitações são intenções de compra, sem histórico global de vendas concluídas.
 
 <img src="docs/alertas-mercado.png" width="880" alt="Alertas do Mercado Global com busca digitável, evoluções, preço e condições de Pokémon">
 
@@ -76,7 +76,7 @@ Ative **IV: ON** e passe o mouse sobre um Pokémon. O resultado aparece junto ao
 
 - Interface compacta sem barra lateral fixa, aproveitando toda a largura para as telas do jogo.
 - Barra superior com acesso direto ao Dashboard, Painel, Overlay, calculadora de IV e controles operacionais.
-- Ícone do Mercado Global no topo: consulta por conta sem sair da hunt, com categorias, espécies, filtros de Pokémon e detalhes dos anúncios. Comparar com o mercado permite selecionar bens da conta e consultar preços semelhantes e solicitações de compra em dollars e diamonds, com margens ajustáveis e indicação da amostra consultada. A aba Alertas salva até 10 regras de preço e condições, consulta novos anúncios a cada 60 segundos e avisa pelo Windows e pela voz do app, inclusive com a janela do mercado fechada. Comprar, Meus Anúncios, Solicitações e Histórico da conta ficam disponíveis para consulta; negociações são feitas no mercado do jogo.
+- Ícone do Mercado Global no topo: consulta automática sem sair da hunt, com busca direta de Pokémon, filtros, preço convertido e cálculo de IV. Inventários e anúncios das quatro contas são reunidos, com filtro por conta e atalhos para o painel do dono. Comparar com o mercado permite selecionar bens da conta e consultar preços semelhantes e solicitações de compra em dollars e diamonds, com margens ajustáveis e indicação da amostra consultada. A aba Alertas salva até 10 regras de preço e condições, consulta novos anúncios a cada 60 segundos e avisa pelo Windows e pela voz do app, inclusive com a janela do mercado fechada. Comprar, Meus Anúncios, Solicitações e Histórico da conta ficam disponíveis para consulta; negociações são feitas no mercado do jogo.
 - Grade, foco individual, uma coluna ou uma linha.
 - Modo Simples de baixo consumo, mantendo o farm do servidor ativo.
 - Overlay flutuante somente-leitura, individual ou agregado.

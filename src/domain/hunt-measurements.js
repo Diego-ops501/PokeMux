@@ -98,7 +98,10 @@
       gold: finite(metrics && metrics.gph) * seconds / 3600,
       xp: finite(metrics && metrics.xph) * seconds / 3600,
       kills: finite(metrics && metrics.kph) * seconds / 3600,
-      captures: Math.max(0, finite(metrics && metrics.captures))
+      captures: Math.max(0, finite(metrics && metrics.captures)),
+      lootGold: metrics && metrics.lootGold != null ? finite(metrics.lootGold) : null,
+      capturesGold: metrics && metrics.capturesGold != null ? finite(metrics.capturesGold) : null,
+      supplyGold: metrics && metrics.supplyGold != null ? finite(metrics.supplyGold) : null
     };
   }
 
@@ -117,6 +120,9 @@
     const elapsed = current.seconds - previous.base.seconds;
     if (elapsed < (minimumSeconds == null ? 300 : Math.max(1, finite(minimumSeconds)))) return null;
     const perHour = (value) => Math.round(value / elapsed * 3600);
+    const kills = current.kills - previous.base.kills;
+    const perKill = key => kills > 0 && current[key] != null && previous.base[key] != null
+      ? Math.max(0, current[key] - previous.base[key]) / kills : null;
     return {
       account, pokemonKey: pKey, huntKey: hKey,
       metrics: {
@@ -125,7 +131,10 @@
         xph: perHour(current.xp - previous.base.xp),
         kph: perHour(current.kills - previous.base.kills),
         cph: Math.max(0, current.captures - previous.base.captures) / elapsed * 3600,
-        hpk: Math.max(0, finite(metrics.hpk))
+        hpk: Math.max(0, finite(metrics.hpk)),
+        lootPerKill: perKill('lootGold'),
+        capturePerKill: perKill('capturesGold'),
+        supplyPerKill: perKill('supplyGold')
       },
       now: Number.isFinite(Number(now)) ? Number(now) : Date.now()
     };
@@ -147,6 +156,11 @@
           t: sample.now
         }
       : { gph: m.gph, xph: m.xph, cph: m.cph, kph: m.kph, hpk: m.hpk, n: 1, t: sample.now };
+    for (const key of ['lootPerKill', 'capturePerKill', 'supplyPerKill']) {
+      if (m[key] == null || !Number.isFinite(Number(m[key]))) continue;
+      byPokemon[sample.huntKey][key] = old && old[key] != null
+        ? finite(old[key]) * (1 - weight) + Number(m[key]) * weight : Number(m[key]);
+    }
 
     const keys = Object.keys(byAccount);
     if (keys.length > 120) {
