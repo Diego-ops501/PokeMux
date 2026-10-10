@@ -15,6 +15,10 @@
 <script src="src/domain/global-market.js"></script>
 <script src="src/domain/market-alerts.js"></script>
 <script src="src/renderer/global-market.js"></script>
+<script src="src/renderer/workspace.js"></script>
+<script src="src/renderer/inventory.js"></script>
+<script src="src/renderer/settings.js"></script>
+<script src="src/renderer/summary.js"></script>
 <link rel="stylesheet" href="src/renderer/global-market.css">
 <link rel="stylesheet" href="src/renderer/toolbar.css">
 <style>
@@ -516,31 +520,39 @@
   .hr-row button { margin-top: 8px; }
   #hrStatus { margin-top: 10px; color: #79c0ff; font-size: 13px; }
 </style>
+<link rel="stylesheet" href="src/renderer/workspace.css">
+<link rel="stylesheet" href="src/renderer/inventory.css">
+<link rel="stylesheet" href="src/renderer/settings.css">
+<link rel="stylesheet" href="src/renderer/summary.css">
 </head>
 <body>
   <div id="topbar">
     <span class="logo">
-      <img src="pokemux-logo-ui.png" alt="PokeMux">
+      <img src="pokemux-icon.png" alt="">
+      <strong>PokeMux</strong>
       <span class="ver" id="appVer"></span>
     </span>
-    <div id="supportLinks">
-      <button id="donTop" class="game-tool">Ajude o projeto</button>
-      <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)" class="game-tool">🔗</button>
+    <nav id="workspaceAccounts" aria-label="Contas"></nav>
+    <div id="workspaceModes" role="group" aria-label="Visualização">
+      <button type="button" data-mode="grid" aria-pressed="true">▦ <span>Grade</span></button>
+      <button type="button" data-mode="focus" aria-pressed="false">⛶ <span>Foco</span></button>
+      <button type="button" data-mode="summary" aria-pressed="false">▤ <span>Resumo</span></button>
     </div>
-    <button id="loginAll" class="primary">▶ Logar equipe</button>
-    <button id="accounts">👤 Treinadores</button>
-    <button id="reloadAll">⟳ Atualizar tudo</button>
-    <button id="statsBtn" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">📊 Painel</button>
-    <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">🃏 Cartas</button>
-    <button id="recommendBtn">🎯 Recomendar hunt</button>
-    <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">Menu do jogo</button>
-    <button id="overlayBtn" title="Abre um resumo flutuante somente-leitura">Overlay</button>
     <div id="toolbarIcons">
       <button id="ivsBtn" title="Ativa ou desativa o IV automático ao passar o mouse sobre um Pokémon" aria-pressed="true" class="game-tool">IV: ON</button>
-      <button id="marketBtn" title="Mercado Global" aria-label="Mercado Global" aria-haspopup="dialog" aria-expanded="false" class="game-tool"><img src="src/renderer/market-icon.png" alt=""></button>
+      <button id="statsBtn" class="workspace-tool" title="Resumo da conta em foco (gold/h, XP/h, bag, drops)">▤ Análise</button>
+      <button id="marketBtn" title="Mercado Global" aria-label="Mercado Global" aria-haspopup="dialog" aria-expanded="false" class="workspace-tool"><img src="src/renderer/market-icon.png" alt=""><span class="tool-label">Mercado</span></button>
+      <button id="inventoryBtn" class="workspace-tool" aria-haspopup="dialog" title="Inventário">🎒 <span class="tool-label">Inventário</span></button>
       <div id="menuWrap">
         <button id="menuBtn" class="game-tool">☰ Opções</button>
-        <div id="menu">
+        <dialog id="menu" aria-labelledby="settingsTitle">
+          <button id="loginAll" class="primary">▶ Logar equipe</button>
+          <button id="accounts">👤 Treinadores</button>
+          <button id="reloadAll">⟳ Atualizar tudo</button>
+          <button id="cardsBtn" title="Dashboard ultra leve: esconde o jogo e mostra só os números">Resumo</button>
+          <button id="recommendBtn">🎯 Recomendar hunt</button>
+          <button id="dock" title="Mostra ou esconde o menu de ícones do jogo. F2 alterna no painel em foco.">Menu do jogo</button>
+          <button id="overlayBtn" title="Abre um resumo flutuante somente-leitura">Overlay</button>
           <button id="hunt" title="Abre o Hunt Analyzer em todos os painéis">🎯 Hunt</button>
           <button id="tierBtn">🏆 Tierlist</button>
           <button id="dittoBtn" title="Onde caçar com o Ditto (comum ou shiny) e em que pokémon virar, no seu nível">✨ Ditto</button>
@@ -565,7 +577,11 @@
           <button id="propNat" title="Mantém a proporção original do jogo, sem esticar a imagem (sobra fundo escuro quando o painel não bate com a proporção)">🖼 Proporção original</button>
           <div id="langRow" title="Idioma / Language / Idioma"><span>🌐</span><button data-lang="pt">PT</button><button data-lang="en">EN</button><button data-lang="es">ES</button></div>
           <button id="errlogBtn" title="Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.">🐞 Erros</button>
-        </div>
+          <div id="supportLinks">
+            <button id="donTop" class="game-tool">Ajude o projeto</button>
+            <button id="refBtn" title="Referral do criador, copie se quiser ajudar :)" class="game-tool">🔗 Referral</button>
+          </div>
+        </dialog>
       </div>
     </div>
   </div>
@@ -679,6 +695,9 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
 
   let accounts = [];
   const webviews = [];
+  let workspaceUI = null;
+  const workspaceLive = [];
+  const stateEpochs = [0, 0, 0, 0];
   const off = [false, false, false, false];
   // PokeMux não carrega código arbitrário nas sessões autenticadas.
   const injectScripts = async () => {};
@@ -706,7 +725,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       loginAll:'▶ Logar equipe', accounts:'👤 Treinadores', reloadAll:'⟳ Atualizar tudo', layout:'▦ Grade', layoutCol:'▤ Uma coluna', propOn:'🖼 Proporção original', asOn:'🚀 Abre com o Windows', asOff:'🚀 Abrir com o Windows', asTitle:'Cria um atalho do PokeMux na pasta Inicializar do Windows, o mesmo lugar onde você colocaria um atalho à mão. Não mexe no registro e você pode remover pelo Win+R > shell:startup.', propOff:'🖼 Esticar na tela', propTitle:'Mantém a proporção original do jogo, sem esticar a imagem. Sobra fundo escuro quando o painel não bate com a proporção; desligado, a imagem preenche tudo mas distorce.', layoutRow:'▥ Uma linha', layoutTitle:'Como os painéis se organizam. Clique pra alternar: grade, uma coluna (empilhado) ou uma linha (lado a lado).',
       sound:'🔊 Som', muted:'🔇 Mudo', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Dormir', awake:'☕ Acordado',
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visível',
-      optionsBtn:'☰ Opções', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
+      optionsBtn:'⚙ Ajustes', errlog:'🐞 Erros', errlogTitle:'Abre o relatório de erros. Se o app travar ou fechar sozinho, envie esse arquivo pro suporte.',
       dockLabel:'Menu do jogo', dockTitle:'Mostra ou esconde o menu de ícones do jogo (verde = visível). F2 alterna no painel em foco.',
       dtBtn:'✨ Ditto', dtBtnTitle:'Onde caçar com o Ditto (comum ou shiny) e em que pokémon virar, no seu nível (tecla D)', dtTitle:'Ditto: onde caçar e o que virar',
       dtHint:'Escolha shiny ou comum, o nível do Ditto e o nível da conta (só entram hunts que ela alcança). Cada hunt mostra a melhor transformação pra ela. Regras do jogo: IV e qualidade do Ditto são fixos; Shiny Ditto tem -20% de Ataque e Sp. Atk (e -25% de HP e defesas), o comum -25% de Ataque e defesas; nenhum usa TM. Comum dura 12 h, shiny é permanente.',
@@ -728,7 +747,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       stKpis:'Ritmo (por hora)', stPinned:'Itens fixados', cfgSections:'Seções (arraste para ordenar, marque para mostrar)', cfgBagItems:'Mostrar TODOS os itens da bag', cfgImportantOnly:'Só itens importantes (Ultra Ball, melhor potion/revive, Rare Picture, Strange Pheromone)', cfgSearch:'Buscar item, bola, pedra…', cfgNoCat:'Abra o jogo pra carregar a lista de itens', cfgBagCats:'Bag: categorias (arraste, marque pra mostrar)', cfgBagHideItems:'Bag: esconder itens específicos',
       stShinyLife:'Shinies Enc. Total', stShinyLifeAll:'Shinies Enc. Total (todas)',
       cfgCredits:'Créditos', creditSidebar:'Painel lateral inspirado em', creditIV:'Calculadora de IV:',
-      stTargetLabel:'🎯 Alvo shiny', stTargetHow:'Escolha uma espécie na engrenagem ⚙ acima, em "Alvo shiny". O painel passa a mostrar se ele já apareceu, se foi capturado e quantas bolas você gastou nele.', stPinnedHow:'Nada fixado ainda. Na engrenagem ⚙ acima, busque um item ou pokébola em "Itens fixados" pra ver a quantidade dele aqui, em todas as contas.', stTargetStatus:'Status', stCaught:'capturado!', stFoundNotCaught:'apareceu, não capturado', stNotAppeared:'ainda não apareceu', stTargetShinyTries:'Tentativas no shiny', stTargetFarm:'Farm na espécie', stTries:'tent.', cfgTarget:'Alvo shiny (acompanhar a caça)', cfgBalls:'\u{1F9FA} Comprar pokébolas', cfgBallsHint:'Compra na conta exibida no painel, direto na loja do jogo. Sempre pede confirmação com o custo.', cfgBallsConfirm:'Comprar {q} × {b} por {c} gold na conta {a}?\\nVocê tem {g} gold.', cfgBallsOk:'{q} bolas compradas!', cfgBallsErr:'A compra falhou', cfgBallsOff:'Nenhuma conta ligada.', cfgLock:'\u{1F512} Cadeado de venda', cfgLockHint:'Estes itens pedem confirmação antes de vender. Shiny e qualidade alta já vêm protegidos.', cfgLockSearch:'Buscar item pra proteger…', cfgLockRemove:'Destravar', cfgTargetSearch:'Buscar espécie pra caçar…',
+      stTargetLabel:'🎯 Alvo shiny', stTargetHow:'Escolha uma espécie na engrenagem ⚙ acima, em "Alvo shiny". O painel passa a mostrar se ele já apareceu, se foi capturado e quantas bolas você gastou nele.', stPinnedHow:'Nada fixado ainda. Na engrenagem ⚙ acima, busque um item ou pokébola em "Itens fixados" pra ver a quantidade dele aqui, em todas as contas.', stTargetStatus:'Status', stCaught:'capturado!', stFoundNotCaught:'apareceu, não capturado', stNotAppeared:'ainda não apareceu', stTargetShinyTries:'Tentativas no shiny', stTargetFarm:'Farm na espécie', stTries:'tent.', cfgTarget:'Alvo shiny (acompanhar a caça)', cfgLock:'\u{1F512} Cadeado de venda', cfgLockHint:'Estes itens pedem confirmação antes de vender. Shiny e qualidade alta já vêm protegidos.', cfgLockSearch:'Buscar item pra proteger…', cfgLockRemove:'Destravar', cfgTargetSearch:'Buscar espécie pra caçar…',
       refTitle:'Referral do criador, copie se quiser ajudar :)', refCopied:'✓ Copiado!',
       stLoading:'carregando…', stOnline:'online', stError:'erro', stOff:'desligada', trainer:'Treinador',
       tZoomOut:'Diminuir zoom', tZoomIn:'Aumentar zoom', tReload:'Recarregar', tExpand:'Expandir (Ctrl+número)', tZoomPct:'Zoom atual (clique volta pra 100%)', faq:'❓ FAQ', faqTitle:'Perguntas frequentes: abre o FAQ no navegador', manual:'📖 Manual', manualTitle:'Manual: o que cada botão e cada seção do app faz', verNova:'Nova versão disponível. Clique pra abrir a página de download.', goalEta:'no ritmo atual, meta às', tRename:'Clique duplo para renomear', promptRename:'Nome do treinador:', accSaveErr:'Não foi possível salvar as senhas no disco. O motivo está no relatório de erros (☰ Opções). Costuma ser espaço livre, antivírus bloqueando a pasta do app, ou o sistema sem cripto.',
@@ -749,7 +768,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       loginAll:'▶ Log in all', accounts:'👤 Accounts', reloadAll:'⟳ Reload all', layout:'▦ Grid', layoutCol:'▤ Single column', propOn:'🖼 Original aspect', asOn:'🚀 Opens with Windows', asOff:'🚀 Open with Windows', asTitle:'Creates a PokeMux shortcut in the Windows Startup folder, the same place you would put one by hand. It does not touch the registry and you can remove it via Win+R > shell:startup.', propOff:'🖼 Stretch to fill', propTitle:'Keeps the game original aspect ratio instead of stretching the image. Dark bars appear when the panel does not match the ratio; turned off, the image fills everything but gets distorted.', layoutRow:'▥ Single row', layoutTitle:'How the panels are arranged. Click to cycle: grid, single column (stacked) or single row (side by side).',
       sound:'🔊 Sound', muted:'🔇 Muted', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Sleep', awake:'☕ Awake',
       chatHidden:'💬 Chat hidden', chatShown:'💬 Chat shown',
-      optionsBtn:'☰ Options', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
+      optionsBtn:'⚙ Settings', errlog:'🐞 Errors', errlogTitle:'Opens the error report. If the app freezes or closes on its own, send this file to support.',
       dockLabel:'Game menu', dockTitle:'Shows or hides the game icon menu (green = shown). F2 toggles it in the focused panel.',
       dtBtn:'✨ Ditto', dtBtnTitle:'Where to hunt with Ditto (regular or shiny) and what to turn into, at your level (key D)', dtTitle:'Ditto: where to hunt and what to become',
       dtHint:'Pick shiny or regular, the Ditto level and your account level (only hunts you can reach count). Each hunt shows its best transformation. Game rules: Ditto IV and quality are fixed; Shiny Ditto has -20% Atk and Sp. Atk (and -25% HP and defenses), regular -25% Atk and defenses; neither uses TMs. Regular lasts 12 h, shiny is permanent.',
@@ -771,7 +790,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       stKpis:'Rate (per hour)', stPinned:'Pinned items', cfgSections:'Sections (drag to reorder, check to show)', cfgBagItems:'Show ALL bag items', cfgImportantOnly:'Only important items (Ultra Ball, best potion/revive, Rare Picture, Strange Pheromone)', cfgSearch:'Search item, ball, stone…', cfgNoCat:'Open the game to load the item list', cfgBagCats:'Bag: categories (drag, check to show)', cfgBagHideItems:'Bag: hide specific items',
       stShinyLife:'Total shinies found', stShinyLifeAll:'Total shinies found (all)',
       cfgCredits:'Credits', creditSidebar:'Sidebar inspired by', creditIV:'IV calculator:',
-      stTargetLabel:'🎯 Shiny target', stTargetHow:'Pick a species in the gear ⚙ above, under "Shiny target". The panel then shows whether it appeared, whether it was caught and how many balls you spent on it.', stPinnedHow:'Nothing pinned yet. In the gear ⚙ above, search an item or ball under "Pinned items" to see its count here, across every account.', stTargetStatus:'Status', stCaught:'caught!', stFoundNotCaught:'appeared, not caught', stNotAppeared:'not appeared yet', stTargetShinyTries:'Shiny attempts', stTargetFarm:'Species farm', stTries:'tries', cfgTarget:'Shiny target (track the hunt)', cfgBalls:'\u{1F9FA} Buy Poké Balls', cfgBallsHint:'Buys on the account shown in the panel, straight from the game shop. Always asks for confirmation with the cost.', cfgBallsConfirm:'Buy {q} × {b} for {c} gold on account {a}?\\nYou have {g} gold.', cfgBallsOk:'{q} balls bought!', cfgBallsErr:'Purchase failed', cfgBallsOff:'No account is on.', cfgLock:'\u{1F512} Sell lock', cfgLockHint:'These items ask for confirmation before selling. Shiny and high quality are already protected.', cfgLockSearch:'Search an item to protect…', cfgLockRemove:'Unlock', cfgTargetSearch:'Search species to hunt…',
+      stTargetLabel:'🎯 Shiny target', stTargetHow:'Pick a species in the gear ⚙ above, under "Shiny target". The panel then shows whether it appeared, whether it was caught and how many balls you spent on it.', stPinnedHow:'Nothing pinned yet. In the gear ⚙ above, search an item or ball under "Pinned items" to see its count here, across every account.', stTargetStatus:'Status', stCaught:'caught!', stFoundNotCaught:'appeared, not caught', stNotAppeared:'not appeared yet', stTargetShinyTries:'Shiny attempts', stTargetFarm:'Species farm', stTries:'tries', cfgTarget:'Shiny target (track the hunt)', cfgLock:'\u{1F512} Sell lock', cfgLockHint:'These items ask for confirmation before selling. Shiny and high quality are already protected.', cfgLockSearch:'Search an item to protect…', cfgLockRemove:'Unlock', cfgTargetSearch:'Search species to hunt…',
       refTitle:'Creator referral, copy it if you want to help :)',
       refTitle:"Creator's referral, copy it if you want to help :)", refCopied:'✓ Copied!',
       stLoading:'loading…', stOnline:'online', stError:'error', stOff:'off', trainer:'Trainer',
@@ -793,7 +812,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       loginAll:'▶ Iniciar equipo', accounts:'👤 Entrenadores', reloadAll:'⟳ Recargar todo', layout:'▦ Cuadrícula', layoutCol:'▤ Una columna', propOn:'🖼 Proporción original', asOn:'🚀 Abre con Windows', asOff:'🚀 Abrir con Windows', asTitle:'Crea un acceso directo de PokeMux en la carpeta Inicio de Windows, el mismo lugar donde lo pondrías a mano. No toca el registro y puedes quitarlo con Win+R > shell:startup.', propOff:'🖼 Estirar en pantalla', propTitle:'Mantiene la proporción original del juego, sin estirar la imagen. Queda fondo oscuro cuando el panel no coincide con la proporción; apagado, la imagen llena todo pero se distorsiona.', layoutRow:'▥ Una fila', layoutTitle:'Cómo se organizan los paneles. Clic para alternar: cuadrícula, una columna (apilado) o una fila (lado a lado).',
       sound:'🔊 Sonido', muted:'🔇 Silencio', eco:'⚡ Eco', ecoOff:'⚡ Eco off', sleep:'💤 Dormir', awake:'☕ Despierto',
       chatHidden:'💬 Chat oculto', chatShown:'💬 Chat visible',
-      optionsBtn:'☰ Opciones', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
+      optionsBtn:'⚙ Ajustes', errlog:'🐞 Errores', errlogTitle:'Abre el informe de errores. Si la app se congela o se cierra sola, envía este archivo al soporte.',
       dockLabel:'Menú del juego', dockTitle:'Muestra u oculta el menú de iconos del juego (verde = visible). F2 alterna en el panel enfocado.',
       dtBtn:'✨ Ditto', dtBtnTitle:'Dónde cazar con el Ditto (común o shiny) y en qué pokémon convertirse, en tu nivel (tecla D)', dtTitle:'Ditto: dónde cazar y en qué convertirse',
       dtHint:'Elige shiny o común, el nivel del Ditto y el nivel de la cuenta (solo entran hunts que alcanza). Cada hunt muestra su mejor transformación. Reglas del juego: IV y calidad del Ditto son fijos; Shiny Ditto tiene -20% de Ataque y Sp. Atk (y -25% de HP y defensas), el común -25% de Ataque y defensas; ninguno usa TM. El común dura 12 h, el shiny es permanente.',
@@ -815,7 +834,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
       stKpis:'Ritmo (por hora)', stPinned:'Ítems fijados', cfgSections:'Secciones (arrastra para ordenar, marca para mostrar)', cfgBagItems:'Mostrar TODOS los ítems de la bolsa', cfgImportantOnly:'Solo ítems importantes (Ultra Ball, mejor poción/revive, Rare Picture, Strange Pheromone)', cfgSearch:'Buscar ítem, ball, piedra…', cfgNoCat:'Abre el juego para cargar la lista de ítems', cfgBagCats:'Bolsa: categorías (arrastra, marca para mostrar)', cfgBagHideItems:'Bolsa: ocultar ítems específicos',
       stShinyLife:'Shinies enc. total', stShinyLifeAll:'Shinies enc. total (todas)',
       cfgCredits:'Créditos', creditSidebar:'Panel lateral inspirado en', creditIV:'Calculadora de IV:',
-      stTargetLabel:'🎯 Objetivo shiny', stTargetHow:'Elige una especie en el engranaje ⚙ de arriba, en "Objetivo shiny". El panel pasa a mostrar si ya apareció, si fue capturado y cuántas bolas gastaste en él.', stPinnedHow:'Nada fijado aún. En el engranaje ⚙ de arriba, busca un objeto o poké ball en "Objetos fijados" para ver la cantidad aquí, en todas las cuentas.', stTargetStatus:'Estado', stCaught:'¡capturado!', stFoundNotCaught:'apareció, no capturado', stNotAppeared:'aún no apareció', stTargetShinyTries:'Intentos en el shiny', stTargetFarm:'Farmeo en la especie', stTries:'intentos', cfgTarget:'Objetivo shiny (seguir la caza)', cfgBalls:'\u{1F9FA} Comprar pokébolas', cfgBallsHint:'Compra en la cuenta mostrada en el panel, directo en la tienda del juego. Siempre pide confirmación con el costo.', cfgBallsConfirm:'\u00bfComprar {q} × {b} por {c} gold en la cuenta {a}?\\nTienes {g} gold.', cfgBallsOk:'\u00a1{q} bolas compradas!', cfgBallsErr:'La compra falló', cfgBallsOff:'Ninguna cuenta encendida.', cfgLock:'\u{1F512} Candado de venta', cfgLockHint:'Estos objetos piden confirmación antes de vender. Shiny y calidad alta ya están protegidos.', cfgLockSearch:'Buscar objeto para proteger…', cfgLockRemove:'Desbloquear', cfgTargetSearch:'Buscar especie para cazar…',
+      stTargetLabel:'🎯 Objetivo shiny', stTargetHow:'Elige una especie en el engranaje ⚙ de arriba, en "Objetivo shiny". El panel pasa a mostrar si ya apareció, si fue capturado y cuántas bolas gastaste en él.', stPinnedHow:'Nada fijado aún. En el engranaje ⚙ de arriba, busca un objeto o poké ball en "Objetos fijados" para ver la cantidad aquí, en todas las cuentas.', stTargetStatus:'Estado', stCaught:'¡capturado!', stFoundNotCaught:'apareció, no capturado', stNotAppeared:'aún no apareció', stTargetShinyTries:'Intentos en el shiny', stTargetFarm:'Farmeo en la especie', stTries:'intentos', cfgTarget:'Objetivo shiny (seguir la caza)', cfgLock:'\u{1F512} Candado de venta', cfgLockHint:'Estos objetos piden confirmación antes de vender. Shiny y calidad alta ya están protegidos.', cfgLockSearch:'Buscar objeto para proteger…', cfgLockRemove:'Desbloquear', cfgTargetSearch:'Buscar especie para cazar…',
       refTitle:'Referral del creador, cópialo si quieres ayudar :)', refCopied:'✓ ¡Copiado!',
       stLoading:'cargando…', stOnline:'online', stError:'error', stOff:'apagada', trainer:'Entrenador',
       tZoomOut:'Alejar zoom', tZoomIn:'Acercar zoom', tReload:'Recargar', tExpand:'Expandir (Ctrl+número)', tZoomPct:'Zoom actual (clic vuelve a 100%)', faq:'❓ FAQ', faqTitle:'Preguntas frecuentes: abre el FAQ en el navegador', manual:'📖 Manual', manualTitle:'Manual: qué hace cada botón y cada sección', verNova:'Nueva versión disponible. Clic para abrir la página de descarga.', goalEta:'a este ritmo, meta a las', tRename:'Doble clic para renombrar', promptRename:'Nombre del entrenador:', accSaveErr:'No se pudieron guardar las contraseñas en el disco. El motivo está en el informe de errores (☰ Opciones). Suele ser espacio libre, antivirus bloqueando la carpeta, o el sistema sin cifrado.',
@@ -974,7 +993,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
 
       dot.style.background = dot.style.color = ACOR[i] || '#8b949e'; // cor da conta (o color alimenta o brilho quando online)
       let falhou = false; // ultima carga falhou? (evita o did-stop-loading apagar o estado de erro)
-      wv.addEventListener('did-start-loading', () => { if (!off[i]) { falhou = false; dot.className = 'dot'; status.textContent = t('stLoading'); } });
+      wv.addEventListener('did-start-loading', () => { stateEpochs[i]++; delete stCache[i]; delete workspaceLive[i]; if (!off[i]) { falhou = false; dot.className = 'dot'; status.textContent = t('stLoading'); } workspaceUI?.refresh(); });
       wv.addEventListener('did-start-loading', () => { if (ivFonte === i) ivOculta(); });
       // o did-stop-loading sempre fecha o par do did-start-loading. Sem ele, navegacao interna da
       // SPA do jogo (que nao redispara o dom-ready) deixava o painel preso em "carregando...".
@@ -984,7 +1003,7 @@ const HOME_URL  = 'https://poke.idleworld.online/?ref=2G9B4BV'; // link do refer
         const m = e && e.message;
         if (typeof m !== 'string') return;
         if (m.lastIndexOf('__PGST__', 0) === 0 && m.length < 300000) {
-          try { const d = stSane(JSON.parse(m.slice(8))); if (d) { rememberAccountName(i, d.name, d.cid); stCache[i] = { t: Date.now(), d }; dtPush(); pushOverlay(); } } catch {}
+          try { const d = stSane(JSON.parse(m.slice(8))); if (d) { rememberAccountName(i, d.name, d.cid); stCache[i] = { t: Date.now(), d, slot: stateSlot(i) }; dtPush(); pushOverlay(); workspaceUI?.refresh(); } } catch {}
           return;
         }
         if (m.lastIndexOf('__PGIVH__', 0) === 0 && m.length < 2000) {
@@ -1047,7 +1066,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
               wv.executeJavaScript(VOLTA_JS(slugVolta)).then(r => { if (r === 'armado') { try { window.pokeAPI.logError('painel', 'painel ' + (i + 1) + ': ' + (recOk ? 'watchdog recuperando' : 'recarregou farmando') + ', volta pra hunt ' + slugVolta + ' em 12s'); } catch {} } }).catch(() => {});
             }
           } catch {}
-          wv.executeJavaScript(ecoScript(ecoFps())).catch(() => {});
+          wv.executeJavaScript(ecoScript(ecoFps(i))).catch(() => {});
           wv.executeJavaScript(PUSH_STATE()).catch(() => {}); // painel Simples le daqui sem perguntar
           // jogo congelado com pagina viva: WebGL perdeu o contexto e nao restaurou em 4s -> recarrega
           wv.executeJavaScript("(()=>{if(window.__pgGlWd)return;window.__pgGlWd=1;let tm;document.addEventListener('webglcontextlost',()=>{clearTimeout(tm);tm=setTimeout(()=>location.reload(),4000);},true);document.addEventListener('webglcontextrestored',()=>clearTimeout(tm),true);})()").catch(() => {});
@@ -1126,6 +1145,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     }
     aplicaCountLayout();
     ajustaProporcao(); // painel novo/removido muda o espaco de cada um
+    applyEco();
+    workspaceUI?.refresh();
   }
   countBtn.onclick = () => setCount(count === 4 ? 1 : count + 1); // cicla 4 -> 1 -> 2 -> 3 -> 4
 
@@ -1143,6 +1164,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       }
     }
     ajustaProporcao(); // expandir/voltar muda o espaco do painel
+    if (typeof workspaceUI !== 'undefined') workspaceUI?.refresh();
+    if (typeof eco !== 'undefined') applyEco();
   }
 
   function togglePower(i) {
@@ -1155,6 +1178,7 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     clearTimeout(loginLoadTimers[i]); loginLoadTimers[i] = null;
     if (off[i]) { webviews[i].src = 'about:blank'; dot.className = 'dot off'; status.textContent = t('stOff'); }
     else { dot.className = 'dot'; status.textContent = t('stLoading'); agendaLoginPage(webviews[i], i, START_URL, 0); }
+    workspaceUI?.refresh();
   }
 
   function loginPanel(wv, cred) {
@@ -1251,13 +1275,14 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   document.getElementById('accSave').onclick = async () => {
     document.querySelectorAll('#accRows input').forEach(inp => {
       if (inp.dataset.f === 'email' && accounts[+inp.dataset.i].email !== inp.value) {
-        delete huntRecovery[+inp.dataset.i]; delete maintenanceLogin[+inp.dataset.i]; delete gameAccountNames[+inp.dataset.i]; stallSlug[+inp.dataset.i] = '';
+        delete huntRecovery[+inp.dataset.i]; delete maintenanceLogin[+inp.dataset.i]; delete gameAccountNames[+inp.dataset.i]; delete stCache[+inp.dataset.i]; delete tabNames[+inp.dataset.i]; stallSlug[+inp.dataset.i] = '';
       }
       accounts[+inp.dataset.i][inp.dataset.f] = inp.value;
     });
     grid.querySelectorAll('.name').forEach((el, i) => el.textContent = accounts[i].name || defName(i));
     if (!(await save())) { window.alert(t('accSaveErr')); return; } // nao fecha o modal: a senha nao foi gravada no disco
     overlay.classList.remove('show');
+    workspaceUI?.refresh();
   };
 
   // ----- Topbar -----
@@ -1276,6 +1301,11 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   // funcao, nao constante: o READ_STATE so e declarado mais abaixo; no dom-ready ja existe
   const PUSH_STATE = () => '(()=>{if(window.__pgPush)return;window.__pgPush=1;setInterval(()=>{try{const d=' + READ_STATE + ';if(d&&d.ok)console.log("__PGST__"+JSON.stringify(d))}catch(x){}},10000)})()';
   const stCache = {};
+  function stateSlot(i) { return { view: webviews[i], email: String(accounts[i]?.email || ''), cid: String(gameAccountNames[i]?.cid || ''), epoch: stateEpochs[i], off: off[i] || !webviews[i] || !podeModificarPagina(webviews[i]) }; }
+  const readAppState = window.PokeMuxWorkspace.createStateReader({ slot: stateSlot, cache: i => stCache[i],
+    read: i => webviews[i].executeJavaScript(READ_STATE),
+    publish: (i, d) => { rememberAccountName(i, d.name, d.cid); stCache[i] = { t: Date.now(), d, slot: stateSlot(i) }; workspaceUI?.refresh(); }
+  });
   function overlayState() {
     const rows = [];
     let gph = 0, xph = 0, shiny = 0;
@@ -1311,8 +1341,9 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
     if (!d || typeof d !== 'object' || d.ok !== true) return null;
     const num = (x) => { x = +x; return Number.isFinite(x) ? x : 0; };
     const a0 = d.a && typeof d.a === 'object' ? d.a : {}, a = {};
-    ['seconds', 'gph', 'xph', 'kph', 'captures', 'shinyFound', 'shinyCap', 'sinceCatch', 'ballsUsed', 'potsUsed'].forEach(k => a[k] = num(a0[k]));
+    ['seconds', 'gph', 'xph', 'kph', 'captures', 'shinyFound', 'shinyCap', 'sinceCatch', 'ballsUsed', 'potsUsed','balance','xpg'].forEach(k => a[k] = num(a0[k]));
     d.a = a;
+    if(d.farm && typeof d.farm==='object')d.farm={hunting:d.farm.hunting===true,lastCombatT:Math.max(0,num(d.farm.lastCombatT))};
     d.name = String(d.name || '').slice(0, 40); d.cid = String(d.cid || '').slice(0, 60); d.hunt = String(d.hunt || '').slice(0, 60);
     ['catchLog', 'usedList', 'team', 'chatShares'].forEach(k => d[k] = (Array.isArray(d[k]) ? d[k] : []).slice(0, 120)
       .map(e => { if (e && typeof e === 'object') { for (const p2 in e) if (typeof e[p2] === 'string') e[p2] = e[p2].slice(0, 80); } return e; }));
@@ -1345,15 +1376,17 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
   const ultraScript = (on) => on
     ? `(()=>{let s=document.getElementById('pg-ultra');if(!s){s=document.createElement('style');s.id='pg-ultra';document.head.appendChild(s);}s.textContent='canvas,video{display:none !important} *{animation:none !important;transition:none !important;will-change:auto !important}';})()`
     : `(()=>{const s=document.getElementById('pg-ultra');if(s)s.remove();})()`;
-  const ecoFps = () => cardsOn ? 1 : (eco ? 15 : 0);
+  const ecoFps = i => window.PokeMuxWorkspace.frameRate({ summary: cardsOn, eco,
+    focused: [...grid.children].findIndex(p => p.classList.contains('expanded')), account: i });
   function applyEco() {
     ecoBtn.textContent = eco ? t('eco') : t('ecoOff');
     ecoBtn.classList.toggle('on', eco);
     webviews.forEach((w, i) => {
       if (off[i] || !podeModificarPagina(w)) return;
-      try { w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); } catch {}
+      try { w.executeJavaScript(ecoScript(ecoFps(i))).catch(() => {}); } catch {}
     });
     lsSet('eco', eco ? '1' : '0');
+    workspaceUI?.refresh();
   }
   ecoBtn.onclick = () => { eco = !eco; applyEco(); };
 
@@ -1659,7 +1692,8 @@ S.supBase=cur;if(S.picBase==null){S.picBase=now;}else{if(now>S.picBase){const do
       const põe = (w, h) => { if (wv.style.width !== w || wv.style.height !== h) { wv.style.width = w; wv.style.height = h; } };
       if (!propNat) return põe('', '');
       const hd = p.querySelector('.panel-header');
-      const dispW = p.clientWidth, dispH = p.clientHeight - (hd ? hd.offsetHeight : 0);
+      const strip = p.querySelector('.panel-metrics');
+      const dispW = p.clientWidth, dispH = p.clientHeight - (hd ? hd.offsetHeight : 0) - (strip ? strip.offsetHeight : 0) - 2;
       if (dispW < 8 || dispH < 8) return põe('', ''); // escondido (modo Simples)
       const esc = Math.min(dispW / 1600, dispH / 832);
       põe(Math.max(1, Math.floor(1600 * esc)) + 'px', Math.max(1, Math.floor(832 * esc)) + 'px');
@@ -2277,7 +2311,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       }
       w.executeJavaScript(READ_ALERTS).then(r => {
         pendA[i] = 0;
-        if (r) rememberAccountName(i, r.name, r.cid);
+        if (r) { rememberAccountName(i, r.name, r.cid); workspaceLive[i] = { live: !!r.live, cid: r.cid, at: Date.now(), email: accounts[i]?.email, view: w }; workspaceUI?.refresh(); }
         if (checkHuntRecovery(i, r, w)) return;
         if (!r) return;
         if (r.live && r.sess && r.sess.start) { // so de conta VIVA: foto tirada no login/erro nunca vencia os 10 min
@@ -2381,6 +2415,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     });
     applyMute(); applyEco(); applyChat(); applyDock(); applyAwake(); applyMinTray(); applyPropNat(); applySndShiny(); applyVoice(); applyShotShiny(); applyVoltaHunt(); applyAlerts(); applySellGuard(); applyClean(); aplicaCountLayout();
     lsSet('lang', lang);
+    workspaceUI?.refresh();
   }
   function applyGameLang() {
     const pl = lang === 'pt' ? 'pt' : 'en'; // es usa en no jogo (so tem pt/en)
@@ -2468,8 +2503,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   // ----- Dropdown "Menu" (Som, Eco, Dormir, Chat, Grade, idioma) -----
   const menuWrap = document.getElementById('menuWrap');
   const menu = document.getElementById('menu');
-  document.getElementById('menuBtn').onclick = (e) => { e.stopPropagation(); menu.classList.toggle('show'); };
-  document.getElementById('errlogBtn').onclick = () => { try { window.pokeAPI.openErrorLog(); } catch {} menu.classList.remove('show'); };
+  function closeSettings() { menu.classList.remove('show'); if(menu.open) menu.close(); }
+  document.getElementById('errlogBtn').onclick = () => { try { window.pokeAPI.openErrorLog(); } catch {} closeSettings(); };
   // backup/restore: configuracoes e historico do localStorage (senhas nao: ficam criptografadas no main).
   // userScripts/scriptsOn NUNCA entram: sao codigo injetado nos paineis logados, e um arquivo de
   // config vindo de outra pessoa viraria execucao de codigo na conta de quem importa.
@@ -2490,10 +2525,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const o = coletaConfig();
     const a = document.createElement('a');
     a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(o));
-    a.download = 'pokemux-config.json'; a.click(); menu.classList.remove('show');
+    a.download = 'pokemux-config.json'; a.click(); closeSettings();
   };
   document.getElementById('bkImp').onclick = () => {
-    menu.classList.remove('show');
+    closeSettings();
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
     inp.onchange = () => {
       const f = inp.files[0]; if (!f) return;
@@ -2513,7 +2548,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     };
     inp.click();
   };
-  document.addEventListener('click', (e) => { if (!menuWrap.contains(e.target)) menu.classList.remove('show'); });
+
 
   // ===== Painel de resumo: le o coletor window.__poke da conta em foco =====
   const READ_STATE = `(() => {
@@ -2589,7 +2624,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const ballMap = {}; bag.forEach(g => { if (g.label === 'Pokébolas') g.items.forEach(x => ballMap[x.id.slice(1)] = x.inf ? '∞' : x.qty); }); // fixados: mesma leitura da mochila (vencida some, infinita e ∞)
     return { ok:true, cid: ch.id||'', name: ch.name||'', level: ch.level||0, gold: ch.gold||0, diamonds: ch.diamonds||0, vip: !!ch.isVip, clan: ch.clan||null, clanRank: ch.clanRank||0, shinyEnc: P.shinyEnc||0, usedList: P.usedList||[], catchLog: P.catchLog||[], shinyLog: P.shinyLog||[], chatShares: P.chatShares||[], balls: sBalls, potions: sPot, revives: sRev, invMap, ballMap,
       prof: ch.profession||'', profRank: ch.professionRank||0, catches: ch.catches||0, hunt, gifts: mail.gifts||0,
-      a, drops, bag, team, prev, events:((ws.events&&ws.events.events)||[]).filter(e=>e&&e.key==='type-of-day').map(e=>({key:e.key,name:e.name,desc:e.desc,until:e.until,pokemonType:e.pokemonType,typeName:e.typeName})), live:!!(P.sock&&P.sock.readyState===1&&ch.id) };
+      a, drops, bag, team, prev, events:((ws.events&&ws.events.events)||[]).filter(e=>e&&e.key==='type-of-day').map(e=>({key:e.key,name:e.name,desc:e.desc,until:e.until,pokemonType:e.pokemonType,typeName:e.typeName})), live:!!(P.sock&&P.sock.readyState===1&&ch.id), farm:{hunting:!!P.hunting,lastCombatT:Math.max(+P.lastCombatT||0,+P.lastFieldT||0,+(P.sess||{}).lastKillT||0)},hasBalls:!!(ws.balls&&ws.balls.counts),hasInv:!!ws.inventory };
   })()`;
 
   const statsEl = document.createElement('div');
@@ -2837,11 +2872,13 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
 
   // vigia do login: quando a primeira conta entra no jogo, reabre o painel que estava esperando
   setInterval(async () => {
-    if (!statsAutoPend) return;
+    if (!statsAutoPend || cardsOn) return;
     for (let i = 0; i < count; i++) {
       if (off[i] || !webviews[i]) continue;
       try {
-        if (await webviews[i].executeJavaScript(NAME_JS)) {
+        const name = await webviews[i].executeJavaScript(NAME_JS);
+        if (!statsAutoPend || cardsOn) return;
+        if (name) {
           statsAutoPend = false; statsOpen = true; applyStats();
           return;
         }
@@ -2871,7 +2908,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     for (let i = 0; i < count; i++) {
       const nm0 = tabNames[i] || stName(i), dot = ACOR[i] || '#8b949e';
       if (off[i] || !webviews[i]) { cards += aggCard(dot, nm0, null); continue; }
-      let d = null; try { d = await webviews[i].executeJavaScript(READ_STATE); } catch {}
+      let d = null; try { d = await readAppState(i); } catch {}
       if (!statsOpen || statsIdx !== -1 || requestId !== statsRefreshId) return;
       if (d && d.name && tabNames[i] !== d.name) { tabNames[i] = d.name; buildStatsTabs(); }
       cards += aggCard(dot, (d && d.name) || nm0, d);
@@ -2904,7 +2941,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const current = () => statsOpen && statsIdx === idx && webviews[idx] === w && requestId === statsRefreshId;
     if (off[idx] || !w) { stBody.innerHTML = '<div class="st-empty">' + t('statsOff') + '</div>'; return; }
     try {
-      const d = await w.executeJavaScript(READ_STATE);
+      const d = await readAppState(idx);
       if (!current()) return;
       renderStats(d);
       if (d && d.ok && d.name && tabNames[idx] !== d.name) { tabNames[idx] = d.name; buildStatsTabs(); }
@@ -2943,14 +2980,18 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       stBody.style.display = ''; stTabs.style.display = ''; const g = statsEl.querySelector('.st-gear'); if (g) g.classList.remove('on');
       buildStatsTabs(); loadTabNames(); refreshStats();
     }
+    workspaceUI?.refresh();
   }
-  statsBtn.onclick = () => { statsOpen = !statsOpen; statsAutoPend = false; applyStats(); };
+  statsBtn.onclick = () => {
+    if (!statsOpen) { const focused = [...grid.children].findIndex(p => p.classList.contains('expanded')); if (focused >= 0) statsIdx = focused; }
+    statsOpen = !statsOpen; statsAutoPend = false; applyStats();
+  };
   statsEl.querySelector('.st-x').onclick = () => { statsOpen = false; statsAutoPend = false; applyStats(); };
   // largura ajustável: arrasta a borda direita (os elementos se reencaixam sozinhos)
   (() => {
     const handle = statsEl.querySelector('.st-resize');
     let ov = null;
-    const move = (e) => { statsEl.style.width = Math.max(288, Math.min(760, e.clientX)) + 'px'; document.body.style.setProperty('--statsw', statsEl.style.width); };
+    const move = (e) => { statsEl.style.width = Math.max(288, Math.min(760, window.innerWidth - e.clientX)) + 'px'; document.body.style.setProperty('--statsw', statsEl.style.width); };
     const stop = () => { if (!ov) return; document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', stop); ov.remove(); ov = null; lsSet('statsW', parseInt(statsEl.style.width, 10)); };
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
@@ -2988,7 +3029,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     if (!lastData || !lastData.usedList || !lastData.usedList.length) {
       let j = statsIdx >= 0 ? statsIdx : -1;
       if (j < 0 || off[j] || !webviews[j]) { j = -1; for (let i = 0; i < count; i++) { if (!off[i] && webviews[i]) { j = i; break; } } }
-      if (j >= 0) { try { const d = await webviews[j].executeJavaScript(READ_STATE); if (d && d.ok) lastData = d; } catch {} }
+      if (j >= 0) { try { const d = await readAppState(j); if (d && d.ok) lastData = d; } catch {} }
     }
     let h = '<div class="cfg-h">' + t('cfgSections') + '</div><div class="cfg-secs">';
     cfg.order.forEach(name => h += '<div class="cfg-row" draggable="true" data-sec="' + name + '"><span class="cfg-grip">⋮⋮</span><label class="cfg-chk"><input type="checkbox" data-sec="' + name + '"' + (cfg.hide[name] ? '' : ' checked') + '> ' + secLabel(name) + '</label></div>');
@@ -3010,14 +3051,6 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     h += '<div class="cfg-h">' + t('stPinned') + '</div><input class="cfg-search" id="cfgSearch" placeholder="' + t('cfgSearch') + '"><div class="cfg-results" id="cfgResults"></div><div class="cfg-pinned">';
     cfg.pinned.forEach((p, idx) => h += '<div class="cfg-pin"><span>' + esc(p.name) + '</span><button data-rm="' + idx + '" title="Remover">✕</button></div>');
     h += '</div>';
-    // Comprar pokebolas em massa: a compra roda na conta exibida no painel, com confirmacao
-    h += '<div class="cfg-h">' + t('cfgBalls') + '</div>';
-    h += '<div class="cfg-noc" style="padding:2px 15px">' + t('cfgBallsHint') + '</div>';
-    h += '<div class="cfg-ballrow" style="display:flex;gap:6px;align-items:center;padding:4px 15px 8px">'
-      + '<select id="cfgBallSel" class="cfg-search" style="flex:1;margin:0"></select>'
-      + '<button id="cfgBallB1" class="cfg-ballbtn">+1.000</button>'
-      + '<button id="cfgBallB2" class="cfg-ballbtn">+10.000</button></div>'
-      + '<div class="cfg-noc" id="cfgBallMsg" style="padding:0 15px 6px"></div>';
     // Cadeado de venda: itens que pedem confirmacao ao vender
     h += '<div class="cfg-h">' + t('cfgLock') + '</div>';
     h += '<div class="cfg-noc" style="padding:2px 15px">' + t('cfgLockHint') + '</div>';
@@ -3050,43 +3083,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     };
     setupDrag(stCfg.querySelectorAll('.cfg-row[data-sec]'), 'sec', cfg.order);
     setupDrag(stCfg.querySelectorAll('.cfg-row[data-bag]'), 'bag', cfg.bagOrder);
-    stCfg.querySelectorAll('.cfg-pin button').forEach(btn => btn.onclick = () => { cfg.pinned.splice(+btn.dataset.rm, 1); saveStatsCfg(); renderSettings(); refreshStats(); });
-    (async () => {
-      const sel = stCfg.querySelector('#cfgBallSel'); if (!sel) return;
-      const cat = await loadCatalog();
-      const bolas = (cat && cat.balls || []).filter(b2 => b2 && b2.p > 0);
-      if (!bolas.length) { sel.outerHTML = '<div class="cfg-noc">' + t('cfgNoCat') + '</div>'; return; }
-      sel.innerHTML = bolas.map(b2 => '<option value="' + (+b2.id || 0) + '" data-p="' + (+b2.p || 0) + '">' + esc(b2.name) + ' \u00b7 ' + nf(b2.p) + 'g</option>').join('');
-      const msg = stCfg.querySelector('#cfgBallMsg');
-      let compraEmAndamento = false;
-      const compra = (qtd) => async () => {
-        if (compraEmAndamento || !Number.isSafeInteger(qtd) || qtd < 1 || qtd > 10000) return;
-        const opt = sel.options[sel.selectedIndex]; if (!opt) return;
-        const ballId = +opt.value, preco = +opt.dataset.p || 0, custo = preco * qtd;
-        if (!Number.isSafeInteger(ballId) || ballId <= 0 || !Number.isFinite(preco) || preco <= 0 || !Number.isSafeInteger(custo) || custo <= 0) { msg.textContent = '\u274c ' + t('cfgBallsErr'); return; }
-        let j = statsIdx >= 0 && !off[statsIdx] && webviews[statsIdx] ? statsIdx : -1;
-        if (j < 0) { for (let k = 0; k < count; k++) if (!off[k] && webviews[k]) { j = k; break; } }
-        if (j < 0) { msg.textContent = t('cfgBallsOff'); return; }
-        const goldTem = (stCache[j] && stCache[j].d && +stCache[j].d.gold) || (j === statsIdx && lastData && +lastData.gold) || 0;
-        if (!Number.isFinite(goldTem) || goldTem < custo) { msg.textContent = '\u274c Saldo insuficiente (' + nf(goldTem) + ' / ' + nf(custo) + ')'; return; }
-        const txt = t('cfgBallsConfirm').replace('{q}', nf(qtd)).replace('{b}', opt.textContent.split(' \u00b7 ')[0])
-          .replace('{c}', nf(custo)).replace('{g}', nf(goldTem)).replace('{a}', () => tabNames[j] || stName(j));
-        if (!window.confirm(txt)) return;
-        compraEmAndamento = true;
-        const botoes = [stCfg.querySelector('#cfgBallB1'), stCfg.querySelector('#cfgBallB2')].filter(Boolean); botoes.forEach(b => b.disabled = true);
-        msg.textContent = '\u23f3';
-        try {
-          const r = await webviews[j].executeJavaScript(
-            "(async()=>{try{const r=await fetch('/api/game/balls/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ballId:" + ballId + ",qty:" + qtd + "})});const j2=await r.json().catch(()=>null);return{st:r.status,gold:j2&&j2.gold}}catch(e){return{st:0}}})()");
-          if (r && r.st === 200) { msg.textContent = '\u2705 ' + t('cfgBallsOk').replace('{q}', nf(qtd)); refreshStats(); }
-          else msg.textContent = '\u274c ' + t('cfgBallsErr') + (r && r.st ? ' (' + r.st + ')' : '');
-        } catch { msg.textContent = '\u274c ' + t('cfgBallsErr'); }
-        finally { compraEmAndamento = false; botoes.forEach(b => b.disabled = false); }
-      };
-      const b1 = stCfg.querySelector('#cfgBallB1'), b2b = stCfg.querySelector('#cfgBallB2');
-      if (b1) b1.onclick = compra(1000);
-      if (b2b) b2b.onclick = compra(10000);
-    })();
+    stCfg.querySelectorAll('.cfg-pin button[data-rm]').forEach(btn => btn.onclick = () => { cfg.pinned.splice(+btn.dataset.rm, 1); saveStatsCfg(); renderSettings(); refreshStats(); });
     stCfg.querySelectorAll('.cfg-pin button[data-rmlock]').forEach(btn => btn.onclick = () => {
       sellLock.splice(+btn.dataset.rmlock, 1); saveSellLock(); applySellGuard(); renderSettings();
     });
@@ -3131,14 +3128,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     };
     const ct = stCfg.querySelector('[data-cleartarget]'); if (ct) ct.onclick = () => { cfg.shinyTarget = null; saveStatsCfg(); renderSettings(); refreshStats(); };
   }
-  gearBtn.onclick = () => {
-    cfgOpen = !cfgOpen;
-    stCfg.style.display = cfgOpen ? 'block' : 'none';
-    stBody.style.display = cfgOpen ? 'none' : '';
-    stTabs.style.display = cfgOpen ? 'none' : '';
-    gearBtn.classList.toggle('on', cfgOpen);
-    if (cfgOpen) { renderSettings(); loadCatalog(); }
-  };
+  gearBtn.onclick = () => settingsUI.open('analysis');
 
   // ===== Modo Cartas: dashboard ultra leve (jogo invisivel a ~1fps, farm continua no servidor) =====
   const cardsEl = document.getElementById('cards');
@@ -3150,7 +3140,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const RARITY_FILTERS = [['weak', 'Fraca', 'Weak', 'Débil'], ['common', 'Comum', 'Common', 'Común'], ['uncommon', 'Incomum', 'Uncommon', 'Poco común'], ['rare', 'Rara', 'Rare', 'Rara'], ['epic', 'Épica', 'Epic', 'Épica'], ['legendary', 'Lendária', 'Legendary', 'Legendaria'], ['mythic', 'Mítica', 'Mythic', 'Mítica'], ['ancient', 'Anciã', 'Ancient', 'Ancestral'], ['divine', 'Divina', 'Divine', 'Divina']];
   const rarityLabel = (r) => r[lang === 'en' ? 2 : lang === 'es' ? 3 : 1];
   const rarityKey = (q) => q >= 4 ? 'divine' : q >= 3 ? 'ancient' : q >= 2 ? 'mythic' : q >= 1.7 ? 'legendary' : q >= 1.5 ? 'epic' : q >= 1.3 ? 'rare' : q >= 1.1 ? 'uncommon' : q >= 1 ? 'common' : 'weak';
-  const raroHtml = (q) => { if (!q) return ''; const r = RARO(q); return ' <b style="color:' + r[1] + '">' + r[0] + '</b>'; };
+  const raroHtml = (q) => { if (!q) return ''; const r = RARO(q); return ' <b style="color:' + r[1] + '">' + (RARITY_FILTERS.find(row=>row[1]===r[0])?.[lang==='en'?2:lang==='es'?3:1] || r[0]) + '</b>'; };
   // ranking de hunts: tabela de efetividade do proprio jogo (dano do MEU tipo no tipo da hunt)
   const CHART = {NORMAL:{ROCK:.5,GHOST:0,STEEL:.5},FIRE:{FIRE:.5,WATER:.5,GRASS:2,ICE:2,BUG:2,ROCK:.5,DRAGON:.5,STEEL:2},WATER:{FIRE:2,WATER:.5,GRASS:.5,GROUND:2,ROCK:2,DRAGON:.5},ELECTRIC:{WATER:2,ELECTRIC:.5,GRASS:.5,GROUND:0,FLYING:2,DRAGON:.5},GRASS:{FIRE:.5,WATER:2,GRASS:.5,POISON:.5,GROUND:2,FLYING:.5,BUG:.5,ROCK:2,DRAGON:.5,STEEL:.5},ICE:{FIRE:.5,WATER:.5,GRASS:2,ICE:.5,GROUND:2,FLYING:2,DRAGON:2,STEEL:.5},FIGHTING:{NORMAL:2,ICE:2,POISON:.5,FLYING:.5,PSYCHIC:.5,BUG:.5,ROCK:2,GHOST:0,DARK:2,STEEL:2,FAIRY:.5},POISON:{GRASS:2,POISON:.5,GROUND:.5,ROCK:.5,GHOST:.5,STEEL:0,FAIRY:2},GROUND:{FIRE:2,ELECTRIC:2,GRASS:.5,POISON:2,FLYING:0,BUG:.5,ROCK:2,STEEL:2},FLYING:{ELECTRIC:.5,GRASS:2,FIGHTING:2,BUG:2,ROCK:.5,STEEL:.5},PSYCHIC:{FIGHTING:2,POISON:2,PSYCHIC:.5,DARK:0,STEEL:.5},BUG:{FIRE:.5,GRASS:2,FIGHTING:.5,POISON:.5,FLYING:.5,PSYCHIC:2,GHOST:.5,DARK:2,STEEL:.5,FAIRY:.5},ROCK:{FIRE:2,ICE:2,FIGHTING:.5,GROUND:.5,FLYING:2,BUG:2,STEEL:.5},GHOST:{NORMAL:0,PSYCHIC:2,GHOST:2,DARK:.5},DRAGON:{DRAGON:2,STEEL:.5,FAIRY:0},DARK:{FIGHTING:.5,PSYCHIC:2,GHOST:2,DARK:.5,FAIRY:.5},STEEL:{FIRE:.5,WATER:.5,ELECTRIC:.5,ICE:2,ROCK:2,STEEL:.5,FAIRY:2},FAIRY:{FIRE:.5,FIGHTING:2,POISON:.5,DRAGON:2,DARK:2,STEEL:.5}};
   const effVs = (lead, h2) => {
@@ -3339,8 +3329,8 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   let huntScope = lsGet('huntScope') || 'minhas'; // 'minhas' (as que voce farma/favoritou) | 'todas'
   let showHiddenHunts = false; // transitorio: revelar as ocultas pra desfazer
   // ----- Cartas modular: cada seção liga/desliga e reordena, salvo no localStorage -----
-  const CDSECTS = ['kpis', 'today', 'table', 'hunts', 'catches', 'shinies', 'shinyTried', 'trend', 'shared', 'team', 'inv'];
-  const cdLabel = (k) => ({ kpis: t('cdSecKpis'), today: t('cdToday'), table: t('cdByAcc2'), hunts: t('cdHunts'), catches: t('cdCatches'), shinies: t('cdShinies'), shinyTried: t('cdShinyTried'), trend: t('cdTrend'), shared: t('cdShared'), team: t('cdTeams'), inv: t('cdInv') }[k] || k);
+  const CDSECTS = ['kpis', 'table', 'today', 'catches', 'pinned', 'trend', 'shinies', 'shinyTried', 'shared'];
+  const cdLabel = (k) => ({ kpis: t('cdSecKpis'), today: t('cdToday'), table: (window.PokeMuxSummary.COPY[lang]||window.PokeMuxSummary.COPY.pt).accounts, pinned: (window.PokeMuxSummary.COPY[lang]||window.PokeMuxSummary.COPY.pt).pinned, hunts: t('cdHunts'), catches: t('cdCatches'), shinies: t('cdShinies'), shinyTried: t('cdShinyTried'), trend: t('cdTrend'), shared: t('cdShared'), team: t('cdTeams'), inv: t('cdInv') }[k] || k);
   // Melhor catch: por que criterio. Padrao IV x qualidade, porque a qualidade multiplica os
   // stats e o poder final, entao IV puro sozinho engana (126/192 x1.80 bate 150/192 x0.95).
   let bestCrit = ['ivq', 'iv', 'q'].includes(lsGet('bestCrit')) ? lsGet('bestCrit') : 'ivq';
@@ -3351,12 +3341,15 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   const utBase = []; // baseline de tentativas por conta: o que veio antes da sessao nao conta no modo sessao
   let cardsCfg = { order: CDSECTS.slice(), hide: {}, w: {}, h: {} }, cardsCfgOpen = false, cdBusy = 0;
   // larguras padrão (colunas de 12): linhas fecham certinho em tela cheia (12 | 12 | 4+4+4 | 6+3+3)
-  let cdFC = { p: -1, n: '', sh: 0, r: '', q: 0, iv: 0, per: 0 }; // filtros das capturas (conta, nome, shiny, raridade, qualidade, IV, periodo)
-  try { const c0 = lsObj('cdFC'); const r0 = String(c0.r || ''); cdFC = { p: +c0.p >= 0 ? +c0.p : -1, n: String(c0.n || '').slice(0, 30).toLowerCase(), sh: c0.sh ? 1 : 0, r: RARITY_FILTERS.some(x => x[0] === r0) ? r0 : '', q: +c0.q || 0, iv: +c0.iv || 0, per: +c0.per || 0 }; } catch {}
-  const CDW_DEF = { kpis: 12, today: 12, table: 12, hunts: 4, catches: 4, shinies: 4, shinyTried: 6, trend: 3, shared: 3, team: 12, inv: 6 };
+  let cdFC = { mode:'important', p: -1, n: '', sh: 0, r: '', q: 0, iv: 0, per: 0 }; // filtros das capturas (conta, nome, shiny, raridade, qualidade, IV, periodo)
+  try { const c0 = lsObj('cdFC'); const r0 = String(c0.r || ''); cdFC = { mode:c0.mode==='all'?'all':'important', p: +c0.p >= 0 ? +c0.p : -1, n: String(c0.n || '').slice(0, 30).toLowerCase(), sh: c0.sh ? 1 : 0, r: RARITY_FILTERS.some(x => x[0] === r0) ? r0 : '', q: +c0.q || 0, iv: +c0.iv || 0, per: +c0.per || 0 }; } catch {}
+  const CDW_DEF = { pinned:12, kpis: 12, today: 12, table: 12, hunts: 4, catches: 12, shinies: 4, shinyTried: 6, trend: 3, shared: 3, team: 12, inv: 6 };
   const cdW = (s) => Math.max(3, Math.min(12, +(cardsCfg.w[s]) || CDW_DEF[s] || 6));
-  try { const c = lsObj('cardsCfg'); if (Array.isArray(c.order)) cardsCfg.order = c.order.filter(x => CDSECTS.includes(x)); CDSECTS.forEach(s => { if (!cardsCfg.order.includes(s)) cardsCfg.order.push(s); }); cardsCfg.hide = c.hide || {}; if (c.w && typeof c.w === 'object') cardsCfg.w = c.w; if (c.h && typeof c.h === 'object') cardsCfg.h = c.h; } catch {}
+  try { const c = lsObj('cardsCfg'); if (Array.isArray(c.order)) cardsCfg.order = c.order.filter(x => CDSECTS.includes(x)); CDSECTS.forEach(s => { if (!cardsCfg.order.includes(s)) cardsCfg.order.push(s); }); cardsCfg.summaryVersion=c.summaryVersion; cardsCfg.hide = c.hide || {}; if (c.w && typeof c.w === 'object') cardsCfg.w = c.w; if (c.h && typeof c.h === 'object') cardsCfg.h = c.h; } catch {}
+  if(cardsCfg.summaryVersion!==3) {cardsCfg.order=CDSECTS.slice();['trend','shinies','shinyTried','shared'].forEach(key=>cardsCfg.hide[key]=true);['kpis','table','today','catches','pinned'].forEach(key=>cardsCfg.hide[key]=false);cardsCfg.w={};cardsCfg.h={};cardsCfg.summaryVersion=3;}
+  const summaryUI=window.PokeMuxSummary;let summaryRenderId=0;const summaryWired=new WeakSet();
   const saveCardsCfg = () => { try { lsSet('cardsCfg', JSON.stringify(cardsCfg)); } catch {} };
+  if(!lsGet('summaryV3')) {saveCardsCfg();lsSet('summaryV3','1');}
   // Últimas capturas tem rolagem própria: uma altura manual antiga só criava um cartão gigante vazio.
   if (Object.prototype.hasOwnProperty.call(cardsCfg.h, 'catches')) { delete cardsCfg.h.catches; saveCardsCfg(); }
   // Base medida por conta, Pokémon exato, nível e hunt. O formato antigo (huntStats2) não tinha
@@ -3377,7 +3370,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     let mudou = false;
     for (let i = 0; i < count; i++) {
       if (off[i] || !webviews[i]) continue;
-      try { const d = await webviews[i].executeJavaScript(READ_STATE); if (d && d.ok && d.cid && d.hunt && d.a) { const lead = (d.team || []).find(p => p.ld) || (d.team || [])[0] || null; if (amostraHunt(i, d.cid, d.hunt, lead, d.a)) mudou = true; } } catch {}
+      try { const d = await readAppState(i); if (d && d.ok && d.cid && d.hunt && d.a) { const lead = (d.team || []).find(p => p.ld) || (d.team || [])[0] || null; if (amostraHunt(i, d.cid, d.hunt, lead, d.a)) mudou = true; } } catch {}
     }
     if (mudou) { try { lsSet('huntStats3', JSON.stringify(huntStats)); } catch {} }
   }, 30000);
@@ -3540,7 +3533,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     }, 140);
   }
   const tlOv = document.getElementById('tlOverlay');
-  document.getElementById('tierBtn').onclick = () => { menu.classList.remove('show'); tlOv.classList.add('show'); renderTier(); };
+  document.getElementById('tierBtn').onclick = () => { closeSettings(); tlOv.classList.add('show'); renderTier(); };
   document.getElementById('tlClose').onclick = () => tlOv.classList.remove('show');
   tlOv.onclick = (e) => { if (e.target === tlOv) tlOv.classList.remove('show'); };
 
@@ -3645,7 +3638,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       + '<span class="tl-num" style="color:' + tr2[2] + '">' + pct + '</span>'
       + '</div>';
   }
-  document.getElementById('dittoBtn').onclick = () => { menu.classList.remove('show'); dtOv.classList.add('show'); document.getElementById('dtCtl').innerHTML = ''; renderDitto(); };
+  document.getElementById('dittoBtn').onclick = () => { closeSettings(); dtOv.classList.add('show'); document.getElementById('dtCtl').innerHTML = ''; renderDitto(); };
   dtOv.onclick = (e) => { if (e.target === dtOv) dtFecha(); };
   // resolve o nome do shiny (o field as vezes so manda o speciesId)
   const nomeShiny = (x) => (x.n && !/^#/.test(x.n)) ? x.n : (creaturesById[x.sid] || x.n || ('#' + (x.sid || '?')));
@@ -3681,24 +3674,26 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
   };
   async function refreshCards(force) {
     if (!cardsOn || (cdBusy && Date.now() - cdBusy < 8000)) return; // nao destroi o DOM durante o gesto, mas destrava sozinho se o mouseup se perder
+    const summaryRun=++summaryRenderId;
     // Guarda do tick: com foco num campo do painel, o redesenho passivo espera (nao apagar o que
     // o usuario digita). Mudou um select/checkbox, o handler chama com force: sem ele, o foco
     // que fica no campo segurava o redesenho pra sempre (bug do "filtro nao aplica").
     const ae = document.activeElement;
-    if (!force && ae && cardsEl.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
-    depColeta(); // depot e assincrono e cacheado; a proxima passada ja pinta com ele
+    // Focused controls are preserved by the DOM reconciler; passive values can keep updating.
+    const textSummary=summaryUI.COPY[lang]||summaryUI.COPY.pt;
     const rows = []; let sumG = 0, sumX = 0, sumK = 0, sumC = 0, sumSF = 0, sumSC = 0, ativos = 0; const shinyTried = {};
-    for (let i = 0; i < count; i++) {
+    await Promise.all(Array.from({length:count},async(_,i)=>{
       const nm0 = tabNames[i] || stName(i), dot = ACOR[i] || '#8b949e';
-      if (off[i] || !webviews[i]) { rows.push({ i, dot, name: nm0, st: 'off' }); continue; }
-      let d = null; const pc = stCache[i]; // push recente: usa e nao pergunta
-      if (pc && Date.now() - pc.t < 30000) d = pc.d;
-      else try { d = await webviews[i].executeJavaScript(READ_STATE); } catch {}
-      if (!d || !d.ok) { rows.push({ i, dot, name: nm0, st: 'wait' }); continue; }
+      if (off[i] || !webviews[i]) { rows.push({ i, dot, name: nm0, st: 'off' }); return; }
+      const slot=stateSlot(i);let d=null;
+      try {d=await readAppState(i);}catch{}
+      const after=stateSlot(i);if(slot.view!==after.view||slot.email!==after.email||slot.epoch!==after.epoch||after.off||after.cid&&after.cid!==String(d?.cid||'')){rows.push({i,dot,name:stName(i),st:'wait'});return;}
+      if (!d || !d.ok) { rows.push({ i, dot, name: nm0, st: 'wait' }); return; }
       if (d.name && tabNames[i] !== d.name) tabNames[i] = d.name;
+      if(d.live===false){rows.push({i,dot,name:d.name||nm0,st:'down'});return;}
       const a = d.a || {};
-      ativos++;
-      sumG += a.gph || 0; sumX += a.xph || 0; sumK += a.kph || 0; sumC += a.captures || 0; sumSF += a.shinyFound || 0; sumSC += a.shinyCap || 0;
+      if(summaryUI.health({st:'on',farm:d.farm}).status==='hunting'){ativos++;sumG+=a.gph||0;sumX+=a.xph||0;sumK+=a.kph||0;}
+      sumC += a.captures || 0; sumSF += a.shinyFound || 0; sumSC += a.shinyCap || 0;
       const cl = d.catchLog || [];
       const best = cl.length ? cl.reduce((b, x) => (bestScore(x) > bestScore(b) ? x : b)) : null;
       const last = cl.length ? cl[cl.length - 1] : null;
@@ -3714,8 +3709,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         }
       });
       if (d.usedList && d.usedList.length) (utBase[i] || (utBase[i] = { init: 0 })).init = 1; // a partir daqui, especie inedita = tentativa da sessao
-      rows.push({ i, dot, cid: d.cid || '', name: d.name || nm0, st: 'on', hunt: d.hunt || '', secs: a.seconds || 0, gph: a.gph || 0, xph: a.xph || 0, kph: a.kph || 0, caps: a.captures || 0, sh: a.shinyFound || 0, best, last, since: a.sinceCatch || 0, lead: (d.team || []).find(p => p.ld) || (d.team || [])[0] || null, shares: d.chatShares || [], team: d.team || [], inv: d.invMap || {}, tlv: +d.level || 0, balls: +d.balls || 0, pots: +d.potions || 0, aBalls: a.ballsUsed || 0, aPots: a.potsUsed || 0 });
-    }
+      rows.push({ i, dot, farm:d.farm, hasBalls:!!d.hasBalls, hasInv:!!d.hasInv, infiniteBalls:Object.values(d.ballMap||{}).includes('∞'), ballMap:d.ballMap||{}, balance:a.balance, sessionXp:a.xpg, cid: d.cid || '', name: d.name || nm0, st: 'on', hunt: d.hunt || '', secs: a.seconds || 0, gph: a.gph || 0, xph: a.xph || 0, kph: a.kph || 0, caps: a.captures || 0, sh: a.shinyFound || 0, best, last, since: a.sinceCatch || 0, lead: (d.team || []).find(p => p.ld) || (d.team || [])[0] || null, shares: d.chatShares || [], team: d.team || [], inv: d.invMap || {}, tlv: +d.level || 0, balls: +d.balls || 0, pots: +d.potions || 0, aBalls: a.ballsUsed || 0, aPots: a.potsUsed || 0 });
+    }));
+    if(!cardsOn||summaryRun!==summaryRenderId)return;
+    rows.sort((a,b)=>a.i-b.i);
     dhist.push({ t: Date.now(), g: sumG, x: sumX });
     dhist = dhist.filter(p => p.t > Date.now() - 3600e3);
 
@@ -3730,19 +3727,15 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     // ===== construtores de seção (cada um é uma seção que pode ligar/desligar/reordenar) =====
     const SB = {};
     SB.kpis = () => {
-      const kpi = (v, l, c) => '<div class="cd-kpi"><div class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div><div class="l">' + l + '</div></div>';
-      return '<div class="cd-kpis">'
-        + kpi(ncs(sumG), t('cdGold'), sumG < 0 ? '#f0883e' : '#3fb950') + kpi(nc(sumX), t('cdXp'), '#79c0ff')
-        + kpi(nf(sumK), t('cdKills')) + kpi(nf(sumC), t('cdCaps'))
-        + kpi(nf(sumSF) + ' / ' + nf(sumSC), t('cdShiny'), sumSF > 0 ? '#f778ba' : null)
-        + kpi(ativos + ' / ' + count, t('cdActive'), '#3fb950') + '</div>';
+      const kpi=(value,label,color)=>'<div class="cd-kpi"><div class="v" style="color:'+color+'">'+value+'</div><div class="l">'+label+'</div></div>';
+      return '<div class="cd-sec"><div class="cd-h">'+textSummary.pace+'</div><div class="cd-kpis">'+kpi(nc(sumX),'XP/h','#79c0ff')+kpi(ncs(sumG),'$/h','#51ddae')+kpi(nf(sumK),'Kills/h','#c3d4e5')+kpi(ativos+' / '+count,textSummary.accounts,'#dfba65')+'</div><p class="summary-period">'+textSummary.session+' · '+nf(sumC)+' '+textSummary.captures+' · ✨ '+nf(sumSC)+' / '+nf(sumSF)+'</p></div>';
     };
     SB.today = () => {
       const T = totalDia(curDay), W = somaDias(7), A = somaDias(0);
       const kpi = (v, l, c) => '<div class="cd-kpi"><div class="v"' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</div><div class="l">' + l + '</div></div>';
       const barra = (v, m, lbl) => { const p = Math.min(100, Math.max(0, Math.round(v / m * 100))); return '<div style="margin-top:7px"><div style="display:flex;justify-content:space-between;font-size:10px;color:#7d8590"><span>' + lbl + '</span><span>' + nf(Math.round(v)) + ' / ' + nf(m) + (p >= 100 ? ' 🎉' : '') + '</span></div><div class="cd-goal"><i style="width:' + p + '%' + (p >= 100 ? ';background:#f2c665' : '') + '"></i></div></div>'; };
       const linha = (lbl, D) => '<span>' + lbl + ': <b style="color:#adbac7">' + ncs(Math.round(D.g)) + '</b> gold · <b style="color:#79c0ff">' + nc(D.x) + '</b> XP · <b>' + nf(D.c) + '</b> ' + t('stCaptures').toLowerCase() + ' · <span style="color:#f778ba">✨ ' + nf(D.sf) + '/' + nf(D.sc) + '</span></span>';
-      return '<div class="cd-sec"><div class="cd-h" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' + t('cdToday') + ' · ' + curDay
+      return '<div class="cd-sec"><div class="cd-h" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' + textSummary.today + ' · ' + curDay
         + '<span style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;text-transform:none">'
         + '<label style="display:flex;gap:4px;align-items:center">' + t('goalG') + ' <input id="cdGoalG" type="number" min="0" step="1000" value="' + (goals.g || '') + '" class="cd-inp" style="width:90px"></label>'
         + '<label style="display:flex;gap:4px;align-items:center">' + t('goalC') + ' <input id="cdGoalC" type="number" min="0" value="' + (goals.c || '') + '" class="cd-inp" style="width:60px"></label>'
@@ -3757,36 +3750,37 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + '<div style="display:flex;gap:18px;margin-top:9px;font-size:11px;color:#7d8590;flex-wrap:wrap">' + linha(t('cdWeek'), W) + linha(t('cdAllTime'), A) + '</div></div>';
     };
     SB.table = () => {
-      const arrow = (k) => dsort.k === k ? (dsort.d < 0 ? ' ▾' : ' ▴') : '';
-      const TH = [['name', t('cdConta')], ['lead', t('cdPoke')], ['hunt', t('cdHunt')], ['secs', '⏱ ' + t('cdTime')], ['gph', 'Gold/h'], ['xph', 'XP/h'], ['kph', 'Kills/h'], ['caps', t('stCaptures')], ['sh', '✨'], ['best', t('cdBest')], ['last', t('cdLast')], ['st', t('cdStatus')]];
-      let s = '<div class="cd-sec"><div class="cd-h" style="display:flex;align-items:center;gap:8px">' + t('cdByAcc')
-        + '<span style="margin-left:auto;display:flex;align-items:center;gap:6px;text-transform:none">' + t('cdBest') + ':'
-        + '<select id="cdBestCrit" title="' + t('cdBestCritTitle') + '">'
-        + [['ivq', t('cdCritIvQ')], ['iv', t('cdCritIv')], ['q', t('cdCritQ')]].map(o => '<option value="' + o[0] + '"' + (bestCrit === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('')
-        + '</select></span>'
-        + '<button id="cdReset" title="' + t('resetTitle') + '">⟲ ' + t('reset') + '</button></div><table class="cd-table"><thead><tr>'
-        + TH.map(x => '<th data-k="' + x[0] + '">' + x[1] + arrow(x[0]) + '</th>').join('') + '</tr></thead><tbody>';
-      ordered.forEach(r => {
-        const stTxt = r.st === 'off' ? '<span style="color:#6e7681">' + t('cdOff') + '</span>'
-          : r.st === 'wait' ? '<span style="color:#6e7681">' + t('cdWaiting') + '</span>'
-          : '<span style="color:#3fb950">' + t('cdHunting') + '</span>' + folegoTxt(r); // o pokémon em uso agora tem coluna própria
-        s += '<tr data-i="' + r.i + '"><td><span class="cd-dot" style="background:' + r.dot + '"></span>' + esc(r.name) + '</td>'
-          + '<td>' + (r.lead ? (r.lead.shiny ? '✨ ' : '') + esc(r.lead.name) + ' <b style="color:#adbac7">Lv' + nf(r.lead.level) + '</b>' : '—') + '</td>'
-          + '<td>' + (r.hunt ? esc(r.hunt) + melhorTxt(r) : '—') + '</td>'
-          + '<td style="color:#adbac7">' + (r.st === 'on' ? tsec(r.secs) : '—') + '</td>'
-          + '<td style="color:' + ((r.gph || 0) < 0 ? '#f0883e' : '#3fb950') + '">' + (r.st === 'on' ? ncs(r.gph) : '—') + '</td>'
-          + '<td style="color:#79c0ff">' + (r.st === 'on' ? nc(r.xph) : '—') + '</td>'
-          + '<td>' + (r.st === 'on' ? nf(r.kph) : '—') + '</td>'
-          + '<td>' + (r.st === 'on' ? nf(r.caps) : '—') + '</td>'
-          + '<td style="color:' + ((r.sh || 0) > 0 ? '#f778ba' : '#8b949e') + '">' + (r.st === 'on' ? nf(r.sh) : '—') + '</td>'
-          + '<td>' + (r.best ? '<span style="color:' + (r.best.q ? RARO(+r.best.q)[1] : '#e6edf3') + '">' + esc(r.best.n) + '</span> <span style="color:#55e6d3">' + (+r.best.iv || 0) + '/192</span>' + (+r.best.q ? ' <span style="color:#f2c665">×' + (+r.best.q).toFixed(2) + '</span>' : '') : '—') + '</td>'
-          + '<td>' + (r.last ? '<span style="color:' + (r.last.q ? RARO(r.last.q)[1] : '#e6edf3') + '">' + esc(r.last.n) + '</span> <span style="color:#6e7681">' + fmtHM(r.last.t) + '</span>' + (r.since ? ' <span style="color:#f0883e">· ' + nf(r.since) + ' ' + ballIco + '</span>' : '') : '—') + '</td>'
-          + '<td>' + stTxt + '</td></tr>';
-      });
-      return s + '</tbody><tfoot><tr><td>' + t('cdTotal') + ' (' + ativos + ')</td><td></td><td></td><td></td>'
-        + '<td style="color:' + (sumG < 0 ? '#f0883e' : '#3fb950') + '">' + ncs(sumG) + '</td>'
-        + '<td style="color:#79c0ff">' + nc(sumX) + '</td><td>' + nf(sumK) + '</td><td>' + nf(sumC) + '</td>'
-        + '<td>' + nf(sumSF) + '</td><td></td><td></td><td></td></tr></tfoot></table></div>';
+      const estimates=(r,stock,used,infinite)=>{
+        const seconds=summaryUI.duration(stock,used,r.secs,infinite);
+        if(seconds===Infinity)return '<em>'+textSummary.infinite+'</em>';
+        if(seconds===null)return '<em>'+textSummary.unknown+'</em>';
+        return '<em class="'+(seconds<7200?'low':'')+'" title="'+textSummary.estimate+'">~'+tsec(seconds)+'</em>';
+      };
+      const issues=rows.map(r=>({r,h:summaryUI.health(r)})).filter(x=>x.h.issues.length);
+      const warnings=issues.length?'<div class="summary-attention" data-summary-key="attention"><b>'+textSummary.problems+'</b> '+issues.map(({r,h})=>'<button data-summary-open="'+r.i+'">'+esc(r.name)+': '+h.issues.map(k=>textSummary[k]).join(' · ')+'</button>').join('')+'</div>':'';
+      const cards=rows.map(r=>{
+        const h=summaryUI.health(r),live=r.st==='on',active=h.status==='hunting',p=r.lead;
+        const sid=p?.sid?dexId(p.sid):0;const url=sid>0&&sid<20000?'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+(p.shiny?'shiny/':'')+sid+'.png':'';
+        const image=url?'<img loading="lazy" src="'+url+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<span aria-hidden="true">◈</span>';
+        return '<article class="summary-account '+(h.issues.length?'problem':'')+'" data-summary-key="account:'+r.i+'" style="--account-color:'+r.dot+'"><header><button class="summary-name" data-summary-open="'+r.i+'">'+esc(r.name)+'</button><span class="summary-status '+h.status+'">'+textSummary[h.status]+'</span></header>'
+          +'<div class="summary-pokemon">'+image+'<div><b>'+esc(p?.name||textSummary.noPokemon)+(p?.shiny?' ✨':'')+'</b><small>'+(p?'Lv '+nf(p.level)+(p.ivt!=null?' · IV '+nf(p.ivt):'')+raroHtml(p.q):'—')+'</small></div></div>'
+          +'<div class="summary-hunt">'+esc(h.status==='idle'?textSummary.noHunt:r.hunt||textSummary.noHunt)+'</div>'
+          +'<div class="summary-rate"><div><small>XP/h</small><b>'+(active?nc(r.xph):'—')+'</b></div><div><small>$/h</small><b>'+(active?ncs(r.gph):'—')+'</b></div></div>'
+          +'<div class="summary-session"><span>'+textSummary.session+' '+(live?tsec(r.secs):'—')+'</span><span>'+(live?nf(r.caps):'—')+' '+textSummary.captures+'</span></div>'
+          +'<div class="summary-supply"><div><small>'+textSummary.balls+'</small><b>'+(live&&r.hasBalls?(r.infiniteBalls?'∞':nf(r.balls)):'—')+'</b>'+(live&&r.hasBalls?estimates(r,r.balls,r.aBalls,r.infiniteBalls):'')+'</div><div><small>'+textSummary.potions+'</small><b>'+(live&&r.hasInv?nf(r.pots):'—')+'</b>'+(live&&r.hasInv?estimates(r,r.pots,r.aPots,false):'')+'</div></div>'
+          +(h.issues.length?'<div class="summary-issues">'+h.issues.map(k=>textSummary[k]).join(' · ')+'</div>':'')
+          +'<div class="summary-actions"><button data-summary-open="'+r.i+'">'+textSummary.open+'</button><button data-summary-recommend="'+r.i+'" '+(!live?'disabled':'')+'>'+t('hrTitle')+'</button></div></article>';
+      }).join('');
+      return warnings+'<div class="summary-accounts" data-summary-key="accounts" style="--summary-count:'+Math.max(1,rows.length)+'">'+cards+'</div>';
+    };
+    SB.pinned=()=>{
+      const items=cfg.pinned.map(item=>{
+        const quantities=rows.filter(r=>r.st==='on'&&(item.t==='ball'?r.hasBalls:r.hasInv)).map(r=>({name:r.name,qty:(item.t==='ball'?r.ballMap:r.inv)?.[item.id]||0}));
+        const infinity=quantities.some(q=>q.qty==='∞'),total=quantities.reduce((sum,q)=>sum+(Number(q.qty)||0),0);
+        const detail=quantities.length?quantities.length+'/'+count+' · '+quantities.map(q=>q.name+': '+q.qty).join(' · '):textSummary.missing;
+        return '<span title="'+esc(detail)+'">'+esc(item.name)+' <b>'+(quantities.length?(infinity?'∞':nf(total)):'—')+'</b></span>';
+      }).join('');
+      return '<div class="cd-sec"><div class="cd-h">'+textSummary.pinned+'</div><div class="summary-pinned">'+(items||'<p class="summary-period">'+textSummary.noPinned+'</p>')+'</div></div>';
     };
     SB.trend = () => '<div class="cd-sec"><div class="cd-h">' + t('cdTrend') + '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
       + '<div><div style="display:flex;justify-content:space-between;font-size:11px;color:#7d8590"><span>Gold/h</span><span style="color:#3fb950">' + ncs(sumG) + '</span></div>' + spark(dhist.map(p => p.g), '#3fb950') + '</div>'
@@ -3801,9 +3795,11 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       const optConta = [-1].concat([...Array(count).keys()]).map(v => v < 0
         ? '<option value="-1"' + (f.p === -1 ? ' selected' : '') + '>' + t('cdFAll') + '</option>'
         : '<option value="' + v + '"' + (f.p === v ? ' selected' : '') + '>' + esc(tabNames[v] || stName(v)) + '</option>').join('');
-      const catches = captureFilters.filterCaptures(lifeCatch, f);
-      return '<div class="cd-sec"><div class="cd-h">' + t('cdCatches') + '</div>'
+      const filtered=captureFilters.filterCaptures(lifeCatch, f);
+      const catches=summaryUI.prioritize(f.mode==='all'?filtered:filtered.filter(summaryUI.important));
+      return '<div class="cd-sec"><div class="cd-h">' + textSummary.important + '</div>'
         + '<div class="cd-cfg-row" style="flex-wrap:wrap;gap:4px;margin-bottom:6px">'
+        + '<select id="cdFcMode" class="cd-inp"><option value="important"'+(f.mode!=='all'?' selected':'')+'>'+textSummary.important+'</option><option value="all"'+(f.mode==='all'?' selected':'')+'>'+textSummary.all+'</option></select>'
         + '<select id="cdFcP" class="cd-inp">' + optConta + '</select>'
         + '<input id="cdFcN" type="text" class="cd-inp" style="width:88px" placeholder="🔎" value="' + esc(f.n) + '">'
         + '<select id="cdFcT" class="cd-inp">' + [[0, t('cdFAll')], [1, '1h'], [6, '6h'], [24, '24h']].map(p2 => '<option value="' + p2[0] + '"' + (f.per === p2[0] ? ' selected' : '') + '>' + p2[1] + '</option>').join('') + '</select>'
@@ -3812,7 +3808,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
         + '<input id="cdFcQ" type="number" min="0" max="2" step="0.1" class="cd-inp" style="width:52px" title="× ≥" placeholder="×≥" value="' + (f.q || '') + '">'
         + '<label class="cd-inp" style="cursor:pointer" title="shiny">✨<input id="cdFcSh" type="checkbox" style="margin-left:3px"' + (f.sh ? ' checked' : '') + '></label>'
         + '</div><div class="cd-catches-list">'
-        + (catches.length ? catches.map(x => '<div class="cd-row"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">' + (x.fx ? '<span title="' + t('cdFirst') + '">🆕</span> ' : '') + (x.sh ? '✨ ' : '') + esc(x.n) + raroHtml(x.q) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span style="color:#55e6d3">' + (+x.iv || 0) + '/192</span>' + (+x.q ? '<span style="color:#f2c665">×' + (+x.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtDT(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div></div>'; };
+        + (catches.length ? catches.map(x => '<div data-summary-key="catch:'+esc(x.p+':'+x.t+':'+x.n)+'" class="cd-row '+(summaryUI.important(x)?'important':'')+'"><span class="cd-dot" style="background:' + x.dot + '"></span><span class="rn">' + (x.fx ? '<span title="' + t('cdFirst') + '">🆕</span> ' : '') + (x.sh ? '✨ ' : '') + esc(x.n) + raroHtml(x.q) + ' <span style="color:#7d8590">· ' + esc(x.acc) + '</span></span><span style="color:#55e6d3">' + (+x.iv || 0) + '/192</span>' + (+x.q ? '<span style="color:#f2c665">×' + (+x.q).toFixed(2) + '</span>' : '') + '<span class="rt">' + fmtDT(x.t) + '</span></div>').join('') : '<div class="cd-empty">' + t('cdNone') + '</div>') + '</div></div>'; };
     SB.teams = () => {
       const M = window.PokeMuxIvMath;
       const alvo = Math.max(1, Math.min(500, +(lsGet('cdPjLv') || 500)));
@@ -3965,17 +3961,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     };
 
     // ===== montagem: barra de config + seções na ordem escolhida, pulando as escondidas =====
-    let h = '<div class="cd-top"><span class="cd-tt">' + t('cardsShort') + '</span><button id="cdGear" class="' + (cardsCfgOpen ? 'on' : '') + '" title="' + t('cdConfig') + '">⚙</button></div>';
+    let h = '<div class="cd-top"><span class="cd-tt">' + textSummary.title + '</span><button id="cdGear" class="' + (cardsCfgOpen ? 'on' : '') + '" title="' + t('cdConfig') + '">⚙</button></div>';
     if (cardsCfgOpen) h += '<div class="cd-cfg"><div class="cd-cfg-h">' + t('cdConfigH') + '</div>'
       + cardsCfg.order.map(s => '<div class="cd-cfg-row" draggable="true" data-s="' + s + '"><span class="cd-grip">⋮⋮</span><label><input type="checkbox" data-sec="' + s + '"' + (cardsCfg.hide[s] ? '' : ' checked') + '> ' + cdLabel(s) + '</label></div>').join('')
-      + '<div class="cd-cfg-h" style="margin-top:10px">' + t('alLocalTitle') + '</div>'
-      + '<div class="cd-cfg-row" style="display:block;font-size:10px;color:#7d8590;line-height:1.4">' + t('alLocalHint') + '</div>'
-      + ['shiny', 'capture', 'rare', 'down', 'stalled', 'balls', 'faint'].map(k => '<div class="cd-cfg-row"><label><input type="checkbox" id="cdAl_' + k + '"' + (alLocal[k] ? ' checked' : '') + '> ' + t('alLocal_' + k) + '</label></div>').join('')
-      + '<div class="cd-cfg-h" style="margin-top:10px">' + t('whTitle') + '</div>'
-      + '<div class="cd-cfg-row"><input id="cdWhUrl" type="text" class="cd-inp" style="flex:1" placeholder="https://discord.com/api/webhooks/…" value="' + esc(whCfg.url) + '"><button id="cdWhTest" class="cd-inp" style="cursor:pointer">' + t('whTest') + '</button></div>'
-      + '<div class="cd-cfg-row"><input id="cdWhMention" type="text" class="cd-inp" style="flex:1" placeholder="' + t('whMention') + '" value="' + esc(whCfg.mention) + '"></div>'
-      + '<div class="cd-cfg-row"><label><input type="checkbox" id="cdWhProb"' + (whCfg.prob ? ' checked' : '') + '> ' + t('whProb') + '</label></div>'
-      + '<div class="cd-cfg-row"><label><input type="checkbox" id="cdWhShiny"' + (whCfg.shiny ? ' checked' : '') + '> ' + t('whShiny') + '</label><label><input type="checkbox" id="cdWhSum"' + (whCfg.sum ? ' checked' : '') + '> ' + t('whSum') + '</label></div>'
       + '</div>';
     let secHtml = '';
     cardsCfg.order.forEach(sec => {
@@ -3993,14 +3981,17 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       const box = it.dataset.s === 'catches' ? it.querySelector('.cd-catches-list') : it.querySelector('.cd-sec, .cd-kpis');
       if (box && box.scrollTop) rolagem[it.dataset.s] = box.scrollTop;
     });
-    cardsEl.innerHTML = h;
+    summaryUI.patch(cardsEl,h);
     cardsEl.scrollTop = st0;
 
     // config: engrenagem, checkboxes e arraste pra reordenar seções
-    const gear = cardsEl.querySelector('#cdGear'); if (gear) gear.onclick = () => { cardsCfgOpen = !cardsCfgOpen; refreshCards(true); };
+    const gear = cardsEl.querySelector('#cdGear'); if (gear) gear.onclick = () => settingsUI.open('summary');
     cardsEl.querySelectorAll('.cd-cfg input[data-sec]').forEach(chk => chk.onchange = () => { cardsCfg.hide[chk.dataset.sec] = !chk.checked; saveCardsCfg(); refreshCards(true); });
     // filtros das capturas, nivel de projecao do time e busca do inventario
     const fcSave = () => { try { lsSet('cdFC', JSON.stringify(cdFC)); } catch {} cdHtmlAnt = ''; refreshCards(true); };
+    const fcMode=cardsEl.querySelector('#cdFcMode');if(fcMode)fcMode.onchange=()=>{cdFC.mode=fcMode.value==='all'?'all':'important';fcSave();};
+    cardsEl.querySelectorAll('[data-summary-open]').forEach(button=>button.onclick=()=>{const i=+button.dataset.summaryOpen;focusWorkspaceAccount(i);statsIdx=i;statsOpen=true;statsAutoPend=false;applyStats();});
+    cardsEl.querySelectorAll('[data-summary-recommend]').forEach(button=>button.onclick=()=>openHuntRecommendations(+button.dataset.summaryRecommend));
     const fcP = cardsEl.querySelector('#cdFcP'); if (fcP) fcP.onchange = () => { cdFC.p = +fcP.value; fcP.blur(); fcSave(); };
     const fcN = cardsEl.querySelector('#cdFcN'); if (fcN) fcN.onchange = () => { cdFC.n = String(fcN.value || '').slice(0, 30).toLowerCase(); fcN.blur(); fcSave(); };
     const fcT = cardsEl.querySelector('#cdFcT'); if (fcT) fcT.onchange = () => { cdFC.per = +fcT.value || 0; fcT.blur(); fcSave(); };
@@ -4025,22 +4016,6 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       try { lsSet('shinyTargets', JSON.stringify(shinyTargets)); } catch {}
       refreshCards(true);
     });
-    // webhook do Discord (engrenagem)
-    const wu = cardsEl.querySelector('#cdWhUrl'); if (wu) wu.onchange = () => { whCfg.url = wu.value.trim(); saveWh(); wu.blur(); };
-    const wt = cardsEl.querySelector('#cdWhTest'); if (wt) wt.onclick = async () => {
-      const u = cardsEl.querySelector('#cdWhUrl'); if (u) { whCfg.url = u.value.trim(); saveWh(); }
-      if (!whCfg.url) return;
-      // direto, sem a fila: o Testar so serve se disser se a URL presta mesmo
-      const rot = wt.textContent; wt.textContent = '...'; wt.disabled = true;
-      let deu = false; try { deu = (await window.pokeAPI.webhook(whCfg.url, t('whTestMsg'))) === true; } catch {}
-      wt.textContent = deu ? t('whTestOk') : t('whTestErr');
-      setTimeout(() => { try { wt.textContent = rot; wt.disabled = false; } catch {} }, 3000);
-    };
-    const ws2 = cardsEl.querySelector('#cdWhShiny'); if (ws2) ws2.onchange = () => { whCfg.shiny = ws2.checked; saveWh(); };
-    const wm = cardsEl.querySelector('#cdWhSum'); if (wm) wm.onchange = () => { whCfg.sum = wm.checked; saveWh(); };
-  const wp = cardsEl.querySelector('#cdWhProb'); if (wp) wp.onchange = () => { whCfg.prob = wp.checked; saveWh(); };
-  ['shiny', 'capture', 'rare', 'down', 'stalled', 'balls', 'faint'].forEach(k => { const el = cardsEl.querySelector('#cdAl_' + k); if (el) el.onchange = () => { alLocal[k] = el.checked; saveAl(); }; });
-  const wmn = cardsEl.querySelector('#cdWhMention'); if (wmn) wmn.onchange = () => { whCfg.mention = String(wmn.value || '').replace(/\D/g, '').slice(0, 20); wmn.value = whCfg.mention; wmn.blur(); saveWh(); };
     let dragS = null;
     cardsEl.querySelectorAll('.cd-cfg-row').forEach(row => {
       row.addEventListener('dragstart', () => { dragS = row.dataset.s; row.style.opacity = '.4'; });
@@ -4051,6 +4026,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     // mover (grip ⋮⋮) e redimensionar (lateral direita) as seções na própria página
     let dragIt = null;
     cardsEl.querySelectorAll('.cd-it').forEach(it => {
+      if(summaryWired.has(it))return;summaryWired.add(it);
       const grip = it.querySelector('.cd-mv');
       grip.addEventListener('dragstart', e => { dragIt = it.dataset.s; cdBusy = Date.now(); it.classList.add('cd-ghost'); try { e.dataTransfer.setDragImage(it, 24, 16); } catch {} });
       grip.addEventListener('dragend', () => { it.classList.remove('cd-ghost'); cdBusy = 0; cardsEl.querySelectorAll('.cd-over').forEach(x => x.classList.remove('cd-over')); });
@@ -4103,11 +4079,17 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     cardsEl.querySelectorAll('.cd-hide').forEach(f => f.onclick = () => { const k = f.dataset.h; if (huntHidden[k]) delete huntHidden[k]; else huntHidden[k] = 1; try { lsSet('huntHidden', JSON.stringify(huntHidden)); } catch {} refreshCards(true); });
   }
   function applyCards() {
+    if (cardsOn && !document.body.classList.contains('cards-on')) {
+      statsOpen = false;
+      statsAutoPend = false;
+      applyStats();
+    }
     document.body.classList.toggle('cards-on', cardsOn);
     cardsBtn.classList.toggle('on', cardsOn);
     lsSet('cardsOn', cardsOn ? '1' : '0');
-    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.setAudioMuted(cardsOn || muted); if (!podeModificarPagina(w)) return; w.executeJavaScript(ultraScript(cardsOn)).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps())).catch(() => {}); w.executeJavaScript(chatScript(cardsOn || chatHidden)).catch(() => {}); } catch {} });
+    webviews.forEach((w, i) => { if (off[i] || !w) return; try { w.setAudioMuted(cardsOn || muted); if (!podeModificarPagina(w)) return; w.executeJavaScript(ultraScript(cardsOn)).catch(() => {}); w.executeJavaScript(ecoScript(ecoFps(i))).catch(() => {}); w.executeJavaScript(chatScript(cardsOn || chatHidden)).catch(() => {}); } catch {} });
     if (cardsOn) { cdHtmlAnt = ''; cardsEl.innerHTML = '<div class="cd-empty" style="padding:20px">' + t('cdWaiting') + '</div>'; refreshCards(); }
+    workspaceUI?.refresh();
   }
   cardsBtn.onclick = () => { cardsOn = !cardsOn; applyCards(); };
   // Keepalive: um toque barato em cada painel ligado, de 30 em 30s, MESMO com a janela
@@ -4486,7 +4468,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     const states = await Promise.all(Array.from({ length:count }, async (_, n) => {
       const w = webviews[n];
       if (!w || off[n] || !podeModificarPagina(w)) return null;
-      try { return await w.executeJavaScript(READ_STATE); } catch { return null; }
+      try { return await readAppState(n); } catch { return null; }
     }));
     if (revision !== hrState.revision || !hrEl.classList.contains('show')) return;
     hrAccount.innerHTML = Array.from({ length: count }, (_, n) => '<option value="' + n + '"' + (off[n] ? ' disabled' : '') + '>'
@@ -4504,7 +4486,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     hrBody.textContent = t('hrLoading');
     try {
       if (hrAccount.value === '' || !w || off[i] || !podeModificarPagina(w)) throw new Error('hrOffline');
-      const [d, catalog] = await Promise.all([w.executeJavaScript(READ_STATE), w.executeJavaScript(HUNTS_JS)]);
+      const [d, catalog] = await Promise.all([readAppState(i), w.executeJavaScript(HUNTS_JS)]);
       if (revision !== hrState.revision || !hrEl.classList.contains('show')) return;
       if (off[i] || webviews[i] !== w || !d || !d.ok || !d.live) throw new Error('hrOffline');
       const p = Array.isArray(d.team) && d.team.find(p => p && p.ld === true);
@@ -4574,7 +4556,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     try {
       const { i, w } = context;
       if (off[i] || webviews[i] !== w || !podeModificarPagina(w)) throw new Error('hrOffline');
-      const d = await w.executeJavaScript(READ_STATE), p = d && Array.isArray(d.team) && d.team.find(p => p && p.ld);
+      const d = await readAppState(i, true), p = d && Array.isArray(d.team) && d.team.find(p => p && p.ld);
       if (!d || !d.live) throw new Error('hrOffline');
       if (!p || hrFingerprint(d, p) !== context.fingerprint) throw new Error('hrStale');
       if (!(p.hp > 0)) throw new Error('hrFainted');
@@ -4588,9 +4570,9 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       if (!result || !result.ok) throw new Error(({ changed:'hrStale', offline:'hrOffline', locked:'hrLocked', fainted:'hrFainted', navigation:'hrNavigation' })[result && result.reason] || 'hrUnconfirmed');
       hrStatus.textContent = t('hrDone') + ' ' + row.hunt.name;
       lastKT[i] = Date.now();
-      if (cardsOn) { cardsOn = false; applyCards(); }
-      closeRecommendations();
-      w.focus();
+      // Keep the current workspace and recommendation panel; only the game hunt changes.
+      delete stCache[i];
+      if(cardsOn)refreshCards(true);
     } catch (error) { hrStatus.textContent = t(error.message && I18N.pt[error.message] ? error.message : 'hrUnconfirmed'); }
     finally {
       hrState.busy = false; [hrFocus,hrPotion,hrThreshold].forEach(c => c.disabled = false); hrAccount.disabled = false; document.getElementById('hrRefresh').disabled = false;
@@ -4624,7 +4606,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     m: () => dockBtn.click(),                              // Menu do jogo (igual F2)
     g: () => document.getElementById('tierBtn').click(),   // Tierlist
     d: () => document.getElementById('dittoBtn').click(),  // Ditto
-    o: () => menu.classList.toggle('show')                 // Opcoes
+    o: () => menu.open ? closeSettings() : settingsUI.open()                 // Opcoes
   };
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey) return; // combos (Ctrl+M etc) seguem intactos
@@ -4638,8 +4620,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
 
   // ----- Init -----
   let marketFocusedPanel = -1;
-  const marketUI = window.PokeMuxMarketUI.mount({
-    language: () => lang, load: lsGet, save: lsSet,
+  const toolIv = {
     isIvEnabled: () => ivAtivo,
     calculateIv: async (i, pokemon, cid) => {
       const w = webviews[i];
@@ -4664,6 +4645,10 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
       ivDados = ivSane(result); ivEl.classList.add('market'); ivRender();
     },
     hideIv: () => { if (ivMarketPoint) ivOculta(); },
+  };
+  const marketUI = window.PokeMuxMarketUI.mount({
+    language: () => lang, load: lsGet, save: lsSet,
+    ...toolIv,
     notifyMarket: (text, desktop, voice) => {
       if (!alertsOn) return;
       if (desktop) try { window.pokeAPI.notify('PokeMux · Mercado', text); } catch {}
@@ -4672,8 +4657,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     rememberFocus: element => { marketFocusedPanel = webviews.indexOf(element); },
     openAccount: i => {
       if (!Number.isInteger(i) || i < 0 || i >= count || !webviews[i]) return;
-      if (!grid.children[i]?.classList.contains('expanded')) toggleExpand(i);
-      webviews[i].focus();
+      focusWorkspaceAccount(i);
     },
     preferred: () => {
       const expanded = [...grid.children].findIndex(panel => panel.classList.contains('expanded'));
@@ -4681,7 +4665,7 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     },
     accounts: async () => Promise.all(Array.from({ length: count }, async (_, i) => {
       const w = webviews[i]; let d = null;
-      if (w && !off[i] && podeModificarPagina(w)) try { d = await w.executeJavaScript(READ_STATE); } catch {}
+      if (w && !off[i] && podeModificarPagina(w)) try { d = await readAppState(i); } catch {}
       return { cid: String(d && d.cid || ''), name: d && d.name || alertAccountName(i), off: off[i], live: !!(d && d.ok && d.live), focused: i === marketFocusedPanel };
     })),
     read: async (i, script) => {
@@ -4696,6 +4680,71 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     }
   });
   document.getElementById('langRow').addEventListener('click', () => marketUI.updateLanguage());
+  const inventoryUI = window.PokeMuxInventory.mount({
+    language: () => lang,
+    itemPrices: () => marketUI.itemPrices(),
+    ...toolIv, ivElement: ivEl,
+    sprite: (id, shiny) => { const dex = dexId(Number(id)); return Number.isInteger(dex) && dex > 0 && dex < 20000 ? "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + (shiny ? "shiny/" : "") + dex + ".png" : ""; },
+    safeIcon: window.PokeMuxGlobalMarket.safeIcon,
+    accounts: () => workspaceState().accounts,
+    slot: stateSlot,
+    read: (i, script) => webviews[i].executeJavaScript(script),
+    receive: window.PokeMuxPokemonState.receive,
+    focus: i => focusWorkspaceAccount(i),
+    rarity: window.PokeMuxGlobalMarket.rarity,
+    grades: window.PokeMuxGlobalMarket.GRADES
+  });
+  function focusWorkspaceAccount(i) {
+    if (!Number.isInteger(i) || i < 0 || i >= count || !webviews[i]) return;
+    if (cardsOn) { cardsOn = false; applyCards(); }
+    if (!grid.children[i].classList.contains('expanded')) toggleExpand(i);
+    try { webviews[i].focus(); } catch {}
+    workspaceUI?.refresh();
+  }
+  function workspaceState() {
+    const now = Date.now();
+    return { lang, summary: cardsOn, stats: statsOpen, eco, accounts: Array.from({ length: count }, (_, i) => {
+      const w = webviews[i], cached = stCache[i], known = gameAccountNames[i], observed = workspaceLive[i];
+      const accountName = known && known.email === String(accounts[i]?.email || '') ? known.name : accounts[i]?.name;
+      const validCache = cached && cached.slot?.view === w && cached.slot?.email === String(accounts[i]?.email || '') && cached.slot?.epoch === stateEpochs[i] && now - cached.t < 30000 && (!known?.cid || known.cid === String(cached.d.cid || ''));
+      const validLive = observed && observed.view === w && observed.email === accounts[i]?.email && now - observed.at < 15000 && (!known?.cid || known.cid === String(observed.cid || ''));
+      const live = !off[i] && !!w && podeModificarPagina(w) && (validLive ? observed.live : !!(validCache && cached.d.live));
+      return { name: accountName, color: ACOR[i], focused: grid.children[i]?.classList.contains('expanded'), off: off[i], live,
+        hunt: live && validCache ? cached.d.hunt : '', metrics: live && validCache ? cached.d.a : null };
+    }) };
+  }
+
+  function renderNotificationSettings(host) {
+    host.replaceChildren();
+    const heading=document.createElement('h3');heading.textContent=t('alLocalTitle');host.append(heading);
+    for(const key of ['shiny','capture','rare','down','stalled','balls','faint']) {
+      const label=document.createElement('label');label.className='settings-check';
+      const input=document.createElement('input');input.type='checkbox';input.checked=alLocal[key];input.dataset.notification=key;
+      input.onchange=()=>{alLocal[key]=input.checked;saveAl();};label.append(input,document.createTextNode(t('alLocal_'+key)));host.append(label);
+    }
+    const title=document.createElement('h3');title.textContent='Discord';host.append(title);
+    const field=(caption,value,save,type='text')=>{const label=document.createElement('label');label.className='settings-field';label.append(document.createTextNode(caption));const input=document.createElement('input');input.type=type;input.value=value;input.onchange=()=>save(input.value.trim());label.append(input);host.append(label);return input;};
+    const url=field(t('whTitle'),whCfg.url,value=>{whCfg.url=value;saveWh();},'password');url.autocomplete='off';
+    field(t('whMention'),whCfg.mention,value=>{whCfg.mention=value.replace(/\D/g,'').slice(0,20);saveWh();});
+    for(const [key,caption] of [['prob','whProb'],['shiny','whShiny'],['sum','whSum']]) {
+      const label=document.createElement('label');label.className='settings-check';const input=document.createElement('input');input.type='checkbox';input.checked=whCfg[key];input.onchange=()=>{whCfg[key]=input.checked;saveWh();};label.append(input,document.createTextNode(t(caption)));host.append(label);
+    }
+    const test=document.createElement('button');test.textContent=t('whTest');test.onclick=async()=>{whCfg.url=url.value.trim();saveWh();if(!whCfg.url)return;test.disabled=true;let ok=false;try{ok=(await window.pokeAPI.webhook(whCfg.url,t('whTestMsg')))===true;}catch{}test.textContent=t(ok?'whTestOk':'whTestErr');test.disabled=false;};host.append(test);
+  }
+  function renderSummarySettings(host) {
+    host.replaceChildren();
+    for(const key of cardsCfg.order) {
+      const row=document.createElement('div');row.className='settings-summary-row';
+      const label=document.createElement('label');label.className='settings-check';const input=document.createElement('input');input.type='checkbox';input.checked=!cardsCfg.hide[key];
+      input.onchange=()=>{cardsCfg.hide[key]=!input.checked;saveCardsCfg();refreshCards(true);};label.append(input,document.createTextNode(cdLabel(key)));row.append(label);
+      for(const delta of [-1,1]) {const button=document.createElement('button');button.textContent=delta<0?'↑':'↓';button.setAttribute('aria-label',lang==='en'?(delta<0?'Move up':'Move down'):lang==='es'?(delta<0?'Subir':'Bajar'):(delta<0?'Mover para cima':'Mover para baixo'));button.disabled=delta<0?cardsCfg.order.indexOf(key)===0:cardsCfg.order.indexOf(key)===cardsCfg.order.length-1;button.onclick=()=>{const at=cardsCfg.order.indexOf(key),to=at+delta;[cardsCfg.order[at],cardsCfg.order[to]]=[cardsCfg.order[to],cardsCfg.order[at]];saveCardsCfg();renderSummarySettings(host);refreshCards(true);};row.append(button);}
+      host.append(row);
+    }
+  }
+  const settingsUI=window.PokeMuxSettings.mount({lang:()=>lang,menu,close:closeSettings,
+    panel:stCfg,renderPanel:()=>{cfgOpen=false;stBody.style.display='';stTabs.style.display='';renderSettings();loadCatalog();},
+    notifications:renderNotificationSettings,summary:renderSummarySettings});
+
   (async () => {
     try { accounts = normalize(await window.pokeAPI.loadCreds()); }
     catch { accounts = normalize([]); }
@@ -4703,6 +4752,22 @@ return {live,hasBalls,hasInv,balls,potions,revives,prevHunt:resumo(P.prev),shiny
     applyLang(); // aplica idioma na interface e ja chama applyMute/Eco/Chat/Awake
     applyStats(); // restaura o painel de resumo se estava aberto
     applyCards(); // restaura o modo cartas se estava ligado
+    workspaceUI = window.PokeMuxWorkspace.mount({ state: workspaceState, resize: ajustaProporcao,
+      focus: focusWorkspaceAccount,
+      mode: (mode, selected) => {
+        if (mode === 'summary') { if (!cardsOn) { cardsOn = true; applyCards(); } }
+        else if (mode === 'focus') focusWorkspaceAccount(selected);
+        else {
+          if (cardsOn) { cardsOn = false; applyCards(); }
+          const expanded = [...grid.children].findIndex(p => p.classList.contains('expanded'));
+          if (expanded >= 0) toggleExpand(expanded);
+          layoutMode = 'grid'; applyLayout(); ajustaProporcao();
+        }
+      },
+      analyze: i => { focusWorkspaceAccount(i); statsIdx = i; statsOpen = true; statsAutoPend = false; applyStats(); },
+      inventory: () => inventoryUI.open(),
+      market: tab => marketUI.open(tab)
+    });
   })();
 </script>
 </body>

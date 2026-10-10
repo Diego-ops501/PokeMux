@@ -25,6 +25,7 @@ async function run() {
     podeModificarPagina:()=>true,READ_STATE:'state',t:x=>x,esc:x=>x,alertAccountName:i=>'Conta '+i,
     hrFocus:{options:[{},{}]},hrPotion:{options:[{},{}]},
     refreshHuntRecommendations:async()=>{refreshes++;}};
+  ui.readAppState = i => ui.webviews[i].executeJavaScript('state');
   const open = new Function(...Object.keys(ui), openingSource+';return openHuntRecommendations;')(...Object.values(ui));
   await open();
   assert.equal(hrAccount.value,'1','botão global consulta a conexão das contas antes de escolher');
@@ -82,6 +83,7 @@ async function run() {
     hrFingerprint:()=>'',t:k=>k,nf:String,esc:String,alertAccountName:()=>'',tipoCor:()=> '#a8b820',
     hrFocus:{value:'xp'},hrPotion:{value:'observed'},hrThreshold:{value:50},hrPotions:{},
     I18N:{pt:{}},clearTimeout:()=>{},setTimeout:()=>1};
+  mocks.readAppState = () => view.executeJavaScript('state');
   const refresh = new Function(...Object.keys(mocks),refreshSource+';return refreshHuntRecommendations;')(...Object.values(mocks));
   await refresh();
   assert(body.innerHTML.includes('--day-color:#a8b820'),'borda usa cor do tipo');
@@ -133,6 +135,36 @@ async function run() {
     const typed = (catalog.mv[sp]||{}).t||[];
     const allArgs = {...args,attacker:{sp,level:3000,q:1.2,ivt:96,tlv:3000,t1:typed[0],t2:typed[1]}};
     for (const objective of ['xp','gold']) assert.doesNotThrow(()=>engine.rank({...allArgs,objective}),sp+' suporta ambos os focos');
+  }
+
+  // The actual renderer travel handler must keep summary/grid/focus and the recommendation panel.
+  const travelSource=html.slice(html.indexOf('  async function travelToRecommendation('),html.indexOf("  document.getElementById('recommendBtn').onclick"));
+  for(const mode of ['summary','grid','focus']) {
+    let calls=0,focused=0,closed=0,layoutChanges=0,refreshes=0;
+    const leader={id:'leader',name:'Squirtle',ld:true,hp:24,level:1};
+    const current={ok:true,live:true,cid:'account-2',level:10,team:[leader]};
+    const target={executeJavaScript:async script=>{assert.equal(script,'travel-script');calls++;return {ok:true};},focus:()=>focused++};
+    const state={busy:false,context:{i:1,w:target,fingerprint:'same'},rows:[{hunt:{sl:'geodude',name:'Geodude',level:1}}]};
+    const go={dataset:{row:'0'},disabled:false,textContent:''},status={};
+    const controls=[{},{},{}],cache={0:{d:'keep-other-account'},1:{d:'before-hunt'}};
+    const env={hrState:state,hrFocus:controls[0],hrPotion:controls[1],hrThreshold:controls[2],hrAccount:{},
+      document:{getElementById:()=>({})},hrBody:{querySelectorAll:()=>[go]},hrStatus:status,
+      off:[false,false],webviews:[{},target],podeModificarPagina:()=>true,readAppState:async(i,fresh)=>{assert.equal(i,1);assert.equal(fresh,true);return current;},
+      hrFingerprint:()=> 'same',hrEngine:{travelScript:(expected,hunt)=>{assert.equal(expected.cid,'account-2');assert.equal(hunt.sl,'geodude');return 'travel-script';}},
+      huntRecovery:{1:{}},stallSlug:['keep','old'],stallOn:[true,true],lastK:[1,2],lastKT:[],stCache:cache,
+      t:k=>k,I18N:{pt:{hrOffline:true,hrStale:true,hrUnconfirmed:true}},Date,
+      cardsOn:mode==='summary',applyCards:()=>layoutChanges++,closeRecommendations:()=>closed++,refreshCards:()=>refreshes++};
+    const travelUI=new Function(...Object.keys(env),travelSource+';return travelToRecommendation;')(...Object.values(env));
+    await travelUI(0);
+    assert.equal(calls,1,mode+' sends only to the selected account');
+    assert.equal(focused+closed+layoutChanges,0,mode+' does not change layout, focus or close recommendations');
+    assert.equal(refreshes,mode==='summary'?1:0);
+    assert.equal(cache[1],undefined,'only the changed hunt cache is invalidated');assert.deepEqual(cache[0],{d:'keep-other-account'});
+    assert(status.textContent.includes('hrDone')&&status.textContent.includes('Geodude'),'confirmation stays visible');
+    assert.equal(state.busy,false);assert.equal(go.disabled,false);
+    current.cid='changed';env.hrFingerprint=()=> 'changed';
+    const staleUI=new Function(...Object.keys(env),travelSource+';return travelToRecommendation;')(...Object.values(env));
+    await staleUI(0);assert.equal(calls,1,'changed character never gets a travel command');assert.equal(focused+closed+layoutChanges,0,'failed travel also preserves screen');
   }
 
   const expected = { cid:'char-1', id:'poke-1', level:100 };

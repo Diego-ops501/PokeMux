@@ -4,24 +4,38 @@ Guia curto do que cada coisa faz. Se você só quer resolver um problema pontual
 
 ## Barra do topo
 
-O PokeMux usa uma barra superior compacta, sem uma barra lateral fixa. Assim, toda a largura da janela fica disponível para as telas do jogo. Os recursos ficam na barra superior e no menu **☰ Opções**:
+O PokeMux usa uma barra superior compacta, sem uma barra lateral fixa. Assim, toda a largura da janela fica disponível para as telas do jogo. Os recursos ficam na barra superior e no menu **⚙ Ajustes**:
 
-A barra combina comandos com texto e alguns ícones no estilo do jogo. Ajude o projeto e Referral ficam juntos à esquerda. À direita ficam os ícones de IV, Mercado e Opções, nessa ordem, com Opções no fim. Menu do jogo e Overlay ficam junto dos outros comandos, com texto e sem ícone. Passe o mouse para ver a descrição; use Tab para navegar e Enter para ativar. O Mercado Global mantém sua arte original.
+A barra mostra o nome de cada conta, usando o nome recebido do jogo ou o nome salvo enquanto aguarda a conexão. Clique no nome para ampliar aquela conta. **Grade** restaura as telas lado a lado; **Foco** mantém uma tela ampliada e atalhos para as outras; **Resumo** abre o dashboard. As trocas preservam as sessões do jogo.
+
+À direita ficam Análise, IV, Mercado, Inventário e Ajustes. Inventário abre uma lista independente, dividida por conta, com Pokémon, itens e Pokébolas; filtre por nome, tipo, raridade e faixa de IV; os alertas da loja ficam na aba Alertas do Mercado. A Análise fica acoplada à direita e acompanha a conta em foco. A faixa abaixo de cada jogo mostra XP/h, dólares/h e capturas usando os dados já coletados. Passe o mouse para ver a descrição; use Tab para navegar e Enter para ativar. Login, cadastro de contas, recomendar hunt, menu do jogo, overlay, apoio e referral ficam em **Ajustes**.
+
+O **Resumo** mostra primeiro o ritmo atual por hora (XP, dólares e kills), seguido dos cartões de cada conta em posições fixas lado a lado. Cada cartão identifica o Pokémon ativo com imagem, nível, IV e raridade; mostra hunt, duração da sessão, capturas, estoque de Pokébolas e poções. A duração do estoque é estimada pelo consumo após dez minutos de sessão; sem consumo suficiente, não há previsão, e bolas infinitas são identificadas. Conta desconectada, fora da hunt, sem combate recente, Pokémon sem HP e estoque esgotado ou com menos de duas horas estimadas aparecem em destaque. **Abrir conta** leva à tela correspondente e abre sua Análise; **Recomendar hunt** abre as sugestões para o Pokémon principal daquela conta. Ao clicar em **Ir para esta hunt**, apenas a hunt da conta selecionada muda: o Resumo, a Grade ou o Foco continuam na tela atual, e a recomendação permanece aberta com a confirmação.
+
+O bloco **Hoje · acumulado** é separado do ritmo por hora. Capturas abrem em **Importantes** (shiny, IV 160+ ou Lendária+); selecione **Todas as capturas** para incluir as demais. Os filtros de conta, nome, período, raridade, IV e qualidade continuam disponíveis. Itens fixados exibem a soma das contas com dados disponíveis e detalham as quantidades por conta ao passar o mouse. O inventário completo fica no botão Inventário e o ranking nas ferramentas. Gráficos e históricos extras podem ser habilitados em **Ajustes → Resumo**. Atualizações preservam o foco, os filtros e a rolagem, alterando os elementos existentes da tela.
+
+Ao entrar no **Resumo**, a Análise é recolhida automaticamente. Clique em **Análise** para abri-la novamente; atualizações dos dados não reabrem o painel nem fecham uma abertura manual.
+
+Com Eco ativo, o jogo visível usa 15 FPS; os jogos fora de foco usam 2 FPS. No Resumo, os jogos usam 1 FPS. Os temporizadores e conexões continuam funcionando, e leituras recentes do estado são compartilhadas pelas ferramentas.
+
+O botão **Inventário** mostra as contas conectadas em colunas lado a lado, usando seus nomes. Cada coluna tem sua própria rolagem e paginação; em janelas estreitas, role horizontalmente para ver as demais. Os botões **Tudo**, **Pokémon**, **Pokébolas** e **Itens** filtram todas as colunas. A janela abre centralizada. Em **Itens**, a ordem padrão usa o maior valor unitário NPC do catálogo, com preços desconhecidos ao final; o valor aparece na linha. Em **Pokémon**, a maior raridade vem primeiro, seguida do maior IV dentro da mesma raridade. Consulte Pokémon com imagem, nível, IV, raridade e qualidade; itens mostram imagem, quantidade, tipo e identificador. Pokémon shiny e da equipe, itens vinculados e bolas infinitas são identificados. A lista inclui os bens da bag, não apenas os disponíveis para venda. Use nome, conta, raridade e IV mínimo/máximo para filtrar localmente; raridade e IV selecionam Pokémon. Cada conta tem páginas de 60 resultados. Com **IV: ON**, passe o mouse, clique ou use Tab em um Pokémon para abrir a calculadora de IV daquele exemplar, usando os atributos e a sessão da conta dona. Dados incompletos são sinalizados. **Atualizar** solicita a bag pelo canal do jogo, sem consultar o mercado. Dados parciais ou falhas são sinalizados junto do horário da leitura; contas desconectadas não exibem inventários antigos como atuais. Clique no nome de uma conta para abrir sua tela. A compra de Pokébolas foi removida do Resumo.
 
 | Botão | O que faz |
 |---|---|
 | **▶ Logar equipe** | Loga as 4 contas de uma vez, com as senhas salvas |
 | **👤 Treinadores** | Cadastra e-mail e senha de cada conta. O 🗑 limpa o formulário; o 🧹 apaga os dados do jogo daquela conta (resolve conta bugada, a senha continua salva) |
 | **⟳ Atualizar tudo** | Recarrega os painéis ligados, ignorando o cache (resolve tela de login velha presa) |
-| **📊 Painel** | Abre o resumo da conta, onde fica a engrenagem de configuração e a compra de Pokébolas |
-| **🃏 Cartas** | Alterna para o Dashboard de baixo consumo com métricas das quatro contas |
+| **📊 Painel** | Abre o resumo da conta, onde fica a engrenagem de configuração |
+| **Resumo** | Alterna para o Dashboard de baixo consumo com métricas das quatro contas |
 | **📌 Overlay** | Abre o resumo flutuante somente-leitura |
 | **IV: ON/OFF** | Ativa ou desativa o cálculo automático de IV ao passar o mouse sobre um Pokémon |
 | **🎯 Recomendar hunt** | Recomenda onde upar o Pokémon principal da conta; clique em uma opção para ir até ela |
 | **Ícone dourado do Mercado Global** | Abre a consulta de preços, anúncios e Pokémon sem sair da hunt, com seleção de conta, categorias, busca, filtros, paginação e detalhes |
-| **☰ Opções** | Tudo o mais: Hunt, Tierlist, Ditto, Alertas, Venda protegida, Eco, atualização e FAQ... |
+| **⚙ Ajustes** | Tudo o mais: Hunt, Tierlist, Ditto, Alertas, Venda protegida, Eco, atualização e FAQ... |
 
-Atalhos de teclado (só quando o foco está no app, não dentro do jogo): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Opções, **M** menu do jogo, **E** Eco, **A** Alertas.
+**Ajustes** abre um painel no centro da tela, com busca e categorias para contas, visual, desempenho, notificações do farm, análise, resumo, ferramentas e backup/suporte. As mudanças de configuração são salvas automaticamente. As engrenagens da Análise e do Resumo abrem o mesmo painel na categoria correspondente; notificações por tipo e Discord também são configurados nele. Grade e Resumo ficam na barra principal, sem atalhos repetidos nos Ajustes. Feche com ✕, Esc ou um clique fora do painel.
+
+Atalhos de teclado (só quando o foco está no app, não dentro do jogo): **H** Hunt, **C** Simples, **L** Limpar jogo, **R** Atualizar, **T** Treinadores, **G** Tierlist, **D** Ditto, **O** Ajustes, **M** menu do jogo, **E** Eco, **A** Alertas.
 
 O ícone do Mercado Global abre uma janela de consulta usando automaticamente uma conta conectada com acesso ao mercado. O seletor começa em **Todas as contas** e filtra inventários e anúncios pessoais, sem exigir a escolha de uma conta para consultar o mercado público. A categoria Pokémon abre diretamente todos os anúncios de Pokémon. Use **Buscar Pokémon** no topo para filtrar pelo nome, combine com shiny, IV, nível, qualidade, tipo e raridade, ordene e navegue pelas páginas. A janela ocupa quase toda a tela e os anúncios usam o espaço antes reservado à lateral de detalhes. Com **IV: ON**, passe o mouse ou selecione um Pokémon para abrir o card de IV junto ao cursor; também funciona nos Pokémon da bag na comparação. O cálculo usa os atributos do exemplar e as bases da espécie/forma do catálogo do jogo. Dados incompletos são sinalizados. Estão disponíveis Comprar, Comparar com o mercado, Alertas, Meus Anúncios, Solicitações e Histórico da conta. A aba Solicitações inclui uma prévia; compras e negociações continuam sendo feitas pelo mercado do jogo. **⟳** atualiza os dados e **Esc** fecha a janela.
 
@@ -67,7 +81,9 @@ Na **engrenagem ⚙** do topo dela você escolhe **quais seções aparecem** e a
 
 **🎯 Alvo shiny.** Serve para acompanhar a caçada de um shiny específico. Na engrenagem, em "Alvo shiny", busque a espécie. A seção passa a mostrar se ele **já apareceu**, se foi **capturado** e **quantas bolas** você gastou nele. Sem escolher a espécie, a seção fica vazia explicando isso (antes ela sumia, e parecia que a opção não funcionava).
 
-## 🍃 Simples: o painel de todas as contas
+## Resumo: o painel de todas as contas
+
+No Inventário, os itens também mostram **Mercado** abaixo do valor NPC, com o menor preço unitário anunciado em cada moeda disponível (dólares e diamantes). O horário da consulta fica visível. A cotação é pública e compartilhada pelas quatro colunas; não há uma consulta por item. Dados recentes da loja são reaproveitados por um minuto. **Atualizar** busca uma nova cotação quando a anterior vence, respeitando a fila e os limites do jogo. Sem anúncios com preço, a linha informa isso; em falha, a cotação anterior permanece com aviso. Esses valores são anúncios ativos, não preços de vendas concluídas. A ordenação dos itens continua usando o valor NPC.
 
 O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gastando pouco do PC. Seções principais:
 
@@ -77,7 +93,7 @@ O jogo some e ficam só os números das 4 contas. Serve pra deixar farmando gast
 - **Inventário**: soma a mochila **e o depósito** das 4 contas
 - **Tendência**: gráficos de gold/h e XP/h, e de gold/dia dos últimos 30 dias
 
-## 🏆 Tierlist (Opções, ou tecla G)
+## 🏆 Tierlist (Ajustes, ou tecla G)
 
 Ranking de todas as espécies do jogo por elemento, nota de 0 a 100.
 
@@ -87,7 +103,7 @@ Na linha: **FÍS/ESP** é a categoria do golpe, **folga ×N** é quanto dano sob
 
 Como a nota é calculada: o dano do melhor golpe segue as regras do próprio jogo (efetividade amplificada na hunt: ×2 vira ×2.5, ×4 vira ×5.5, resistências dividem por 1.5; STAB ×1.5 no golpe do tipo do pokémon; golpe físico contra a Defesa e especial contra a Defesa Especial do selvagem), e a vida do selvagem diz quantos golpes o kill leva. Matar de um golpe no limite não vale o mesmo que matar com folga: a nota usa a chance de matar de um golpe, então dois pokémon que "matam de um" não empatam mais em 100. A nota final é XP por golpe (kills esperados × XP da hunt), com 100 pro melhor da lista. Hunts de **NIGHTMARE** (nível 2000 a 3000) levam esse rótulo na lista de hunts do Simples. Na tierlist elas só ganham linha quando são a de maior XP da espécie, o que hoje não acontece: o jogo paga menos XP nelas do que em Orre.
 
-## ✨ Ditto (Opções, logo abaixo da Tierlist)
+## ✨ Ditto (Ajustes, logo abaixo da Tierlist)
 
 Onde caçar com um Ditto e em que pokémon virar. Escolha **Shiny** ou **Comum**, o **nível do Ditto** e o **nível da conta** (só entram hunts até esse nível; 0 mostra todas). **Meu Ditto…** preenche com um Ditto que esteja no time de uma conta ligada. Qualidade e IV não se escolhem: no jogo eles são fixos e iguais pra todo Ditto (comum 1.4 e 89, shiny 2.0 e 119), e o app usa esses.
 
@@ -112,7 +128,7 @@ A calculadora de IV mostra a **aptidão natural** da espécie (física, especial
 Depois de **dez minutos sem novos abates** em uma hunt confirmada, o app recarrega o painel. A recuperação continua com novas tentativas a cada **cinco minutos** até confirmar um novo abate, mesmo sem aviso de manutenção. Se a conta voltar para a cidade durante a recuperação, o app tenta enviá-la à hunt anterior. Contas ligadas com credenciais salvas também tentam novamente quando ficam presas no login. CAPTCHA pendente, 2FA e campos em edição pausam as recargas e continuam manuais. Uma conta parada voluntariamente na cidade, sem recuperação pendente, não é enviada para uma hunt.
 
 - **🛡 Venda protegida**: pede confirmação antes de vender shiny, qualidade Lendária ou acima e itens raros. Na engrenagem do Painel dá pra travar seus próprios itens (**🔒 Cadeado de venda**)
-- **🔔 Alertas**: avisa quando um shiny é capturado, um Pokémon com IV 160+ ou raridade Lendária é capturado, cai **Strange Pheromones** ou **Boss Token**, uma conta cai, para de farmar, fica sem suprimento ou tem pokémon derrubado. Na engrenagem do Simples você escolhe quais tipos avisam no Windows, um por um. Com webhook do Discord configurado, os avisos de problema também chegam no celular
+- **🔔 Alertas**: avisa quando um shiny é capturado, um Pokémon com IV 160+ ou raridade Lendária é capturado, cai **Strange Pheromones** ou **Boss Token**, uma conta cai, para de farmar, fica sem suprimento ou tem pokémon derrubado. Em Ajustes → Notificações do farm você escolhe quais tipos avisam no Windows, um por um. Com webhook do Discord configurado, os avisos de problema também chegam no celular
 - **🗣️ Voz dos alertas**: usa uma voz instalada no Windows e fala a conta envolvida. Anuncia somente a captura bem-sucedida de shiny, **Strange Pheromones**, **Boss Token**, Pokébolas/curas acabando e capturas com IV 160+ ou exatamente da faixa Lendária. Esses avisos informam o IV e a raridade do Pokémon, sem duplicar uma captura que atende aos dois critérios. A aparição e a falha de captura de shiny não disparam voz nem notificação do Windows. Mítica, Anciã e Divina não são chamadas de Lendária
 - **📷 Print de shiny**: quando ligado, salva localmente uma imagem do painel em que o shiny apareceu
 - **💾 Exportar/Importar config**: leva suas configurações e seu histórico pra outro PC. Credenciais e webhook ficam de fora, de propósito. Importar troca o histórico pelo do arquivo e guarda uma cópia do seu antes. O app também salva um backup semanal na pasta de dados do PokeMux

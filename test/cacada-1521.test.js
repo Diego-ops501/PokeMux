@@ -130,7 +130,7 @@ const espera = () => new Promise((r) => setTimeout(r, 20));
     for (let k = f0 + 1; !L[k].trim().startsWith('});'); k++) corpo.push(L[k]);
     const timers = []; let reloads = 0;
     const h = new Function('off', 'i', 'dot', 'status', 't', 'alerta', 'wv', 'setTimeout',
-      'let fails = 0, alertedDown = false, falhou = false;\nconst onStart = () => {' + um('did-start-loading') + '\n};\nconst onFail = (e) => {' + corpo.join('\n') + '\n};\nreturn { onStart, onFail };')(
+      'let fails = 0, alertedDown = false, falhou = false; const stateEpochs = [0], stCache = {}, workspaceLive = [], workspaceUI = null;\nconst onStart = () => {' + um('did-start-loading') + '\n};\nconst onFail = (e) => {' + corpo.join('\n') + '\n};\nreturn { onStart, onFail };')(
       [false], 0, {}, {}, (k) => k, () => {}, { reload: () => reloads++ }, (fn) => timers.push(fn));
     h.onStart(); h.onFail({ errorCode: -105 }); h.onStart(); // falhou, e o usuario mandou recarregar: nova carga em andamento
     timers.forEach((fn) => fn());

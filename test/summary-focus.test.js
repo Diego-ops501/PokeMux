@@ -17,6 +17,7 @@ const context = vm.createContext({
   stTabs: { childElementCount: 5, innerHTML: '', appendChild() {} },
   stBody: { innerHTML: '' }, tabNames: [], off: [], READ_STATE: '',
   webviews: Array.from({ length: 4 }, (_, i) => ({ executeJavaScript: () => new Promise((resolve, reject) => pending.push({ i, resolve, reject })) })),
+  readAppState: i => context.webviews[i].executeJavaScript(),
   document: { createElement: () => ({ style: { setProperty() {} } }) },
   ACOR: [], stName: i => 'Treinador ' + (i + 1), t: k => k,
   ajustaProporcao() {}, renderStats: d => { context.stBody.innerHTML = d.name; }

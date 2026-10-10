@@ -30,8 +30,8 @@ ok(html.includes('try { wv.src = url; }') && !html.includes('Promise.resolve(wv.
 ok(html.includes("if ((wv.getURL() || '') === 'about:blank') return;"), 'painel de espera vazio não aparece falsamente como online');
 ok(!html.includes("iframe[src*='challenges.cloudflare.com']") && !html.includes('turnstile.render('), 'PokeMux não clica, reinicializa nem reconfigura o widget do site');
 ok(html.includes("if (wv.__pgAuthPage) { wv.__pgAuthPage = false; wv.reload(); }"), 'coletor é instalado apenas depois que a SPA entra no jogo');
-ok(html.includes('let compraEmAndamento = false;') && html.includes('goldTem < custo'), 'compra bloqueia duplicidade e saldo insuficiente');
-ok(html.includes('Number.isSafeInteger(ballId)') && html.includes('qtd > 10000'), 'compra valida identificador, quantidade e custo');
+ok(!html.includes('/api/game/balls/buy'), 'Resumo não executa compras de Pokébolas');
+ok(!html.includes('cfgBallSel') && !html.includes('cfgBallB1'), 'Resumo não oferece os controles de compra removidos');
 ok(html.includes("let voltaHuntOn = lsGet('voltaHunt') === '1'"), 'retorno à hunt continua desligado por padrão');
 ok(html.includes("lsSet('cleanHud', '0')") && html.includes("let cleanOn = lsGet('cleanHud') === '1'") && !html.includes("lsGet('cleanHud') !== '0'"), 'HUD do jogo fica visível por padrão e Limpar jogo permanece opcional');
 ok(html.includes("https://poke.idleworld.online/?ref=2G9B4BV") && html.includes("LOGIN_URL + '?ref=2G9B4BV'") && !html.includes('CJNKGPB'), 'referral oficial usa a chave 2G9B4BV');
@@ -41,7 +41,7 @@ ok(main.includes("ipcMain.handle('overlay:toggle'") && html.includes('id="overla
 ok(main.includes("ipcMain.handle('shiny:capture'") && html.includes("let shotShinyOn = lsGet('shotShiny') === '1'"), 'print de shiny é opcional e local');
 
 console.log('\n--- Instalador e atualização ---');
-ok(pkg.name === 'pokemux' && pkg.build.productName === 'PokeMux' && /^\d+\.\d+\.\d+$/.test(pkg.version), 'produto PokeMux tem versão válida para publicação');
+ok(pkg.name === 'pokemux' && pkg.build.productName === 'PokeMux' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?$/.test(pkg.version), 'produto PokeMux tem versão válida para publicação');
 ok(!html.includes('id="appSidebar"') && !html.includes('--pg-sidebar') && html.includes('id="statsBtn"') && html.includes('id="cardsBtn"'), 'layout clássico remove a sidebar fixa e restaura os controles no topo');
 ok(html.includes('class="cd-catches-list"') && html.includes('.cd-catches-list { max-height: clamp(') && html.includes('overflow-y: auto'), 'últimas capturas têm altura responsiva e rolagem interna');
 ok(html.includes('captureFilters.filterCaptures(lifeCatch, f)') && !html.includes('.slice(-40)'), 'últimas capturas mostram todos os resultados que passam pelos filtros');

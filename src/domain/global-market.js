@@ -484,6 +484,17 @@
       boss: minimum(x => x.kind === 'item' && Number(x.refId) === 70000)
     };
   }
+  function itemPriceSummary(list) {
+    const prices = {};
+    for (const row of list || []) {
+      if (!['item','diamonds'].includes(row.kind) || row.offerOnly || !(Number(row.price)>0) || !Number.isFinite(Number(row.price)) || row.quantity != null && !(Number(row.quantity)>0) || !['GOLD','DIAMONDS'].includes(row.currency)) continue;
+      const key = row.kind === 'diamonds' ? 'diamonds' : 'item:'+row.refId;
+      if (row.kind === 'item' && (!Number.isSafeInteger(Number(row.refId)) || !(Number(row.refId)>0))) continue;
+      const group = prices[key] ||= { GOLD:null, DIAMONDS:null };
+      group[row.currency] = group[row.currency] == null ? Number(row.price) : Math.min(group[row.currency],Number(row.price));
+    }
+    return prices;
+  }
 
   async function readInGame(params, expectedCid, sanitize, includeOwned, includeAlertCatalog, receivePokemon) {
     const P = window.__poke;
@@ -626,5 +637,5 @@
     return '(' + readIvInGame.toString() + ')(' + JSON.stringify(safe) + ',' + JSON.stringify(String(expectedCid).slice(0, 100)) + ')';
   }
 
-  return { CATEGORIES, SORTS, GRADES, TYPES, normalized, rarity, query, sanitizeResponse, filterListings, diamondRate, equivalentDiamonds, sortPrices, createMarketReader, createSnapshotCache, snapshotPage, readPriceBook, readPricePage, readComparisonBook, safeIcon, listingTime, comparisonFilters, comparable, priceSummary, saleRecommendation, marketHighlights, evolutionIds, readPokemonGroup, readScript, ivScript };
+  return { CATEGORIES, SORTS, GRADES, TYPES, normalized, rarity, query, sanitizeResponse, filterListings, diamondRate, equivalentDiamonds, sortPrices, createMarketReader, createSnapshotCache, snapshotPage, readPriceBook, readPricePage, readComparisonBook, safeIcon, listingTime, comparisonFilters, comparable, priceSummary, saleRecommendation, marketHighlights, itemPriceSummary, evolutionIds, readPokemonGroup, readScript, ivScript };
 });

@@ -1,5 +1,45 @@
 # Changelog
 
+## 2.0.0 — Interface, inventário e desempenho (09/10/2026)
+
+- Lançamento estável da interface 2.0, reunindo as melhorias das betas abaixo.
+- Português, inglês e espanhol no mesmo aplicativo, incluindo os novos textos do Inventário e Ajustes.
+- READMEs e guias em PT/EN/ES, com imagens da interface real em cada idioma.
+- Grade/Foco/Resumo preservam sessões; inventário em colunas com IV e cotações, Ajustes centralizados, mercado unificado e recomendações sem mudar a tela.
+- Análise recolhida automaticamente ao entrar no Resumo e reaberta somente por ação do usuário.
+
+
+## 2.0.0-beta.2 — Inventário das quatro contas e Ajustes
+
+- Entrar no Resumo recolhe a Análise e cancela sua abertura automática pendente. O painel só reabre por ação do usuário; atualizações do Resumo preservam uma abertura manual.
+- Cartões do Resumo têm Abrir conta (jogo e Análise) e Recomendar hunt (sugestões da conta correspondente). Ir para esta hunt mantém o modo e o foco atuais, preserva a janela de recomendações com a confirmação e atualiza apenas os dados da conta alterada.
+- Resumo reformulado: totais por hora no topo, cartões das contas em posições fixas lado a lado, Pokémon ativo com imagem/nível/IV/raridade, hunt, rendimento, sessão e suprimentos. Conta desconectada, fora da hunt, sem combate recente, Pokémon sem HP e estoque esgotado ou com menos de duas horas estimadas aparecem em destaque.
+- Capturas abrem em Importantes (shiny, IV 160+ ou Lendária+), com opção Todas e os filtros existentes. Inventário completo e ranking de hunts deixam de ocupar o Resumo; apenas itens fixados permanecem nele. Histórico e gráficos continuam opcionais nos Ajustes.
+- Atualizações do Resumo reconciliam textos/atributos e preservam cartões, filtros, foco e rolagem. Leituras das contas ocorrem em paralelo, compartilhadas com as ferramentas e protegidas contra troca de sessão; contas fora da hunt ou sem dados não entram no ritmo atual.
+- Ajustes abre um painel central com busca e categorias: Contas, Visual e jogo, Desempenho, Notificações do farm, Análise, Resumo, Ferramentas e Backup e suporte. Configurações e atalhos preservam seus comportamentos e valores salvos.
+- Removido o botão Alertas do topo; os alertas de anúncios continuam no Mercado. Grade e Resumo têm um único acesso na barra. Engrenagens de Análise e Resumo abrem seus editores no painel central; notificações por tipo e Discord passam a ser configuradas nos Ajustes.
+- Itens mostram os menores preços unitários anunciados no Mercado Global, em dólares e diamantes, abaixo do valor NPC. Cotação compartilhada pelas quatro contas, reaproveitada por um minuto e alimentada também pelas consultas existentes da loja.
+- A consulta usa a fila do mercado, com origem conectada automática e respeito aos limites do jogo. Falhas preservam a última cotação com aviso; propostas sem preço, ofertas indisponíveis e respostas de personagens diferentes ficam fora do mínimo. A chegada da cotação atualiza apenas o texto, preservando a lista e o cálculo de IV.
+- Janela de inventário centralizada. Na categoria Itens, maior valor unitário NPC vem primeiro; preços desconhecidos ficam ao final. Em Pokémon, ordenação por raridade e depois IV decrescente dentro da mesma raridade.
+- Contas conectadas aparecem em colunas lado a lado, com rolagem e paginação independentes. Em janelas estreitas, a navegação horizontal preserva as colunas.
+- Botões Tudo, Pokémon, Pokébolas e Itens no topo, com imagens pequenas dos bens e indicadores substitutos quando uma imagem não está disponível.
+- Calculadora de IV integrada ao inventário, usando os atributos, espécie/forma e personagem da conta dona do exemplar. Passe o mouse, clique ou use Tab; respeita IV: ON/OFF e descarta resultados atrasados após troca de seleção, filtro ou sessão.
+- Removidos os controles e a execução de compras de Pokébolas do Resumo.
+- Botão Inventário abre uma janela própria, dividida por conta, com Pokémon, itens, Pokébolas e diamantes. Mostra nível, IV, qualidade, raridade, equipe, shiny, quantidade e identificador, incluindo itens vinculados e bolas infinitas.
+- Filtros locais por nome, conta, tipo, raridade e faixa de IV. Cada conta tem paginação independente para manter listas grandes leves.
+- Atualização pede as três partes da bag pelo WebSocket do jogo, sem consultar o mercado. Pokémon recebidos em partes são reunidos; dados incompletos, contas desconectadas e falhas de atualização são identificados.
+- Proteção contra respostas de contas/personagens anteriores e testes de filtros, chunks, quatro contas, paginação e navegação.
+
+## 2.0.0-beta.1 — Nova navegação e desempenho (em desenvolvimento)
+
+- Barra superior com os nomes reais das contas conectadas, cores e estado de conexão. Antes de receber os dados do jogo, usa o nome salvo da conta.
+- Modos Grade, Foco e Resumo. Clique no nome de uma conta para focar sua sessão; atalhos das outras contas ficam abaixo do jogo. A troca de modo preserva os quatro webviews e suas sessões.
+- Métricas de XP/h, dólares/h e capturas abaixo de cada tela, reaproveitando os dados já coletados. Dados antigos ou de contas desligadas não aparecem como atuais.
+- Análise acoplada à direita e atalhos diretos para inventário e alertas do mercado. Login, cadastro de contas, overlay e demais ferramentas continuam disponíveis em Opções.
+- Leituras recentes do estado são compartilhadas entre painel, resumo, mercado e recomendações, com proteção contra respostas de sessões anteriores e consultas simultâneas duplicadas.
+- Eco limita a renderização das contas fora de foco a 2 FPS; a conta visível permanece em 15 FPS. Resumo usa 1 FPS nos jogos. Temporizadores e conexões continuam ativos.
+- Testes de inicialização completa no Electron, nomes reais, isolamento, preservação de sessões e layout em três larguras de janela.
+
 ## 1.1.18 — Mercado unificado e focos de hunt (09/10/2026)
 
 - Mercado público abre usando automaticamente uma conta conectada com acesso. Inventários e anúncios pessoais das quatro contas são reunidos, com filtro local por conta e identificação do dono. Clique no nome da conta de um anúncio para abrir seu painel.

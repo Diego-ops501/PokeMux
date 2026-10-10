@@ -68,7 +68,33 @@
       const duration = days ? `${days}d ${hours}h` : hours ? `${hours}h ${minutes}min` : `${minutes}min`;
       return bridge.language() === 'en' ? duration + ' ' + tt().ago : tt().ago + ' ' + duration;
     };
-    const marketRead = M.createMarketReader((account, script) => bridge.read(account, script), bridge.marketReaderOptions);
+    let itemQuote = null, itemQuoteJob = null;
+    const marketRead = M.createMarketReader(async (account, script) => {
+      const response = await bridge.read(account, script);
+      if(response?.ok && script.includes('({"category":"All"') && response.data?.cid && (script.includes(','+JSON.stringify(String(response.data.cid))+',(') || script.includes(',"",(') && s.accounts[account]?.live && String(s.accounts[account]?.cid)===String(response.data.cid))) {
+        const data=M.sanitizeResponse(response.data);
+        itemQuote={ok:true,prices:M.itemPriceSummary(data.listings),at:Date.now()};
+      }
+      return response;
+    }, bridge.marketReaderOptions);
+    async function itemPrices() {
+      if(itemQuote && Date.now()-itemQuote.at<60000)return itemQuote;
+      if(itemQuoteJob)return itemQuoteJob;
+      itemQuoteJob=(async()=>{
+        const accounts=await bridge.accounts();
+        const candidates=accounts.map((metadata,account)=>({metadata,account})).filter(x=>x.metadata.live && !x.metadata.off && x.metadata.cid);
+        candidates.sort((a,b)=>Number(b.account===s.account)-Number(a.account===s.account));
+        let failure='offline';
+        for(const {metadata,account} of candidates) {
+          const response=await marketRead(account,M.readScript({category:'All'},metadata.cid),()=>!metadata.off,10).catch(()=>({ok:false,reason:'network'}));
+          if(response?.ok && String(response.data?.cid)===String(metadata.cid)) return itemQuote || {ok:false,reason:'changed'};
+          failure=response?.reason || 'network';
+          if(failure==='limited')break;
+        }
+        return {ok:false,reason:failure,prices:itemQuote?.prices,at:itemQuote?.at};
+      })().finally(()=>{itemQuoteJob=null;});
+      return itemQuoteJob;
+    }
     let savedSnapshot = null;
     try { savedSnapshot = JSON.parse(bridge.load('marketPokemonSnapshots') || 'null'); } catch {}
     const snapshots = M.createSnapshotCache((account,script,valid)=>marketRead(account,script,valid,0), {initial:savedSnapshot,now:bridge.marketSnapshotOptions?.now,save:value=>bridge.save('marketPokemonSnapshots',JSON.stringify(value))});
@@ -699,7 +725,8 @@
       load();
     }
 
-    async function open() {
+    async function open(tab) {
+      if (typeof tab === 'string' && ['buy', 'compare', 'mine', 'requests', 'history', 'alerts'].includes(tab)) s.tab = tab;
       const focus = s.previousFocus || document.activeElement, expanded = bridge.preferred();
       s.previousFocus = focus; s.open = true; invalidate(); const revision = s.revision;
       overlay.classList.add('show'); button.classList.add('on'); chrome();
@@ -874,7 +901,7 @@
     if (snapshotMode && bridge.marketSnapshotOptions?.background !== false) warmTimer = setTimeout(warmCache,5000);
     window.addEventListener('beforeunload', () => { monitor.stop(); clearTimeout(warmTimer); snapshots.stop(); });
     chrome();
-    return { open, close, warmCache, refresh: () => load(true), isOpen: () => s.open, updateLanguage: () => { if (s.open) render(); else chrome(); } };
+    return { open, close, warmCache, itemPrices, refresh: () => load(true), isOpen: () => s.open, updateLanguage: () => { if (s.open) render(); else chrome(); } };
   }
   root.PokeMuxMarketUI = { mount };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
